@@ -1,0 +1,8 @@
+Name,Type,Class,Level,Damage,Projectile,Perks,Form ID,Editor ID,Source URL
+Enclave plasma gun,Ranged,Pistol/Rifle,25 / 35 / 45,24 / 28 / 32,ProjectilePlasmaLarge,"Bloody Mess; Non-auto pistol: Gunslinger (Expert, Master); Auto pistol: Guerilla (Expert, Master); Follow Through; Far-Flung Fireworks; Covert Operative; Tank Killer; Packin' Light; Arms Keeper; Gunsmith; Quick Hands; Sniper (scoped) only; Pistol: Gun Runner, Modern Renegade, Crack Shot (sighted only); Rifle: Ground Pounder, Tormentor, Long Shot (sighted only)",002FD97A,Enclave_PlasmaGun,https://fallout.fandom.com/wiki/Enclave_plasma_gun
+Laser gun,Ranged,Pistol/Rifle,,,,,,LaserGun,https://fallout.fandom.com/wiki/Laser_gun_(Fallout_76)
+Pipe bolt-action,Ranged,Pistol/Rifle,,,,,,PipeBoltAction,https://fallout.fandom.com/wiki/Pipe_bolt-action_(Fallout_76)
+Pipe gun,Ranged,Pistol/Rifle,,,,,,PipeGun,https://fallout.fandom.com/wiki/Pipe_gun_(Fallout_76)
+Pipe revolver,Ranged,Pistol/Rifle,,,,,,PipeRevolver,https://fallout.fandom.com/wiki/Pipe_revolver_(Fallout_76)
+Plasma gun,Ranged,Pistol/Rifle,,,,,,PlasmaGun,https://fallout.fandom.com/wiki/Plasma_gun_(Fallout_76)
+Ultracite laser gun,Ranged,Pistol/Rifle,,,,,,UltraciteLaserGun,https://fallout.fandom.com/wiki/Ultracite_laser_gun
