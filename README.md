@@ -1,2 +1,296 @@
-# fo76-ml-db
-The Great Fallout 76 DB Project!
+# Fallout 76 Database Project
+
+A Python-based data collection and database management system for Fallout 76 game data. This project scrapes weapon and perk information from Fallout Wiki pages and stores it in a normalized MySQL database, designed to support a future RAG-powered LLM system for build optimization.
+
+## Project Overview
+
+**Goal:** Build a comprehensive database of Fallout 76 game data to power a RAG (Retrieval Augmented Generation) system that helps players:
+- Optimize character builds based on playstyle preferences
+- Query game data (weapon damage, perk effects, stat buffs, etc.)
+- Answer questions like "What's the best pistol build for stealth?"
+
+**Current Status:**
+- ✅ Database schema complete (weapons, armor, power armor, perks, legendary perks)
+- ✅ 240 regular perks with 450 total ranks
+- ✅ 28 legendary perks fully scraped with all 4 ranks (112 total rank entries)
+- ✅ Import script ready for full database population
+- ⏳ 7 weapons scraped (need ~250+ more)
+
+## Quick Start
+
+### 1. Setup Environment
+
+```bash
+# Clone repository
+git clone <repository_url>
+cd fo76-ml-db
+
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install Playwright browsers (for JavaScript-heavy pages)
+playwright install chromium
+```
+
+### 2. Create Database
+
+```bash
+# Create database and import schema
+mysql -u <username> -p -e "CREATE DATABASE IF NOT EXISTS f76;"
+mysql -u <username> -p f76 < f76_schema.sql
+```
+
+### 3. Import Data
+
+```bash
+# Option A: Using environment variables (recommended)
+export MYSQL_USER=your_username
+export MYSQL_PASS=your_password
+python import_to_db.py
+
+# Option B: Using command-line arguments
+python import_to_db.py -u <username> -p <password>
+
+# Option C: Custom database settings
+python import_to_db.py \
+  -u <username> \
+  -p <password> \
+  -H localhost \
+  -d f76 \
+  --perks-csv Perks.csv \
+  --legendary-perks-csv LegendaryPerks.csv \
+  --weapons-csv human_corrected_weapons_clean.csv
+```
+
+## Data Sources
+
+### Input Files
+
+- **`Perks.csv`** - 240 unique regular SPECIAL perks (450 rows with rank variants)
+  - Columns: name, special, level, race, rank, description, form_id
+- **`LegendaryPerks.csv`** - 28 legendary perks with all 4 ranks (112 rows)
+  - Columns: name, rank, description, effect_value, effect_type, form_id, race
+- **`human_corrected_weapons_clean.csv`** - Cleaned weapon data
+  - Columns: Name, Type, Class, Level, Damage, Projectile, Perks, Form ID, Editor ID, Source URL
+- **`urls.txt`** - 257 Fallout Wiki weapon URLs for scraping
+
+## Web Scraping
+
+### Scrape Weapons
+
+```bash
+# Scrape all URLs in urls.txt
+python scraper.py -f urls.txt -o weapons_scraped.csv
+
+# Scrape a single weapon
+python scraper.py -u "https://fallout.fandom.com/wiki/Laser_gun_(Fallout_76)" -o laser.csv
+
+# Use Playwright for JavaScript-heavy pages
+python scraper.py -f urls.txt -o weapons.csv --playwright
+```
+
+### Scrape Legendary Perks
+
+```bash
+# Scrape all legendary perks
+python legendary_perk_scraper.py -f legendary_perk_urls.txt -o LegendaryPerks.csv
+
+# Scrape a single legendary perk
+python legendary_perk_scraper.py -u "https://fallout.fandom.com/wiki/Follow_Through" -o output.csv
+
+# Use Playwright (if needed)
+python legendary_perk_scraper.py -f legendary_perk_urls.txt -o output.csv --playwright
+```
+
+**Legendary Perk Scraper Features:**
+- ✅ Extracts all 4 ranks per perk (not just one)
+- ✅ Parses effect values and types (percentage, flat, value)
+- ✅ Handles race classification (Human, Ghoul, or Both)
+- ✅ Extracts Form IDs for each rank
+- ✅ Deduplicates data from Wiki page sections
+- ✅ Validates rank completeness (all perks should have 4 ranks)
+
+## Database Architecture
+
+### Core Tables
+
+- **`weapons`** - Weapon data (damage, projectile, form_id, etc.)
+- **`armor`** - Regular armor pieces
+- **`power_armor`** - Power armor frames and pieces
+- **`perks`** - Regular SPECIAL perks (240 unique)
+- **`perk_ranks`** - Rank-specific effects for regular perks (450 rows)
+- **`legendary_perks`** - Legendary character perks (28 unique)
+- **`legendary_perk_ranks`** - Rank-specific effects for legendary perks (112 rows)
+
+### Junction Tables
+
+- **`weapon_perks`** - Links weapons to regular perks that affect them
+- **`weapon_legendary_perk_effects`** - Links weapons to legendary perks
+- **`armor_perks`** / **`armor_legendary_perk_effects`** - Similar for armor
+- **`power_armor_perks`** / **`power_armor_legendary_perk_effects`** - Similar for power armor
+
+### RAG-Optimized Views
+
+- **`v_weapons_with_perks`** - Weapons with all affecting perks (regular + legendary)
+- **`v_armor_with_perks`** - Armor with all affecting perks
+- **`v_power_armor_with_perks`** - Power armor with all affecting perks
+- **`v_perks_all_ranks`** - Regular perks with rank breakdowns
+- **`v_legendary_perks_all_ranks`** - Legendary perks with rank breakdowns
+
+## Import Script Features
+
+### What the Import Does
+
+1. **Imports regular perks** from `Perks.csv`:
+   - 240 unique perks → `perks` table
+   - 450 perk ranks → `perk_ranks` table (grouped by perk name)
+   - Handles race column (Human/Ghoul/Both)
+
+2. **Imports legendary perks** from `LegendaryPerks.csv`:
+   - 28 unique legendary perks → `legendary_perks` table
+   - 112 legendary perk ranks → `legendary_perk_ranks` table
+   - Parses effect values (10%, 20%, 30%, 40%) and types
+   - Handles ghoul-specific perks: "Action Diet", "Feral Rage"
+
+3. **Imports weapons** and links them to perks
+
+### Smart Perk Parsing
+
+The import script handles complex perk formats:
+- ✓ `"Bloody Mess"` → Creates 1 link
+- ✓ `"Gunslinger (Expert, Master)"` → Creates 3 links: Gunslinger, Gunslinger Expert, Gunslinger Master
+- ✓ `"Sniper (scoped) only"` → Extracts "Sniper" (strips conditions)
+- ✓ `"Pistol: Gun Runner, Modern Renegade"` → Parses class-specific perks
+- ✓ Validates all perks against canonical perk lists
+
+## Example Output
+
+```
+============================================================
+FALLOUT 76 DATABASE IMPORT
+============================================================
+
+=== Importing Perks from Perks.csv ===
+Found 240 unique perks with 450 total ranks
+✓ Inserted 240 perks
+✓ Inserted 450 perk ranks
+✓ Cached 240 regular perk IDs
+
+=== Importing Legendary Perks from LegendaryPerks.csv ===
+Found 28 unique legendary perks with 112 total ranks
+✓ Inserted 28 legendary perks
+✓ Inserted 112 legendary perk ranks
+✓ Cached 28 legendary perk IDs
+
+=== Importing Weapons from human_corrected_weapons_clean.csv ===
+✓ Inserted 7 new weapons
+✓ Created 22 weapon-perk links
+
+============================================================
+IMPORT COMPLETE
+============================================================
+Total regular perks imported: 240
+Total legendary perks imported: 28
+Total weapons imported: 7
+
+=== Database Summary ===
+Weapons in database: 7
+Regular perks in database: 240 (450 total ranks)
+Legendary perks in database: 28 (112 total ranks)
+Weapon → regular perk links: 20
+Weapon → legendary perk effects: 2
+```
+
+## Project Structure
+
+```
+fo76-ml-db/
+├── f76_schema.sql                    # Database schema (complete)
+├── import_to_db.py                   # Main import script
+├── scraper.py                        # Weapon scraper
+├── legendary_perk_scraper.py         # Legendary perk scraper (with rank support)
+├── Perks.csv                         # 240 perks, 450 ranks
+├── LegendaryPerks.csv                # 28 legendary perks, 112 ranks
+├── human_corrected_weapons_clean.csv # Cleaned weapon data (7 weapons)
+├── urls.txt                          # 257 weapon Wiki URLs
+├── legendary_perk_urls.txt           # 28 legendary perk Wiki URLs
+├── IMPORT_GUIDE.md                   # Detailed import instructions
+├── SCHEMA_DESIGN.md                  # Database design documentation
+├── TODO.md                           # Project roadmap and status
+└── CLAUDE.md                         # AI assistant guidance
+```
+
+## Key Features
+
+### Race Support (Human vs Ghoul)
+- Database tracks race-specific perks
+- 2 ghoul-exclusive legendary perks: "Action Diet", "Feral Rage"
+- Most perks are universal (both races)
+
+### Multi-Rank Perk Support
+- Regular perks: Ranks 1-5 (varying by perk)
+- Legendary perks: Always 4 ranks with scaling effects
+- Example: "Follow Through" - 10%/20%/30%/40% damage increase
+
+### Effect Parsing
+- Automatically extracts numeric values from descriptions
+- Categorizes effect types: percentage, flat, value
+- Enables future damage calculators and build simulators
+
+## Documentation
+
+- **[IMPORT_GUIDE.md](IMPORT_GUIDE.md)** - Complete import process walkthrough
+- **[SCHEMA_DESIGN.md](SCHEMA_DESIGN.md)** - Database architecture and RAG design
+- **[TODO.md](TODO.md)** - Project status, roadmap, and next steps
+- **[CLAUDE.md](CLAUDE.md)** - Project context for AI assistants
+
+## Development
+
+### Dependencies
+
+```
+beautifulsoup4  # HTML parsing
+lxml            # XML/HTML parser
+playwright      # Browser automation
+pandas          # Data manipulation
+mysql-connector-python  # MySQL connectivity
+requests        # HTTP requests
+```
+
+### Testing
+
+```bash
+# Validate scraped weapon data
+python validate_scraped_data.py weapons_scraped.csv
+
+# Test import logic without database
+python test_import_legendary_perks.py
+```
+
+## Future Plans
+
+- [ ] Scrape remaining ~250 weapons
+- [ ] Build armor and power armor scrapers
+- [ ] Implement weapon_perk_rules table (conditional perks)
+- [ ] Create RAG-optimized query views
+- [ ] Build LLM-powered build optimizer
+- [ ] Add damage calculator
+- [ ] Build simulator
+
+## Contributing
+
+This is a personal project, but suggestions and improvements are welcome!
+
+## License
+
+MIT License
+
+## Acknowledgments
+
+- Data sourced from [Fallout Wiki](https://fallout.fandom.com/)
+- Built for the Fallout 76 community
