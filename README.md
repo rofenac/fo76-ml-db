@@ -11,10 +11,14 @@ A Python-based data collection and database management system for Fallout 76 gam
 
 **Current Status:**
 - ✅ Database schema complete (weapons, armor, power armor, perks, legendary perks)
-- ✅ 240 regular perks with 450 total ranks
-- ✅ 28 legendary perks fully scraped with all 4 ranks (112 total rank entries)
-- ✅ Import script ready for full database population
-- ⏳ 7 weapons scraped (need ~250+ more)
+- ✅ 240 regular perks with 449 total ranks imported
+- ✅ 28 legendary perks with all ranks imported (112 total rank entries)
+- ✅ 249 weapons fully scraped and imported
+- ✅ 18 armor sets fully scraped and imported
+- ✅ 72 power armor pieces fully scraped and imported (12 sets × 6 pieces each)
+- ✅ 1,689 weapon-perk relationship links established
+- ⏳ Junction tables for armor/power armor perks ready but unpopulated
+- ⏳ Additional build components needed (mutations, consumables, legendary effects, etc.)
 
 ## Quick Start
 
@@ -71,17 +75,23 @@ python import_to_db.py \
 
 ### Input Files
 
-- **`Perks.csv`** - 240 unique regular SPECIAL perks (450 rows with rank variants)
+- **`Perks.csv`** - 240 unique regular SPECIAL perks (449 rows with rank variants)
   - Columns: name, special, level, race, rank, description, form_id
 - **`LegendaryPerks.csv`** - 28 legendary perks with all 4 ranks (112 rows)
   - Columns: name, rank, description, effect_value, effect_type, form_id, race
-- **`human_corrected_weapons_clean.csv`** - Cleaned weapon data
+- **`human_corrected_weapons_clean.csv`** - 249 weapons fully imported
   - Columns: Name, Type, Class, Level, Damage, Projectile, Perks, Form ID, Editor ID, Source URL
-- **`urls.txt`** - 257 Fallout Wiki weapon URLs for scraping
+- **`armor_scraped.csv`** - 18 armor sets fully scraped
+  - Columns: Name, Type, Slot, Armor Rating, Energy Resistance, Radiation Resistance, Set Name, Level, Weight, Value, Form ID, Editor ID, Perks, Source URL
+- **`power_armor_scraped.csv`** - 72 power armor pieces fully scraped
+  - Columns: Name, Type, Set Name, Armor Rating, Energy Resistance, Radiation Resistance, Level, Weight, Value, Durability, Fusion Core Drain, Form ID, Editor ID, Perks, Source URL
+- **`urls.txt`** - 257 Fallout Wiki weapon URLs (fully scraped)
+- **`armor_urls.txt`** - 18 armor set URLs (fully scraped)
+- **`power_armor_urls.txt`** - 12 power armor set URLs (fully scraped)
 
 ## Web Scraping
 
-### Scrape Weapons
+### Scrape Weapons ✅ COMPLETE
 
 ```bash
 # Scrape all URLs in urls.txt
@@ -94,7 +104,39 @@ python scraper.py -u "https://fallout.fandom.com/wiki/Laser_gun_(Fallout_76)" -o
 python scraper.py -f urls.txt -o weapons.csv --playwright
 ```
 
-### Scrape Legendary Perks
+**Status:** All 249 weapons scraped and imported.
+
+### Scrape Armor ✅ COMPLETE
+
+```bash
+# Scrape all armor sets
+python armor_scraper.py -f armor_urls.txt -o armor_scraped.csv
+
+# Scrape a single armor set
+python armor_scraper.py -u "https://fallout.fandom.com/wiki/Combat_armor_(Fallout_76)" -o output.csv
+
+# Use Playwright (if needed)
+python armor_scraper.py -f armor_urls.txt -o armor_scraped.csv --playwright
+```
+
+**Status:** All 18 armor sets scraped and imported.
+
+### Scrape Power Armor ✅ COMPLETE
+
+```bash
+# Scrape all power armor sets
+python power_armor_scraper.py -f power_armor_urls.txt -o power_armor_scraped.csv
+
+# Scrape a single power armor set
+python power_armor_scraper.py -u "https://fallout.fandom.com/wiki/T-45_power_armor_(Fallout_76)" -o output.csv
+
+# Use Playwright (if needed)
+python power_armor_scraper.py -f power_armor_urls.txt -o power_armor_scraped.csv --playwright
+```
+
+**Status:** All 72 power armor pieces scraped and imported (12 sets × 6 pieces each).
+
+### Scrape Legendary Perks ✅ COMPLETE
 
 ```bash
 # Scrape all legendary perks
@@ -114,6 +156,8 @@ python legendary_perk_scraper.py -f legendary_perk_urls.txt -o output.csv --play
 - ✅ Extracts Form IDs for each rank
 - ✅ Deduplicates data from Wiki page sections
 - ✅ Validates rank completeness (all perks should have 4 ranks)
+
+**Status:** All 28 legendary perks scraped and imported with all ranks.
 
 ## Database Architecture
 
@@ -172,38 +216,26 @@ The import script handles complex perk formats:
 
 ```
 ============================================================
-FALLOUT 76 DATABASE IMPORT
+DATABASE IMPORT COMPLETE
+============================================================
+Armor imported this session:        18
+Power armor imported this session:  72
+------------------------------------------------------------
+TOTAL DATABASE RECORDS:
+  Weapons:         249
+  Armor:           18
+  Power Armor:     72
+  Perks:           240
+  Legendary Perks: 28
 ============================================================
 
-=== Importing Perks from Perks.csv ===
-Found 240 unique perks with 450 total ranks
-✓ Inserted 240 perks
-✓ Inserted 450 perk ranks
-✓ Cached 240 regular perk IDs
-
-=== Importing Legendary Perks from LegendaryPerks.csv ===
-Found 28 unique legendary perks with 112 total ranks
-✓ Inserted 28 legendary perks
-✓ Inserted 112 legendary perk ranks
-✓ Cached 28 legendary perk IDs
-
-=== Importing Weapons from human_corrected_weapons_clean.csv ===
-✓ Inserted 7 new weapons
-✓ Created 22 weapon-perk links
-
-============================================================
-IMPORT COMPLETE
-============================================================
-Total regular perks imported: 240
-Total legendary perks imported: 28
-Total weapons imported: 7
-
-=== Database Summary ===
-Weapons in database: 7
-Regular perks in database: 240 (450 total ranks)
-Legendary perks in database: 28 (112 total ranks)
-Weapon → regular perk links: 20
-Weapon → legendary perk effects: 2
+Full Database Summary:
+- Regular perks: 240 (449 total ranks)
+- Legendary perks: 28 (112 total ranks)
+- Weapons: 249
+- Armor: 18
+- Power Armor: 72 (12 sets × 6 pieces)
+- Weapon-perk links: 1,689
 ```
 
 ## Project Structure
@@ -211,16 +243,24 @@ Weapon → legendary perk effects: 2
 ```
 fo76-ml-db/
 ├── f76_schema.sql                    # Database schema (complete)
-├── import_to_db.py                   # Main import script
+├── import_to_db.py                   # Main import script (weapons + perks)
+├── import_armor.py                   # Armor/power armor import script
 ├── scraper.py                        # Weapon scraper
+├── armor_scraper.py                  # Armor scraper
+├── power_armor_scraper.py            # Power armor scraper
 ├── legendary_perk_scraper.py         # Legendary perk scraper (with rank support)
-├── Perks.csv                         # 240 perks, 450 ranks
+├── Perks.csv                         # 240 perks, 449 ranks
 ├── LegendaryPerks.csv                # 28 legendary perks, 112 ranks
-├── human_corrected_weapons_clean.csv # Cleaned weapon data (7 weapons)
-├── urls.txt                          # 257 weapon Wiki URLs
-├── legendary_perk_urls.txt           # 28 legendary perk Wiki URLs
+├── human_corrected_weapons_clean.csv # 249 weapons (imported)
+├── armor_scraped.csv                 # 18 armor sets (imported)
+├── power_armor_scraped.csv           # 72 power armor pieces (imported)
+├── urls.txt                          # 257 weapon Wiki URLs (complete)
+├── armor_urls.txt                    # 18 armor Wiki URLs (complete)
+├── power_armor_urls.txt              # 12 power armor Wiki URLs (complete)
+├── legendary_perk_urls.txt           # 28 legendary perk Wiki URLs (complete)
 ├── IMPORT_GUIDE.md                   # Detailed import instructions
 ├── SCHEMA_DESIGN.md                  # Database design documentation
+├── SCRAPER_README.md                 # Web scraper documentation
 ├── TODO.md                           # Project roadmap and status
 └── CLAUDE.md                         # AI assistant guidance
 ```
@@ -274,13 +314,23 @@ python test_import_legendary_perks.py
 
 ## Future Plans
 
-- [ ] Scrape remaining ~250 weapons
-- [ ] Build armor and power armor scrapers
-- [ ] Implement weapon_perk_rules table (conditional perks)
-- [ ] Create RAG-optimized query views
-- [ ] Build LLM-powered build optimizer
-- [ ] Add damage calculator
-- [ ] Build simulator
+### Phase 1: Additional Build Components (Not Yet Started)
+- [ ] **Mutations** - Scraped and stored in database (e.g., Marsupial, Speed Demon, Bird Bones)
+- [ ] **Consumables** - Food, chems, drinks with stat buffs
+- [ ] **Legendary Effects/Mods** - Weapon and armor legendary modifications
+- [ ] **SPECIAL Stats** - Base stats and how they're modified by perks/gear
+- [ ] **Status Effects/Buffs** - Temporary effects from consumables, mutations, environment
+
+### Phase 2: Data Enhancement
+- [ ] Populate armor_perks and power_armor_perks junction tables
+- [ ] Implement weapon_perk_rules table (conditional perks: scoped, ADS, VATS, etc.)
+- [ ] Add damage formulas and calculation support
+
+### Phase 3: RAG System & Optimization
+- [ ] Build RAG-powered LLM query interface
+- [ ] Create build optimizer based on playstyle inputs
+- [ ] Add damage calculator with full perk/buff stacking
+- [ ] Build comparison and recommendation engine
 
 ## Contributing
 

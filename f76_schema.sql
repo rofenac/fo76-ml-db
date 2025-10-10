@@ -114,12 +114,12 @@ CREATE TABLE perks (
 CREATE TABLE perk_ranks (
   id INT AUTO_INCREMENT PRIMARY KEY,
   perk_id INT NOT NULL,
-  rank INT NOT NULL,                   -- 1, 2, 3, 4, etc.
+  `rank` INT NOT NULL,                   -- 1, 2, 3, 4, etc.
   description TEXT NOT NULL,           -- Rank-specific description with values
   form_id CHAR(8),                     -- Some ranks have form IDs, some don't
   CONSTRAINT fk_pr_perk FOREIGN KEY (perk_id) REFERENCES perks(id) ON DELETE CASCADE,
-  UNIQUE KEY uq_perk_rank (perk_id, rank),
-  INDEX idx_prank_rank (rank)
+  UNIQUE KEY uq_perk_rank (perk_id, `rank`),
+  INDEX idx_prank_rank (`rank`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================================
@@ -140,12 +140,12 @@ CREATE TABLE legendary_perks (
 CREATE TABLE legendary_perk_ranks (
   id INT AUTO_INCREMENT PRIMARY KEY,
   legendary_perk_id INT NOT NULL,
-  rank INT NOT NULL,                   -- 1, 2, 3, 4, etc.
+  `rank` INT NOT NULL,                   -- 1, 2, 3, 4, etc.
   description TEXT,                    -- Rank-specific description
   effect_value VARCHAR(128),           -- Parsed numeric value (e.g., "10" from "10% damage")
   effect_type VARCHAR(64),             -- "percentage", "flat", "duration", etc.
   CONSTRAINT fk_lpr_perk FOREIGN KEY (legendary_perk_id) REFERENCES legendary_perks(id) ON DELETE CASCADE,
-  UNIQUE KEY uq_legendary_perk_rank (legendary_perk_id, rank)
+  UNIQUE KEY uq_legendary_perk_rank (legendary_perk_id, `rank`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================================
@@ -309,12 +309,12 @@ SELECT
   p.special,
   p.level AS min_level,
   p.race,
-  pr.rank,
+  pr.`rank`,
   pr.description AS rank_description,
   pr.form_id
 FROM perks p
 LEFT JOIN perk_ranks pr ON p.id = pr.perk_id
-ORDER BY p.name, pr.rank;
+ORDER BY p.name, pr.`rank`;
 
 -- View: Legendary perks with all ranks
 CREATE OR REPLACE VIEW v_legendary_perks_all_ranks AS
@@ -323,10 +323,10 @@ SELECT
   lp.name AS perk_name,
   lp.description AS base_description,
   lp.race,
-  lpr.rank,
+  lpr.`rank`,
   lpr.description AS rank_description,
   lpr.effect_value,
   lpr.effect_type
 FROM legendary_perks lp
 LEFT JOIN legendary_perk_ranks lpr ON lp.id = lpr.legendary_perk_id
-ORDER BY lp.name, lpr.rank;
+ORDER BY lp.name, lpr.`rank`;

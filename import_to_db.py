@@ -113,7 +113,7 @@ class F76DatabaseImporter:
                 # Insert all ranks for this perk
                 for rank_data in data['ranks']:
                     self.cursor.execute(
-                        "INSERT INTO perk_ranks (perk_id, rank, description, form_id) VALUES (%s, %s, %s, %s)",
+                        "INSERT INTO perk_ranks (perk_id, `rank`, description, form_id) VALUES (%s, %s, %s, %s)",
                         (perk_id, rank_data['rank'], rank_data['description'], rank_data['form_id'])
                     )
                     ranks_inserted += 1
@@ -189,7 +189,7 @@ class F76DatabaseImporter:
                 for rank_data in data['ranks']:
                     self.cursor.execute(
                         """INSERT INTO legendary_perk_ranks
-                           (legendary_perk_id, rank, description, effect_value, effect_type)
+                           (legendary_perk_id, `rank`, description, effect_value, effect_type)
                            VALUES (%s, %s, %s, %s, %s)""",
                         (legendary_perk_id, rank_data['rank'], rank_data['description'],
                          rank_data['effect_value'], rank_data['effect_type'])

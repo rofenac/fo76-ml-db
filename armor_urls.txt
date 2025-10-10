@@ -1,0 +1,22 @@
+# Fallout 76 Armor URLs
+# Gathered from https://fallout.fandom.com/wiki/Fallout_76_armor
+# Total: 18 armor sets
+
+https://fallout.fandom.com/wiki/Arctic_marine_armor
+https://fallout.fandom.com/wiki/Botsmith_armor
+https://fallout.fandom.com/wiki/Brotherhood_recon_armor
+https://fallout.fandom.com/wiki/Civil_Engineer_armor
+https://fallout.fandom.com/wiki/Combat_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/Covert_scout_armor
+https://fallout.fandom.com/wiki/Forest_scout_armor
+https://fallout.fandom.com/wiki/Leather_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/Marine_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/Metal_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/Raider_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/Robot_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/Secret_Service_armor
+https://fallout.fandom.com/wiki/Solar_armor
+https://fallout.fandom.com/wiki/Thorn_armor
+https://fallout.fandom.com/wiki/Trapper_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/Urban_scout_armor
+https://fallout.fandom.com/wiki/Wood_armor

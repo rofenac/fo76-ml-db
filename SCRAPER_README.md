@@ -1,11 +1,20 @@
-# Fallout 76 Wiki Scraper
+# Fallout 76 Wiki Scrapers
 
-A robust Python scraper for extracting weapon data from Fallout Wiki pages.
+A comprehensive set of Python scrapers for extracting game data from Fallout Wiki pages.
 
-## Features
+## Overview
 
-- ✅ Extracts complete weapon information (name, type, class, level, damage, projectile, Form ID, Editor ID)
-- ✅ Intelligent perk extraction from infobox categories
+This project includes scrapers for:
+- **Weapons** (`scraper.py`) - 249 weapons scraped ✅
+- **Armor** (`armor_scraper.py`) - 18 armor sets scraped ✅
+- **Power Armor** (`power_armor_scraper.py`) - 72 power armor pieces scraped ✅
+- **Legendary Perks** (`legendary_perk_scraper.py`) - 28 legendary perks with all ranks scraped ✅
+
+## Common Features
+
+All scrapers share these features:
+- ✅ Extracts complete data from Wiki infoboxes
+- ✅ Intelligent perk extraction from categorized sections
 - ✅ Handles conditional perks (e.g., "scoped only", "pistol only", "sighted")
 - ✅ Validates perks against canonical list (Perks.csv)
 - ✅ Handles Expert/Master perk variants
@@ -26,22 +35,19 @@ playwright install
 
 ## Usage
 
-### Scrape a single weapon:
+### Weapon Scraper (`scraper.py`) ✅ COMPLETE
+
+**Scrape a single weapon:**
 ```bash
 python scraper.py -u "https://fallout.fandom.com/wiki/Laser_gun_(Fallout_76)" -o laser_gun.csv
 ```
 
-### Scrape multiple weapons from a file:
+**Scrape all weapons from file:**
 ```bash
-python scraper.py -f urls.txt -o weapons_output.csv
+python scraper.py -f urls.txt -o weapons_scraped.csv
 ```
 
-### Use Playwright for JavaScript-heavy pages:
-```bash
-python scraper.py -f urls.txt -o weapons_output.csv --playwright
-```
-
-### Command-line options:
+**Command-line options:**
 ```
 -u, --url         Single URL to scrape
 -f, --file        File with URLs (one per line) - default: urls.txt
@@ -49,6 +55,82 @@ python scraper.py -f urls.txt -o weapons_output.csv --playwright
 -p, --playwright  Use Playwright instead of requests
 --perks           Path to canonical perks CSV - default: Perks.csv
 ```
+
+**Status:** All 249 weapons scraped and imported to database.
+
+---
+
+### Armor Scraper (`armor_scraper.py`) ✅ COMPLETE
+
+**Scrape a single armor set:**
+```bash
+python armor_scraper.py -u "https://fallout.fandom.com/wiki/Combat_armor_(Fallout_76)" -o output.csv
+```
+
+**Scrape all armor sets from file:**
+```bash
+python armor_scraper.py -f armor_urls.txt -o armor_scraped.csv
+```
+
+**Command-line options:**
+```
+-u, --url         Single URL to scrape
+-f, --file        File with URLs - default: armor_urls.txt
+-o, --output      Output CSV file - default: armor_scraped.csv
+-p, --playwright  Use Playwright instead of requests
+--perks           Path to canonical perks CSV - default: Perks.csv
+```
+
+**Status:** All 18 armor sets scraped and imported to database.
+
+---
+
+### Power Armor Scraper (`power_armor_scraper.py`) ✅ COMPLETE
+
+**Scrape a single power armor set:**
+```bash
+python power_armor_scraper.py -u "https://fallout.fandom.com/wiki/T-45_power_armor_(Fallout_76)" -o output.csv
+```
+
+**Scrape all power armor sets from file:**
+```bash
+python power_armor_scraper.py -f power_armor_urls.txt -o power_armor_scraped.csv
+```
+
+**Command-line options:**
+```
+-u, --url         Single URL to scrape
+-f, --file        File with URLs - default: power_armor_urls.txt
+-o, --output      Output CSV file - default: power_armor_scraped.csv
+-p, --playwright  Use Playwright instead of requests
+--perks           Path to canonical perks CSV - default: Perks.csv
+```
+
+**Status:** All 72 power armor pieces scraped and imported (12 sets × 6 pieces each).
+
+---
+
+### Legendary Perk Scraper (`legendary_perk_scraper.py`) ✅ COMPLETE
+
+**Scrape a single legendary perk:**
+```bash
+python legendary_perk_scraper.py -u "https://fallout.fandom.com/wiki/Follow_Through" -o output.csv
+```
+
+**Scrape all legendary perks from file:**
+```bash
+python legendary_perk_scraper.py -f legendary_perk_urls.txt -o LegendaryPerks.csv
+```
+
+**Command-line options:**
+```
+-u, --url         Single URL to scrape
+-f, --file        File with URLs - default: legendary_perk_urls.txt
+-o, --output      Output CSV file - default: LegendaryPerks.csv
+-p, --playwright  Use Playwright instead of requests
+```
+
+**Status:** All 28 legendary perks scraped with all ranks (112 total rank entries).
 
 ## Input Format
 
@@ -64,6 +146,7 @@ https://fallout.fandom.com/wiki/Plasma_gun_(Fallout_76)
 
 ## Output Format
 
+### Weapon Scraper Output
 CSV with the following columns:
 - **Name**: Weapon name
 - **Type**: Weapon type (e.g., "Ranged")
@@ -75,6 +158,51 @@ CSV with the following columns:
 - **Form ID**: Game Form ID (8-digit hex)
 - **Editor ID**: Game Editor ID
 - **Source URL**: Wiki page URL
+
+### Armor Scraper Output
+CSV with the following columns:
+- **Name**: Armor piece name
+- **Type**: Armor type (e.g., "Light", "Sturdy", "Heavy", "Outfit")
+- **Slot**: Armor slot (e.g., "Chest", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "Helmet")
+- **Armor Rating**: Physical damage resistance
+- **Energy Resistance**: Energy damage resistance
+- **Radiation Resistance**: Radiation resistance
+- **Set Name**: Armor set name (for matching set bonuses)
+- **Level**: Level requirements
+- **Weight**: Item weight
+- **Value**: Item value (caps)
+- **Form ID**: Game Form ID (8-digit hex)
+- **Editor ID**: Game Editor ID
+- **Perks**: Semicolon-separated list of affecting perks
+- **Source URL**: Wiki page URL
+
+### Power Armor Scraper Output
+CSV with the following columns:
+- **Name**: Power armor piece name
+- **Type**: Piece type (e.g., "Frame", "Torso", "Helmet", "Left Arm", "Right Arm", "Left Leg", "Right Leg")
+- **Set Name**: Power armor set (e.g., "T-45", "T-51b", "T-60", "X-01", "Ultracite")
+- **Armor Rating**: Physical damage resistance
+- **Energy Resistance**: Energy damage resistance
+- **Radiation Resistance**: Radiation resistance
+- **Level**: Level requirements
+- **Weight**: Item weight
+- **Value**: Item value (caps)
+- **Durability**: Item durability/HP
+- **Fusion Core Drain**: AP drain rate (for frames)
+- **Form ID**: Game Form ID (8-digit hex)
+- **Editor ID**: Game Editor ID
+- **Perks**: Semicolon-separated list of affecting perks
+- **Source URL**: Wiki page URL
+
+### Legendary Perk Scraper Output
+CSV with the following columns:
+- **name**: Legendary perk name
+- **rank**: Perk rank (1-4)
+- **description**: Rank-specific description
+- **effect_value**: Parsed numeric value (e.g., "10" from "10% damage")
+- **effect_type**: Effect type (percentage, flat, value)
+- **form_id**: Game Form ID (8-digit hex)
+- **race**: Race classification (Human, Ghoul, or "Human, Ghoul")
 
 ## Perk Extraction
 
@@ -158,16 +286,44 @@ URL → Fetch HTML → Parse with BeautifulSoup → Extract Infobox →
 
 **Slow scraping**: Use requests (default) instead of Playwright when possible
 
+## Scraper Architecture
+
+### Common Components
+
+All scrapers share similar architecture:
+
+1. **Data Classes**: Structured data containers (`WeaponData`, `ArmorData`, `PowerArmorData`, `LegendaryPerkData`)
+2. **Scraper Classes**: Main scraping logic with modular methods
+3. **HTML Fetching**: Support for both requests (fast) and Playwright (JavaScript-heavy pages)
+4. **Infobox Parsing**: Extract structured data from Wiki infoboxes
+5. **Perk Extraction**: Intelligent perk parsing with validation
+6. **CSV Export**: Write to CSV with proper formatting
+
+### Workflow
+```
+URL → Fetch HTML → Parse with BeautifulSoup → Extract Infobox →
+→ Extract Stats → Extract Perks → Parse Conditions →
+→ Validate Against Canonical List → Format Output → Save to CSV
+```
+
 ## Future Enhancements
 
-Potential improvements:
-- [ ] Scrape weapon modifications
-- [ ] Extract legendary effects
-- [ ] Scrape armor data
+### Potential Improvements
+- [ ] Scrape weapon modifications (receivers, barrels, stocks, sights)
+- [ ] Extract legendary weapon/armor effects
+- [ ] Scrape mutations
+- [ ] Scrape consumables (food, chems, drinks)
 - [ ] Add retry logic for failed requests
 - [ ] Parallel scraping with rate limiting
 - [ ] Export to JSON format option
-- [ ] Database import script
+- [ ] Real-time progress bars
+
+### Completed Enhancements
+- [x] Weapon scraper - 249 weapons scraped
+- [x] Armor scraper - 18 armor sets scraped
+- [x] Power armor scraper - 72 power armor pieces scraped
+- [x] Legendary perk scraper - 28 legendary perks with all ranks scraped
+- [x] Database import scripts for all data types
 
 ## License
 

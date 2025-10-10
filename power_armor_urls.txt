@@ -1,0 +1,16 @@
+# Fallout 76 Power Armor URLs
+# Gathered from https://fallout.fandom.com/wiki/Fallout_76_power_armor
+# Total: 12 power armor sets
+
+https://fallout.fandom.com/wiki/Excavator_power_armor
+https://fallout.fandom.com/wiki/Raider_power_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/T-45_power_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/T-51b_power_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/T-60_power_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/Ultracite_power_armor
+https://fallout.fandom.com/wiki/X-01_power_armor_(Fallout_76)
+https://fallout.fandom.com/wiki/T-65_power_armor
+https://fallout.fandom.com/wiki/Hellcat_power_armor
+https://fallout.fandom.com/wiki/Strangler_heart_power_armor
+https://fallout.fandom.com/wiki/Union_power_armor
+https://fallout.fandom.com/wiki/Vulcan_power_armor
