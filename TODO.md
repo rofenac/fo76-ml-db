@@ -1,6 +1,6 @@
 # Project TODO List
 
-## Current Status (Last Updated: 2025-10-09)
+## Current Status (Last Updated: 2025-10-10)
 
 ### ✅ Phase 1: Core Data Collection - COMPLETE
 
@@ -8,13 +8,14 @@
 - ✅ 249 weapons fully scraped and imported
 - ✅ All weapon-perk relationships established (1,689 links)
 
-**Armor:**
-- ✅ 18 armor sets fully scraped and imported
-- ⏳ Armor-perk junction tables ready but unpopulated
-
-**Power Armor:**
-- ✅ 72 power armor pieces fully scraped and imported (12 sets × 6 pieces each)
-- ⏳ Power armor-perk junction tables ready but unpopulated
+**Armor (Unified Regular + Power Armor):**
+- ✅ 477 armor pieces fully imported (291 regular + 186 power armor)
+  - 18 regular armor sets × multiple levels × pieces
+  - 12 power armor sets × multiple levels × 6 pieces each
+  - Level-specific data: one row per piece per level
+- ✅ Unified schema: power armor merged into `armor` table with `armor_type` ENUM
+- ✅ Armor perks are universal (no junction tables needed)
+- ⏳ Vulcan Power Armor awaiting per-piece stat data from wiki
 
 **Regular Perks:**
 - ✅ 240 unique perks imported
@@ -35,13 +36,20 @@
 
 **Scrapers:**
 - ✅ `scraper.py` - Weapon scraper (complete)
-- ✅ `armor_scraper.py` - Armor scraper (complete)
+- ✅ `armor_scraper.py` - Armor scraper (updated for piece-level extraction)
 - ✅ `power_armor_scraper.py` - Power armor scraper (complete)
 - ✅ `legendary_perk_scraper.py` - Legendary perk scraper (complete)
+
+**Data Collection:**
+- ✅ Manual collection of 477 armor pieces completed (with ChatGPT assistance)
+- ✅ All level variants documented for both regular and power armor
 
 ---
 
 ## Phase 2: Additional Build Components
+
+### 🔧 Immediate Tasks
+- [ ] Add Vulcan Power Armor when per-piece stat data becomes available from wiki
 
 ### 🔍 Research & Evaluation Phase
 
@@ -118,18 +126,11 @@ The following build components need to be researched, evaluated, and potentially
 
 ## Phase 3: Data Enhancement
 
-### Junction Table Population
-- [ ] Parse armor perks from `armor_scraped.csv` `Perks` column
-- [ ] Populate `armor_perks` junction table
-- [ ] Parse power armor perks from `power_armor_scraped.csv` `Perks` column
-- [ ] Populate `power_armor_perks` junction table
-
 ### Conditional Perk Rules
 - [ ] Implement `weapon_perk_rules` table population:
   - Parse conditional modifiers from weapon perk data
   - Store rules like "scoped only", "pistol configuration", "ADS only", "in VATS"
   - Link specific weapon-perk combinations with conditions
-- [ ] Create similar tables for armor and power armor if needed
 
 ### Damage Formulas
 - [ ] Research Fallout 76 damage calculation formulas
@@ -189,8 +190,10 @@ The following build components need to be researched, evaluated, and potentially
 - [ ] Test RAG retrieval accuracy
 
 ### Documentation
+- [x] Update CLAUDE.md with unified armor architecture
+- [x] Update README.md with unified armor schema
+- [x] Update TODO.md with completed tasks
 - [ ] Complete SCRAPER_README.md with armor/PA scraper docs
-- [ ] Update CLAUDE.md with current architecture
 - [ ] Document all database views and their use cases
 - [ ] Create user guide for querying the database
 
@@ -216,8 +219,10 @@ The following build components need to be researched, evaluated, and potentially
 - [x] Build power armor scraper
 - [x] Scrape all 18 armor sets
 - [x] Scrape all 12 power armor sets (72 pieces total)
-- [x] Import armor data to database
-- [x] Import power armor data to database
+- [x] Manually collect 477 armor pieces with level-specific data (with ChatGPT assistance)
+- [x] Merge power armor into unified `armor` table with `armor_type` ENUM
+- [x] Remove armor perk junction tables (armor perks are universal)
+- [x] Import unified armor data to database (291 regular + 186 power armor)
 
 ### ✅ Weapon Data Collection
 - [x] Gather 257 weapon URLs from Fallout Wiki
@@ -244,8 +249,10 @@ The following build components need to be researched, evaluated, and potentially
 
 ### Current Database Summary
 - **Weapons:** 249
-- **Armor:** 18
-- **Power Armor:** 72 (12 sets × 6 pieces)
+- **Armor (unified):** 477 (291 regular + 186 power armor)
+  - 18 regular armor sets × multiple levels × pieces
+  - 12 power armor sets × multiple levels × 6 pieces each
+  - One row per piece per level for accurate stat tracking
 - **Regular Perks:** 240 (449 total ranks)
 - **Legendary Perks:** 28 (112 total ranks)
 - **Weapon-Perk Links:** 1,689

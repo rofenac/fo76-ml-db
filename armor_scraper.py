@@ -30,18 +30,16 @@ logger = logging.getLogger(__name__)
 class ArmorData:
     """Structured armor data matching database schema"""
     name: str
-    type: str = ""  # Light, Sturdy, Heavy, Outfit, etc.
-    slot: str = ""  # Chest, Left Arm, Right Arm, Left Leg, Right Leg, Helmet
-    armor_rating: str = ""
+    class_type: str = ""  # Light, Sturdy, Heavy, Outfit, Underarmor, etc.
+    slot: str = ""  # Chest, Left Arm, Right Arm, Left Leg, Right Leg, Helmet/Mask
+    damage_resistance: str = ""
     energy_resistance: str = ""
     radiation_resistance: str = ""
+    cryo_resistance: str = ""
+    fire_resistance: str = ""
+    poison_resistance: str = ""
     set_name: str = ""  # Armor set name
     level: str = ""
-    weight: str = ""
-    value: str = ""
-    form_id: str = ""
-    editor_id: str = ""
-    perks_raw: str = ""
     source_url: str = ""
 
     def to_csv_dict(self) -> Dict[str, str]:
@@ -49,18 +47,16 @@ class ArmorData:
         data = asdict(self)
         csv_data = {
             'Name': data['name'],
-            'Type': data['type'],
+            'Class': data['class_type'],
             'Slot': data['slot'],
-            'Armor Rating': data['armor_rating'],
+            'Damage Resistance': data['damage_resistance'],
             'Energy Resistance': data['energy_resistance'],
             'Radiation Resistance': data['radiation_resistance'],
+            'Cryo Resistance': data['cryo_resistance'],
+            'Fire Resistance': data['fire_resistance'],
+            'Poison Resistance': data['poison_resistance'],
             'Set Name': data['set_name'],
             'Level': data['level'],
-            'Weight': data['weight'],
-            'Value': data['value'],
-            'Form ID': data['form_id'],
-            'Editor ID': data['editor_id'],
-            'Perks': data['perks_raw'],
             'Source URL': data['source_url']
         }
         return csv_data
@@ -170,80 +166,108 @@ class FalloutArmorScraper:
         """Extract individual armor pieces from the page"""
         pieces = []
 
-        # Find the infobox
-        infobox = soup.find('aside', class_='portable-infobox') or soup.find('table', class_='infobox')
+        # Extract piece-by-piece data from tables
+        piece_data = self._extract_pieces_from_tables(soup)
 
-        if not infobox:
-            logger.warning(f"No infobox found for {set_name}")
-            return pieces
-
-        # Extract common data from infobox
-        infobox_data = self._extract_infobox(infobox)
-
-        # Extract perks
-        perks_list = self._extract_perks(soup)
-        perks_str = self._format_perks(perks_list)
-
-        # Determine armor type from variants or description
-        armor_type = infobox_data.get('type', '')
-
-        # For armor sets with multiple pieces, create entries for each slot
-        # Common slots: Chest, Helmet, Left Arm, Right Arm, Left Leg, Right Leg
-        slots = ['Chest', 'Helmet', 'Left Arm', 'Right Arm', 'Left Leg', 'Right Leg']
-
-        # If we have specific data for individual pieces, use it
-        # Otherwise, create a single entry for the armor set
-        if infobox_data.get('has_multiple_pieces'):
-            for slot in slots:
+        if piece_data:
+            for piece_info in piece_data:
                 piece = ArmorData(
-                    name=f"{set_name} {slot.lower()}",
-                    type=armor_type,
-                    slot=slot,
-                    armor_rating=infobox_data.get('armor_rating', ''),
-                    energy_resistance=infobox_data.get('energy_resistance', ''),
-                    radiation_resistance=infobox_data.get('radiation_resistance', ''),
+                    name=f"{set_name} {piece_info.get('slot', '')}".strip(),
+                    class_type=piece_info.get('class', ''),
+                    slot=piece_info.get('slot', ''),
+                    damage_resistance=piece_info.get('damage_resistance', ''),
+                    energy_resistance=piece_info.get('energy_resistance', ''),
+                    radiation_resistance=piece_info.get('radiation_resistance', ''),
+                    cryo_resistance=piece_info.get('cryo_resistance', ''),
+                    fire_resistance=piece_info.get('fire_resistance', ''),
+                    poison_resistance=piece_info.get('poison_resistance', ''),
                     set_name=set_name,
-                    level=infobox_data.get('level', ''),
-                    weight=infobox_data.get('weight', ''),
-                    value=infobox_data.get('value', ''),
-                    form_id=infobox_data.get('form_id', ''),
-                    editor_id=infobox_data.get('editor_id', ''),
-                    perks_raw=perks_str,
+                    level=piece_info.get('level', ''),
                     source_url=url
                 )
                 pieces.append(piece)
+            logger.info(f"Extracted {len(pieces)} individual armor pieces from tables")
         else:
-            # Single piece or full set entry
-            piece = ArmorData(
-                name=set_name,
-                type=armor_type,
-                slot=infobox_data.get('slot', ''),
-                armor_rating=infobox_data.get('armor_rating', ''),
-                energy_resistance=infobox_data.get('energy_resistance', ''),
-                radiation_resistance=infobox_data.get('radiation_resistance', ''),
-                set_name=set_name,
-                level=infobox_data.get('level', ''),
-                weight=infobox_data.get('weight', ''),
-                value=infobox_data.get('value', ''),
-                form_id=infobox_data.get('form_id', ''),
-                editor_id=infobox_data.get('editor_id', ''),
-                perks_raw=perks_str,
-                source_url=url
-            )
-            pieces.append(piece)
+            # Fallback: Try infobox extraction (old method for sets without piece tables)
+            infobox = soup.find('aside', class_='portable-infobox') or soup.find('table', class_='infobox')
+            if infobox:
+                infobox_data = self._extract_infobox(infobox, soup)
+                variants = infobox_data.get('variants', [])
+
+                if variants:
+                    for variant in variants:
+                        piece = ArmorData(
+                            name=f"{set_name}",
+                            class_type=variant.get('class', ''),
+                            slot="",  # No slot info available
+                            damage_resistance=variant.get('damage_resistance', ''),
+                            energy_resistance=variant.get('energy_resistance', ''),
+                            radiation_resistance=variant.get('radiation_resistance', ''),
+                            set_name=set_name,
+                            level=infobox_data.get('level', ''),
+                            source_url=url
+                        )
+                        pieces.append(piece)
+                logger.warning(f"No piece-level data found for {set_name}, using fallback extraction")
 
         return pieces
 
-    def _extract_infobox(self, infobox: BeautifulSoup) -> Dict[str, str]:
+    def _extract_infobox(self, infobox: BeautifulSoup, soup: BeautifulSoup) -> Dict[str, any]:
         """Extract data from the armor infobox"""
         data = {}
 
-        # Extract data rows
-        rows = infobox.find_all(['tr', 'div'], class_=lambda x: x and ('pi-data' in x or 'infobox-data' in x))
+        # Extract resistance data from horizontal groups (icons + values)
+        horiz_groups = infobox.find_all('table', class_='pi-horizontal-group')
 
-        for row in rows:
-            label_elem = row.find(['th', 'h3'], class_=lambda x: x and ('pi-data-label' in x or 'infobox-label' in x))
-            value_elem = row.find(['td', 'div'], class_=lambda x: x and ('pi-data-value' in x or 'infobox-data' in x))
+        for group in horiz_groups:
+            rows = group.find_all('tr')
+            if len(rows) < 2:
+                continue
+
+            # First row has icons/labels, second row has values
+            label_row = rows[0]
+            value_row = rows[1]
+
+            label_cells = label_row.find_all(['th', 'td'])
+            value_cells = value_row.find_all(['th', 'td'])
+
+            if len(label_cells) != len(value_cells):
+                continue
+
+            for label_cell, value_cell in zip(label_cells, value_cells):
+                # Check for image alt text (resistance icons)
+                img = label_cell.find('img')
+                if img:
+                    alt_text = img.get('alt', '').lower()
+                    value = value_cell.get_text(strip=True)
+
+                    if 'physical' in alt_text or 'damage' in alt_text:
+                        data['damage_resistance'] = value
+                    elif 'energy' in alt_text:
+                        data['energy_resistance'] = value
+                    elif 'radiation' in alt_text:
+                        data['radiation_resistance'] = value
+                    elif 'cryo' in alt_text:
+                        data['cryo_resistance'] = value
+                    elif 'fire' in alt_text:
+                        data['fire_resistance'] = value
+                    elif 'poison' in alt_text:
+                        data['poison_resistance'] = value
+
+                # Check for text labels (Class, Value, Weight, etc.)
+                else:
+                    label = label_cell.get_text(strip=True).lower()
+                    value = value_cell.get_text(strip=True)
+
+                    if 'class' in label or 'variant' in label or 'type' in label:
+                        data['class'] = value
+
+        # Extract other data from labeled rows
+        pi_items = infobox.find_all('div', class_='pi-item')
+
+        for item in pi_items:
+            label_elem = item.find('h3', class_='pi-data-label')
+            value_elem = item.find('div', class_='pi-data-value')
 
             if not label_elem or not value_elem:
                 continue
@@ -251,93 +275,188 @@ class FalloutArmorScraper:
             label = label_elem.get_text(strip=True).lower()
             value = value_elem.get_text(strip=True)
 
-            # Map labels to data fields
-            if 'type' in label or 'variant' in label:
-                data['type'] = value
-            elif 'armor' in label and 'rating' in label:
-                data['armor_rating'] = value
-            elif 'dr' in label or 'physical' in label:
-                data['armor_rating'] = value
-            elif 'energy' in label and 'resistance' in label:
-                data['energy_resistance'] = value
-            elif 'er' in label:
-                data['energy_resistance'] = value
-            elif 'radiation' in label and 'resistance' in label:
-                data['radiation_resistance'] = value
-            elif 'rr' in label:
-                data['radiation_resistance'] = value
-            elif 'level' in label:
+            if 'level' in label:
                 data['level'] = value
-            elif 'weight' in label:
-                data['weight'] = value
-            elif 'value' in label:
-                data['value'] = value
-            elif 'form id' in label:
-                form_id = re.search(r'([0-9A-Fa-f]{8})', value)
-                if form_id:
-                    data['form_id'] = form_id.group(1).upper()
-            elif 'editor id' in label or 'base id' in label:
-                editor_id = value.strip('"').strip("'")
-                data['editor_id'] = editor_id
-            elif 'slot' in label or 'piece' in label:
-                data['slot'] = value
 
-        # Check if this is a multi-piece armor set
-        if 'chest' in data.get('slot', '').lower() or 'torso' in data.get('slot', '').lower():
-            data['has_multiple_pieces'] = True
+        # Check for variants table (Light, Sturdy, Heavy)
+        variants = self._extract_variants_from_tables(soup)
+        if variants:
+            data['variants'] = variants
 
         return data
 
-    def _extract_perks(self, soup: BeautifulSoup) -> List[Dict[str, any]]:
-        """Extract perks that affect this armor"""
-        perks = []
+    def _extract_pieces_from_tables(self, soup: BeautifulSoup) -> List[Dict[str, str]]:
+        """Extract individual armor pieces from data tables"""
+        pieces = []
 
-        # Find the infobox
-        infobox = soup.find('aside', class_='portable-infobox') or soup.find('table', class_='infobox')
+        # Look for tables with piece-by-piece stats
+        tables = soup.find_all('table', class_=lambda x: x and ('va-table' in x or 'wikitable' in x or 'article-table' in x))
 
-        if infobox:
-            # Look for perk categories in infobox
-            perk_categories = ['Weight', 'Protection', 'Defense', 'Perks', 'Other']
+        for table in tables:
+            # Get headers
+            headers = []
+            header_row = table.find('tr')
+            if header_row:
+                for th in header_row.find_all(['th', 'td']):
+                    headers.append(th.get_text(strip=True).lower())
 
-            for category in perk_categories:
-                h3_elements = infobox.find_all('h3', string=lambda x: x and x.strip() == category)
+            # Skip if this doesn't look like a piece table
+            # Check for either explicit piece indicators OR "name" + resistance columns
+            has_name = 'name' in headers
+            has_resistance = any(keyword in ' '.join(headers) for keyword in ['physical', 'energy', 'dr', 'er', 'resistance'])
 
-                for h3 in h3_elements:
-                    parent = h3.find_parent('div', class_='pi-item')
-                    if not parent:
-                        continue
+            if not (has_name and has_resistance):
+                continue
 
-                    value_div = parent.find('div', class_='pi-data-value')
-                    if not value_div:
-                        continue
+            # Find column indices
+            piece_col = slot_col = level_col = class_col = None
+            dr_col = er_col = rr_col = cryo_col = fire_col = poison_col = None
 
-                    links = value_div.find_all('a')
-                    for link in links:
-                        perk_name = link.get_text(strip=True)
-                        if perk_name and self._is_valid_perk(perk_name):
-                            perks.append({'name': perk_name, 'condition': None})
+            for i, header in enumerate(headers):
+                h_lower = header.lower()
+                if 'piece' in h_lower or 'slot' in h_lower or 'armor piece' in h_lower or h_lower == 'name':
+                    piece_col = i
+                elif 'level' in h_lower or 'lvl' in h_lower:
+                    level_col = i
+                elif 'class' in h_lower or 'variant' in h_lower or 'weight class' in h_lower:
+                    class_col = i
+                elif 'physical' in h_lower or ('dr' in h_lower and 'durability' not in h_lower):
+                    dr_col = i
+                elif 'energy' in h_lower or 'er' in h_lower:
+                    er_col = i
+                elif 'radiation' in h_lower or 'rr' in h_lower:
+                    rr_col = i
+                elif 'cryo' in h_lower:
+                    cryo_col = i
+                elif 'fire' in h_lower:
+                    fire_col = i
+                elif 'poison' in h_lower:
+                    poison_col = i
 
-        return perks
+            # Extract data rows
+            for row in table.find_all('tr')[1:]:  # Skip header
+                cells = row.find_all(['td', 'th'])
+                if len(cells) < 2:
+                    continue
 
-    def _is_valid_perk(self, perk_name: str) -> bool:
-        """Check if perk name exists in canonical list"""
-        if not self.canonical_perks:
-            return True
+                piece_data = {}
 
-        perk_clean = perk_name.strip()
-        if perk_clean in self.canonical_perks:
-            return True
+                # Extract slot/piece name
+                if piece_col is not None and piece_col < len(cells):
+                    slot_text = cells[piece_col].get_text(strip=True)
+                    piece_data['slot'] = self._normalize_slot_name(slot_text)
 
-        perk_clean = re.sub(r'\s+(only|bonus)$', '', perk_clean, flags=re.IGNORECASE)
-        return perk_clean in self.canonical_perks
+                # If no piece column, try to infer from first cell
+                if not piece_data.get('slot') and len(cells) > 0:
+                    first_cell = cells[0].get_text(strip=True)
+                    if any(part in first_cell.lower() for part in ['chest', 'arm', 'leg', 'helmet', 'mask']):
+                        piece_data['slot'] = self._normalize_slot_name(first_cell)
 
-    def _format_perks(self, perks_list: List[Dict[str, any]]) -> str:
-        """Format perks list to semicolon-separated string"""
-        if not perks_list:
-            return ""
+                # Skip if we couldn't determine the slot
+                if not piece_data.get('slot'):
+                    continue
 
-        perk_names = [p['name'] for p in perks_list]
-        return "; ".join(perk_names)
+                # Extract other data
+                if level_col is not None and level_col < len(cells):
+                    piece_data['level'] = cells[level_col].get_text(strip=True)
+                if class_col is not None and class_col < len(cells):
+                    piece_data['class'] = cells[class_col].get_text(strip=True)
+                if dr_col is not None and dr_col < len(cells):
+                    piece_data['damage_resistance'] = cells[dr_col].get_text(strip=True)
+                if er_col is not None and er_col < len(cells):
+                    piece_data['energy_resistance'] = cells[er_col].get_text(strip=True)
+                if rr_col is not None and rr_col < len(cells):
+                    piece_data['radiation_resistance'] = cells[rr_col].get_text(strip=True)
+                if cryo_col is not None and cryo_col < len(cells):
+                    piece_data['cryo_resistance'] = cells[cryo_col].get_text(strip=True)
+                if fire_col is not None and fire_col < len(cells):
+                    piece_data['fire_resistance'] = cells[fire_col].get_text(strip=True)
+                if poison_col is not None and poison_col < len(cells):
+                    piece_data['poison_resistance'] = cells[poison_col].get_text(strip=True)
+
+                pieces.append(piece_data)
+
+        return pieces
+
+    def _normalize_slot_name(self, slot_text: str) -> str:
+        """Normalize slot names to standard format"""
+        slot_lower = slot_text.lower()
+
+        if 'chest' in slot_lower or 'torso' in slot_lower:
+            return "Chest"
+        elif 'left arm' in slot_lower:
+            return "Left Arm"
+        elif 'right arm' in slot_lower:
+            return "Right Arm"
+        elif 'left leg' in slot_lower:
+            return "Left Leg"
+        elif 'right leg' in slot_lower:
+            return "Right Leg"
+        elif 'helmet' in slot_lower or 'mask' in slot_lower or 'head' in slot_lower:
+            return "Helmet"
+        else:
+            return slot_text  # Return as-is if we can't identify
+
+    def _extract_variants_from_tables(self, soup: BeautifulSoup) -> List[Dict[str, str]]:
+        """Extract armor variants (Light, Sturdy, Heavy) from data tables - deprecated, kept for fallback"""
+        variants = []
+
+        tables = soup.find_all('table', class_=lambda x: x and ('va-table' in x or 'wikitable' in x or 'article-table' in x))
+
+        for table in tables:
+            headers = []
+            header_row = table.find('tr')
+            if header_row:
+                for th in header_row.find_all(['th', 'td']):
+                    headers.append(th.get_text(strip=True).lower())
+
+            if not any(keyword in ' '.join(headers) for keyword in ['variant', 'type', 'dr', 'damage', 'resistance']):
+                continue
+
+            variant_col = dr_col = er_col = rr_col = cryo_col = fire_col = poison_col = None
+
+            for i, header in enumerate(headers):
+                if 'variant' in header or 'type' in header or 'class' in header:
+                    variant_col = i
+                elif 'dr' in header or 'damage' in header:
+                    dr_col = i
+                elif 'er' in header or 'energy' in header:
+                    er_col = i
+                elif 'rr' in header or 'radiation' in header:
+                    rr_col = i
+                elif 'cryo' in header:
+                    cryo_col = i
+                elif 'fire' in header:
+                    fire_col = i
+                elif 'poison' in header:
+                    poison_col = i
+
+            for row in table.find_all('tr')[1:]:
+                cells = row.find_all(['td', 'th'])
+                if len(cells) < 2:
+                    continue
+
+                variant_data = {}
+
+                if variant_col is not None and variant_col < len(cells):
+                    variant_data['class'] = cells[variant_col].get_text(strip=True)
+                if dr_col is not None and dr_col < len(cells):
+                    variant_data['damage_resistance'] = cells[dr_col].get_text(strip=True)
+                if er_col is not None and er_col < len(cells):
+                    variant_data['energy_resistance'] = cells[er_col].get_text(strip=True)
+                if rr_col is not None and rr_col < len(cells):
+                    variant_data['radiation_resistance'] = cells[rr_col].get_text(strip=True)
+                if cryo_col is not None and cryo_col < len(cells):
+                    variant_data['cryo_resistance'] = cells[cryo_col].get_text(strip=True)
+                if fire_col is not None and fire_col < len(cells):
+                    variant_data['fire_resistance'] = cells[fire_col].get_text(strip=True)
+                if poison_col is not None and poison_col < len(cells):
+                    variant_data['poison_resistance'] = cells[poison_col].get_text(strip=True)
+
+                if variant_data.get('class'):
+                    variants.append(variant_data)
+
+        return variants
 
     def scrape_urls_from_file(self, urls_file: str, output_csv: str, use_playwright: bool = False):
         """Scrape multiple armor URLs and save to CSV"""
@@ -363,9 +482,9 @@ class FalloutArmorScraper:
 
     def _save_to_csv(self, armor_pieces: List[ArmorData], output_file: str):
         """Save armor data to CSV"""
-        fieldnames = ['Name', 'Type', 'Slot', 'Armor Rating', 'Energy Resistance',
-                     'Radiation Resistance', 'Set Name', 'Level', 'Weight', 'Value',
-                     'Form ID', 'Editor ID', 'Perks', 'Source URL']
+        fieldnames = ['Name', 'Class', 'Slot', 'Damage Resistance', 'Energy Resistance',
+                     'Radiation Resistance', 'Cryo Resistance', 'Fire Resistance',
+                     'Poison Resistance', 'Set Name', 'Level', 'Source URL']
 
         with open(output_file, 'w', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)

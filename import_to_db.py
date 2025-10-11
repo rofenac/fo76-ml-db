@@ -376,8 +376,6 @@ class F76DatabaseImporter:
                     'level': row.get('Level', '').strip() or None,
                     'damage': row.get('Damage', '').strip() or None,
                     'projectile': row.get('Projectile', '').strip() or None,
-                    'form_id': row.get('Form ID', '').strip() or None,
-                    'editor_id': row.get('Editor ID', '').strip() or None,
                     'perks_raw': row.get('Perks', '').strip() or None,
                     'source_url': row.get('Source URL', '').strip() or None,
                 }
@@ -386,17 +384,15 @@ class F76DatabaseImporter:
                     # Insert or update weapon
                     self.cursor.execute("""
                         INSERT INTO weapons (name, type, class, level, damage, projectile,
-                                            form_id, editor_id, perks_raw, source_url)
+                                            perks_raw, source_url)
                         VALUES (%(name)s, %(type)s, %(class)s, %(level)s, %(damage)s, %(projectile)s,
-                                %(form_id)s, %(editor_id)s, %(perks_raw)s, %(source_url)s)
+                                %(perks_raw)s, %(source_url)s)
                         ON DUPLICATE KEY UPDATE
                             type = VALUES(type),
                             class = VALUES(class),
                             level = VALUES(level),
                             damage = VALUES(damage),
                             projectile = VALUES(projectile),
-                            form_id = VALUES(form_id),
-                            editor_id = VALUES(editor_id),
                             perks_raw = VALUES(perks_raw),
                             source_url = VALUES(source_url)
                     """, weapon_data)

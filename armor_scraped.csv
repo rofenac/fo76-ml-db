@@ -1,19 +1,19 @@
-Name,Type,Slot,Armor Rating,Energy Resistance,Radiation Resistance,Set Name,Level,Weight,Value,Form ID,Editor ID,Perks,Source URL
-Arctic marine armor,,,,,,Arctic marine armor,35 / 45 / 50,,,,,,https://fallout.fandom.com/wiki/Arctic_marine_armor
-Botsmith armor,,,,,,Botsmith armor,50 / 40 / 30 / 20,,,,,,https://fallout.fandom.com/wiki/Botsmith_armor
-Brotherhood recon armor,,,,,,Brotherhood recon armor,50 / 40,,,,,,https://fallout.fandom.com/wiki/Brotherhood_recon_armor
-Civil Engineer armor,,,,,,Civil Engineer armor,50,,,,,,https://fallout.fandom.com/wiki/Civil_Engineer_armor
-Combat armor,,,,,,Combat armor,50 / 40 / 30 / 20,,,,,,https://fallout.fandom.com/wiki/Combat_armor_(Fallout_76)
-Covert scout armor,,,,,,Covert scout armor,40 / 50,,,,,,https://fallout.fandom.com/wiki/Covert_scout_armor
-Forest scout armor,,,,,,Forest scout armor,40 / 50,,,,,,https://fallout.fandom.com/wiki/Forest_scout_armor
-Leather armor,,,,,,Leather armor,1 / 5 / 10 / 20 / 30 / 40 / 50,,,,,,https://fallout.fandom.com/wiki/Leather_armor_(Fallout_76)
-Marine armor,,,,,,Marine armor,35 / 45,,,,,,https://fallout.fandom.com/wiki/Marine_armor_(Fallout_76)
-Metal armor,,,,,,Metal armor,10 / 20 / 30 / 40 / 50,,,,,,https://fallout.fandom.com/wiki/Metal_armor_(Fallout_76)
-Raider armor,,,,,,Raider armor,5 / 15 / 25 / 35 / 45,,,,,,https://fallout.fandom.com/wiki/Raider_armor_(Fallout_76)
-Robot armor,,,,,,Robot armor,10 / 20 / 30 / 40 / 50,,,,,,https://fallout.fandom.com/wiki/Robot_armor_(Fallout_76)
-Secret Service armor,,,,,,Secret Service armor,40 / 50,,,,,,https://fallout.fandom.com/wiki/Secret_Service_armor
-Solar armor,,,,,,Solar armor,40 / 50,,,,,,https://fallout.fandom.com/wiki/Solar_armor
-Thorn armor,,,,,,Thorn armor,40 / 50,,,,,,https://fallout.fandom.com/wiki/Thorn_armor
-Trapper armor,,,,,,Trapper armor,15 / 25 / 35 / 45,,,,,,https://fallout.fandom.com/wiki/Trapper_armor_(Fallout_76)
-Urban scout armor,,,,,,Urban scout armor,40 / 50,,,,,,https://fallout.fandom.com/wiki/Urban_scout_armor
-Wood armor,,,,,,Wood armor,1 / 5 / 15 / 25 / 35 / 45,,,,,,https://fallout.fandom.com/wiki/Wood_armor
+Name,Class,Damage Resistance,Energy Resistance,Radiation Resistance,Cryo Resistance,Fire Resistance,Poison Resistance,Set Name,Level,Source URL
+Arctic marine armor,Sturdy,175,104,35,52,,,Arctic marine armor,35 / 45 / 50,https://fallout.fandom.com/wiki/Arctic_marine_armor
+Botsmith armor,Heavy,235,110,110,,,,Botsmith armor,50 / 40 / 30 / 20,https://fallout.fandom.com/wiki/Botsmith_armor
+Brotherhood recon armor,Heavy,300,160,160,,,,Brotherhood recon armor,50 / 40,https://fallout.fandom.com/wiki/Brotherhood_recon_armor
+Civil Engineer armor,Sturdy,144,287,181,,,,Civil Engineer armor,50,https://fallout.fandom.com/wiki/Civil_Engineer_armor
+Combat armor,Light,84,84,,,,,Combat armor,50 / 40 / 30 / 20,https://fallout.fandom.com/wiki/Combat_armor_(Fallout_76)
+Covert scout armor,Light,160,170,50,,,,Covert scout armor,40 / 50,https://fallout.fandom.com/wiki/Covert_scout_armor
+Forest scout armor,Light,160,120,,,,,Forest scout armor,40 / 50,https://fallout.fandom.com/wiki/Forest_scout_armor
+Leather armor,Light,60,129,,,,,Leather armor,1 / 5 / 10 / 20 / 30 / 40 / 50,https://fallout.fandom.com/wiki/Leather_armor_(Fallout_76)
+Marine armor,Sturdy,122,75,19,,,,Marine armor,35 / 45,https://fallout.fandom.com/wiki/Marine_armor_(Fallout_76)
+Metal armor,Light,131,31,,,,,Metal armor,10 / 20 / 30 / 40 / 50,https://fallout.fandom.com/wiki/Metal_armor_(Fallout_76)
+Raider armor,Light,110,47,,,,,Raider armor,5 / 15 / 25 / 35 / 45,https://fallout.fandom.com/wiki/Raider_armor_(Fallout_76)
+Robot armor,Light,64,64,53,,,,Robot armor,10 / 20 / 30 / 40 / 50,https://fallout.fandom.com/wiki/Robot_armor_(Fallout_76)
+Secret Service armor,Heavy,250,220,220,,,,Secret Service armor,40 / 50,https://fallout.fandom.com/wiki/Secret_Service_armor
+Solar armor,Light,160,120,,,,,Solar armor,40 / 50,https://fallout.fandom.com/wiki/Solar_armor
+Thorn armor,Light,160,120,,,,,Thorn armor,40 / 50,https://fallout.fandom.com/wiki/Thorn_armor
+Trapper armor,Sturdy,91,54,91,,,,Trapper armor,15 / 25 / 35 / 45,https://fallout.fandom.com/wiki/Trapper_armor_(Fallout_76)
+Urban scout armor,Light,160,120,,,,,Urban scout armor,40 / 50,https://fallout.fandom.com/wiki/Urban_scout_armor
+Wood armor,Light,133,33,,,,,Wood armor,1 / 5 / 15 / 25 / 35 / 45,https://fallout.fandom.com/wiki/Wood_armor

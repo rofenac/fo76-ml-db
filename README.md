@@ -10,14 +10,17 @@ A Python-based data collection and database management system for Fallout 76 gam
 - Answer questions like "What's the best pistol build for stealth?"
 
 **Current Status:**
-- ✅ Database schema complete (weapons, armor, power armor, perks, legendary perks)
+- ✅ Database schema complete with unified armor architecture (weapons, armor, perks, legendary perks)
 - ✅ 240 regular perks with 449 total ranks imported
 - ✅ 28 legendary perks with all ranks imported (112 total rank entries)
 - ✅ 249 weapons fully scraped and imported
-- ✅ 18 armor sets fully scraped and imported
-- ✅ 72 power armor pieces fully scraped and imported (12 sets × 6 pieces each)
+- ✅ 477 armor pieces fully imported (291 regular + 186 power armor)
+  - 18 regular armor sets × multiple levels × pieces
+  - 12 power armor sets × multiple levels × 6 pieces each
+  - Level-specific data: one row per piece per level
 - ✅ 1,689 weapon-perk relationship links established
-- ⏳ Junction tables for armor/power armor perks ready but unpopulated
+- ✅ Unified armor schema (regular + power armor merged into single table)
+- ⏳ Vulcan Power Armor awaiting per-piece stat data
 - ⏳ Additional build components needed (mutations, consumables, legendary effects, etc.)
 
 ## Quick Start
@@ -81,10 +84,10 @@ python import_to_db.py \
   - Columns: name, rank, description, effect_value, effect_type, form_id, race
 - **`human_corrected_weapons_clean.csv`** - 249 weapons fully imported
   - Columns: Name, Type, Class, Level, Damage, Projectile, Perks, Form ID, Editor ID, Source URL
-- **`armor_scraped.csv`** - 18 armor sets fully scraped
-  - Columns: Name, Type, Slot, Armor Rating, Energy Resistance, Radiation Resistance, Set Name, Level, Weight, Value, Form ID, Editor ID, Perks, Source URL
-- **`power_armor_scraped.csv`** - 72 power armor pieces fully scraped
-  - Columns: Name, Type, Set Name, Armor Rating, Energy Resistance, Radiation Resistance, Level, Weight, Value, Durability, Fusion Core Drain, Form ID, Editor ID, Perks, Source URL
+- **`armor_unified.csv`** - 477 armor pieces fully imported (291 regular + 186 power armor)
+  - Columns: Name, Class, Slot, Armor Type, Damage Resistance, Energy Resistance, Radiation Resistance, Cryo Resistance, Fire Resistance, Poison Resistance, Set Name, Level, Source URL
+  - One row per piece per level for accurate stat tracking
+  - Manually collected data covering 18 regular armor sets + 12 power armor sets
 - **`urls.txt`** - 257 Fallout Wiki weapon URLs (fully scraped)
 - **`armor_urls.txt`** - 18 armor set URLs (fully scraped)
 - **`power_armor_urls.txt`** - 12 power armor set URLs (fully scraped)
@@ -119,22 +122,9 @@ python armor_scraper.py -u "https://fallout.fandom.com/wiki/Combat_armor_(Fallou
 python armor_scraper.py -f armor_urls.txt -o armor_scraped.csv --playwright
 ```
 
-**Status:** All 18 armor sets scraped and imported.
+**Status:** Armor data collection complete. 477 armor pieces manually collected and imported (291 regular + 186 power armor).
 
-### Scrape Power Armor ✅ COMPLETE
-
-```bash
-# Scrape all power armor sets
-python power_armor_scraper.py -f power_armor_urls.txt -o power_armor_scraped.csv
-
-# Scrape a single power armor set
-python power_armor_scraper.py -u "https://fallout.fandom.com/wiki/T-45_power_armor_(Fallout_76)" -o output.csv
-
-# Use Playwright (if needed)
-python power_armor_scraper.py -f power_armor_urls.txt -o power_armor_scraped.csv --playwright
-```
-
-**Status:** All 72 power armor pieces scraped and imported (12 sets × 6 pieces each).
+**Note:** Power armor and regular armor now use a unified schema in the `armor` table with `armor_type` ENUM distinguishing between "regular" and "power" armor. Vulcan Power Armor awaiting per-piece stat data from wiki.
 
 ### Scrape Legendary Perks ✅ COMPLETE
 
@@ -163,26 +153,28 @@ python legendary_perk_scraper.py -f legendary_perk_urls.txt -o output.csv --play
 
 ### Core Tables
 
-- **`weapons`** - Weapon data (damage, projectile, form_id, etc.)
-- **`armor`** - Regular armor pieces
-- **`power_armor`** - Power armor frames and pieces
+- **`weapons`** - Weapon data (damage, projectile, form_id, etc.) - 249 rows
+- **`armor`** - UNIFIED armor data (regular + power armor) - 477 rows
+  - Contains both regular armor and power armor pieces
+  - Uses `armor_type` ENUM: "regular" or "power"
+  - One row per piece per level for accurate stat tracking
+  - No unique constraint on name (same piece exists at multiple levels)
 - **`perks`** - Regular SPECIAL perks (240 unique)
-- **`perk_ranks`** - Rank-specific effects for regular perks (450 rows)
+- **`perk_ranks`** - Rank-specific effects for regular perks (449 rows)
 - **`legendary_perks`** - Legendary character perks (28 unique)
 - **`legendary_perk_ranks`** - Rank-specific effects for legendary perks (112 rows)
 
 ### Junction Tables
 
-- **`weapon_perks`** - Links weapons to regular perks that affect them
+- **`weapon_perks`** - Links weapons to regular perks that affect them (1,689 rows)
 - **`weapon_legendary_perk_effects`** - Links weapons to legendary perks
-- **`armor_perks`** / **`armor_legendary_perk_effects`** - Similar for armor
-- **`power_armor_perks`** / **`power_armor_legendary_perk_effects`** - Similar for power armor
+
+**Note:** Armor perk junction tables were removed because all armor perks (Armorer, Fix It Good, White Knight, Lucky Break, Funky Duds, Sizzling Style) affect ALL armor equally - no item-specific tracking needed.
 
 ### RAG-Optimized Views
 
 - **`v_weapons_with_perks`** - Weapons with all affecting perks (regular + legendary)
-- **`v_armor_with_perks`** - Armor with all affecting perks
-- **`v_power_armor_with_perks`** - Power armor with all affecting perks
+- **`v_armor_complete`** - Unified armor view (includes both regular and power armor)
 - **`v_perks_all_ranks`** - Regular perks with rank breakdowns
 - **`v_legendary_perks_all_ranks`** - Legendary perks with rank breakdowns
 
@@ -218,13 +210,14 @@ The import script handles complex perk formats:
 ============================================================
 DATABASE IMPORT COMPLETE
 ============================================================
-Armor imported this session:        18
-Power armor imported this session:  72
+Armor imported this session:
+  - Regular armor:  291
+  - Power armor:    186
+  - Total:          477
 ------------------------------------------------------------
 TOTAL DATABASE RECORDS:
   Weapons:         249
-  Armor:           18
-  Power Armor:     72
+  Armor (unified): 477
   Perks:           240
   Legendary Perks: 28
 ============================================================
@@ -233,8 +226,7 @@ Full Database Summary:
 - Regular perks: 240 (449 total ranks)
 - Legendary perks: 28 (112 total ranks)
 - Weapons: 249
-- Armor: 18
-- Power Armor: 72 (12 sets × 6 pieces)
+- Armor (unified): 477 (291 regular + 186 power armor)
 - Weapon-perk links: 1,689
 ```
 
@@ -242,21 +234,20 @@ Full Database Summary:
 
 ```
 fo76-ml-db/
-├── f76_schema.sql                    # Database schema (complete)
+├── f76_schema.sql                    # Database schema (complete, unified armor)
 ├── import_to_db.py                   # Main import script (weapons + perks)
-├── import_armor.py                   # Armor/power armor import script
+├── import_armor.py                   # Unified armor import script (regular + power armor)
 ├── scraper.py                        # Weapon scraper
-├── armor_scraper.py                  # Armor scraper
+├── armor_scraper.py                  # Armor scraper (updated for piece-level)
 ├── power_armor_scraper.py            # Power armor scraper
 ├── legendary_perk_scraper.py         # Legendary perk scraper (with rank support)
 ├── Perks.csv                         # 240 perks, 449 ranks
 ├── LegendaryPerks.csv                # 28 legendary perks, 112 ranks
 ├── human_corrected_weapons_clean.csv # 249 weapons (imported)
-├── armor_scraped.csv                 # 18 armor sets (imported)
-├── power_armor_scraped.csv           # 72 power armor pieces (imported)
+├── armor_unified.csv                 # 477 armor pieces (291 regular + 186 power armor)
 ├── urls.txt                          # 257 weapon Wiki URLs (complete)
-├── armor_urls.txt                    # 18 armor Wiki URLs (complete)
-├── power_armor_urls.txt              # 12 power armor Wiki URLs (complete)
+├── armor_urls.txt                    # 18 armor Wiki URLs (scraped)
+├── power_armor_urls.txt              # 12 power armor Wiki URLs (scraped)
 ├── legendary_perk_urls.txt           # 28 legendary perk Wiki URLs (complete)
 ├── IMPORT_GUIDE.md                   # Detailed import instructions
 ├── SCHEMA_DESIGN.md                  # Database design documentation
@@ -322,7 +313,7 @@ python test_import_legendary_perks.py
 - [ ] **Status Effects/Buffs** - Temporary effects from consumables, mutations, environment
 
 ### Phase 2: Data Enhancement
-- [ ] Populate armor_perks and power_armor_perks junction tables
+- [ ] Add Vulcan Power Armor when per-piece stat data becomes available
 - [ ] Implement weapon_perk_rules table (conditional perks: scoped, ADS, VATS, etc.)
 - [ ] Add damage formulas and calculation support
 

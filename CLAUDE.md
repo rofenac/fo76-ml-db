@@ -8,23 +8,27 @@ The Great Fallout 76 DB Project is a Python-based data collection and database m
 
 **Project Goal:** Build a RAG-powered LLM system to help players optimize character builds, query game data, and answer complex questions like "What's the best bloodied heavy gunner build for solo play?"
 
-## Current Status (Last Updated: 2025-10-09)
+## Current Status (Last Updated: 2025-10-10)
 
 ### ✅ Phase 1 Complete: Core Data Collection
 
 **Database Population:**
 - 249 weapons fully scraped and imported
-- 18 armor sets fully scraped and imported
-- 72 power armor pieces fully scraped and imported (12 sets × 6 pieces each)
+- 477 armor pieces fully imported (291 regular + 186 power armor)
+  - 18 regular armor sets × multiple levels × pieces
+  - 12 power armor sets × multiple levels × 6 pieces each
+  - Level-specific data: one row per piece per level
 - 240 regular perks with 449 total ranks imported
 - 28 legendary perks with 112 total ranks imported (all 4 ranks per perk)
 - 1,689 weapon-perk relationship links established
 
 **Scrapers Complete:**
 - `scraper.py` - Weapon scraper ✅
-- `armor_scraper.py` - Armor scraper ✅
+- `armor_scraper.py` - Armor scraper ✅ (updated for piece-level extraction)
 - `power_armor_scraper.py` - Power armor scraper ✅
 - `legendary_perk_scraper.py` - Legendary perk scraper ✅
+
+**Note:** Vulcan Power Armor awaiting per-piece stat data from wiki
 
 ### 🔄 Next Phase: Additional Build Components
 
@@ -70,65 +74,49 @@ The project uses a MySQL database (`f76`) with a normalized schema defined in `f
    - Unique constraint on weapon name
    - Indexed on: form_id, type, class
 
-2. **armor** - Armor data table (18 rows)
-   - Contains: name, type, slot, armor_rating, energy_resistance, radiation_resistance, set_name, level, weight, value, form_id, editor_id, perks_raw, source_url
-   - Unique constraint on armor name
-   - Indexed on: set_name, slot, type
+2. **armor** - UNIFIED armor data table (477 rows - regular + power armor merged)
+   - Contains: name, class, slot, damage_resistance, energy_resistance, radiation_resistance, cryo_resistance, fire_resistance, poison_resistance, set_name, armor_type, level, source_url
+   - **armor_type**: ENUM('regular', 'power') - distinguishes regular armor from power armor
+   - **No unique constraint on name** - same piece exists at multiple levels
+   - **One row per piece per level** - normalized for accurate stat tracking
+   - Indexed on: name, set_name, slot, class, armor_type, level
+   - **Note:** Power armor no longer has separate table - merged for schema consistency
 
-3. **power_armor** - Power armor data table (72 rows)
-   - Contains: name, type, set_name, armor_rating, energy_resistance, radiation_resistance, level, weight, value, durability, fusion_core_drain, form_id, editor_id, perks_raw, source_url
-   - Unique constraint on power armor name
-   - Indexed on: set_name, type
-
-4. **perks** - Regular SPECIAL perks base table (240 rows)
+3. **perks** - Regular SPECIAL perks base table (240 rows)
    - Contains: name, special, level, race
    - Unique constraint on perk name
    - Indexed on: special, race
 
-5. **perk_ranks** - Regular perk ranks (449 rows)
+4. **perk_ranks** - Regular perk ranks (449 rows)
    - Contains: perk_id, `rank`, description, form_id
    - Foreign key to perks(id) with CASCADE delete
    - **Important:** `rank` is a MySQL reserved keyword - must use backticks in queries
 
-6. **legendary_perks** - Legendary perks base table (28 rows)
+5. **legendary_perks** - Legendary perks base table (28 rows)
    - Contains: name, description, race
    - Unique constraint on perk name
    - Indexed on: race
 
-7. **legendary_perk_ranks** - Legendary perk ranks (112 rows = 28 perks × 4 ranks)
+6. **legendary_perk_ranks** - Legendary perk ranks (112 rows = 28 perks × 4 ranks)
    - Contains: legendary_perk_id, `rank`, description, effect_value, effect_type
    - Foreign key to legendary_perks(id) with CASCADE delete
    - **Important:** `rank` is a MySQL reserved keyword - must use backticks
 
 ### Junction Tables (Many-to-Many Relationships)
 
-8. **weapon_perks** - Links weapons to regular perks (1,689 rows)
+7. **weapon_perks** - Links weapons to regular perks (1,689 rows)
    - Primary key: (weapon_id, perk_id)
    - Foreign keys with CASCADE delete
 
-9. **weapon_legendary_perk_effects** - Links weapons to legendary perks
+8. **weapon_legendary_perk_effects** - Links weapons to legendary perks
    - Primary key: (weapon_id, legendary_perk_id)
    - Foreign keys with CASCADE delete
 
-10. **armor_perks** - Links armor to regular perks (ready, unpopulated)
-    - Primary key: (armor_id, perk_id)
-    - Foreign keys with CASCADE delete
-
-11. **armor_legendary_perk_effects** - Links armor to legendary perks (ready, unpopulated)
-    - Primary key: (armor_id, legendary_perk_id)
-    - Foreign keys with CASCADE delete
-
-12. **power_armor_perks** - Links power armor to regular perks (ready, unpopulated)
-    - Primary key: (power_armor_id, perk_id)
-    - Foreign keys with CASCADE delete
-
-13. **power_armor_legendary_perk_effects** - Links power armor to legendary perks (ready, unpopulated)
-    - Primary key: (power_armor_id, legendary_perk_id)
-    - Foreign keys with CASCADE delete
+**Note:** Armor perk junction tables were removed because all armor perks (Armorer, Fix It Good, White Knight, Lucky Break, Funky Duds, Sizzling Style) affect ALL armor equally - no item-specific tracking needed.
 
 ### Future Tables
 
-14. **weapon_perk_rules** - Conditional perk application rules (schema ready, unpopulated)
+9. **weapon_perk_rules** - Conditional perk application rules (schema ready, unpopulated)
     - Stores conditions: weapon_class, fire_mode, scope_state, aim_state, vats_state
     - For tracking context-specific perk applications (e.g., "only when scoped", "only in ADS")
 
@@ -137,8 +125,7 @@ The project uses a MySQL database (`f76`) with a normalized schema defined in `f
 The schema includes views for efficient LLM queries:
 
 - **v_weapons_with_perks** - Weapons with all affecting perks (regular + legendary)
-- **v_armor_with_perks** - Armor with all affecting perks
-- **v_power_armor_with_perks** - Power armor with all affecting perks
+- **v_armor_complete** - Unified armor view (includes both regular and power armor)
 - **v_perks_all_ranks** - Regular perks with rank breakdowns
 - **v_legendary_perks_all_ranks** - Legendary perks with rank breakdowns
 
@@ -175,10 +162,12 @@ python import_armor.py
 
 - **human_corrected_weapons_clean.csv** - 249 weapons (all imported) ✅
   - Columns: Name, Type, Class, Level, Damage, Projectile, Perks, Form ID, Editor ID, Source URL
-- **armor_scraped.csv** - 18 armor sets (all imported) ✅
-  - Columns: Name, Type, Slot, Armor Rating, Energy Resistance, Radiation Resistance, Set Name, Level, Weight, Value, Form ID, Editor ID, Perks, Source URL
-- **power_armor_scraped.csv** - 72 power armor pieces (all imported) ✅
-  - Columns: Name, Type, Set Name, Armor Rating, Energy Resistance, Radiation Resistance, Level, Weight, Value, Durability, Fusion Core Drain, Form ID, Editor ID, Perks, Source URL
+- **armor_unified.csv** - 477 armor pieces (all imported) ✅
+  - Contains: 291 regular armor + 186 power armor
+  - Columns: Name, Class, Slot, Armor Type, Damage Resistance, Energy Resistance, Radiation Resistance, Cryo Resistance, Fire Resistance, Poison Resistance, Set Name, Level, Source URL
+  - **Format:** One row per piece per level (normalized level data)
+  - **Armor Type:** "regular" or "power" - distinguishes armor categories
+  - Manually collected data covering 18 regular armor sets + 12 power armor sets across all levels
 
 ## Data Processing Workflow
 
@@ -195,7 +184,7 @@ The typical workflow for this project:
 
 3. **Import** - Load data into MySQL database
    - `import_to_db.py` - Imports weapons, perks, legendary perks, and populates weapon_perks junction table
-   - `import_armor.py` - Imports armor and power armor
+   - `import_armor.py` - Imports unified armor data (regular + power armor)
 
 ## Key Data Patterns
 
@@ -222,18 +211,20 @@ Weapons have multiple classification attributes:
 - **Class** - "Pistol/Rifle", "Heavy", "Shotgun", etc. (some weapons can be multiple classes)
 - **Projectile** - Game engine projectile type (e.g., "ProjectilePlasmaLarge", "ProjectileBallisticRifle")
 
-### Armor Classification
+### Armor Classification (Unified Regular + Power Armor)
 
-Armor has the following classification:
-- **Type** - "Light", "Sturdy", "Heavy", "Outfit", etc.
-- **Slot** - "Chest", "Helmet", "Left Arm", "Right Arm", "Left Leg", "Right Leg"
-- **Set Name** - For matching set bonuses
+All armor (regular and power armor) uses the unified armor table with the following classification:
+- **armor_type** - ENUM: "regular" or "power"
+- **class** - For regular armor only: "Light", "Sturdy", "Heavy" (NULL for power armor)
+- **slot** - Piece location: "Chest", "Helmet", "Left Arm", "Right Arm", "Left Leg", "Right Leg", "Torso"
+- **set_name** - Armor set identifier (e.g., "Combat armor", "T-45 power armor", "X-01 power armor")
+- **level** - Level requirement (one row per piece per level for accurate stat tracking)
 
-### Power Armor Classification
+**Regular Armor Sets (18):** Combat armor, Scout armor, Marine armor, Leather armor, Metal armor, Raider armor, Robot armor, Wood armor, Trapper armor, Secret Service armor, Covert Scout armor, BoS Recon armor, Solar armor, Thorn armor, Strangler heart armor (non-PA), Arctic Marine armor, Enclave armor, Union armor
 
-Power armor has the following classification:
-- **Type** - "Helmet", "Torso", "Left Arm", "Right Arm", "Left Leg", "Right Leg"
-- **Set Name** - "T-45", "T-51b", "T-60", "X-01", "Ultracite", "T-65", "Hellcat", "Strangler heart", "Union", "Vulcan", "Excavator", "Raider"
+**Power Armor Sets (12):** T-45, T-51b, T-60, X-01, Ultracite, T-65, Hellcat, Strangler heart, Union, Vulcan, Excavator, Raider
+
+**Note:** Vulcan Power Armor is not yet fully populated - awaiting per-piece stat data from wiki.
 
 ### Race Support
 
@@ -331,39 +322,49 @@ python import_to_db.py \
 
 ### Armor Import Script (`import_armor.py`)
 
-Imports armor and power armor data.
+Imports unified armor data (regular + power armor).
 
 ```bash
 python import_armor.py
 ```
 
 **What it does:**
-1. Imports 18 armor pieces → `armor` table
-2. Imports 72 power armor pieces → `power_armor` table
-3. Uses INSERT...ON DUPLICATE KEY UPDATE for safe re-imports
+1. Imports 477 armor pieces from `armor_unified.csv` → `armor` table
+   - 291 regular armor pieces (18 sets × multiple levels × pieces)
+   - 186 power armor pieces (12 sets × multiple levels × 6 pieces each)
+2. Uses INSERT for initial import (no ON DUPLICATE KEY UPDATE needed - no unique name constraint)
+3. Tracks and reports import counts by armor type
 
-**Note:** Armor and power armor perk junction tables are currently unpopulated. Future enhancement will parse perks from CSV and populate `armor_perks`, `armor_legendary_perk_effects`, `power_armor_perks`, and `power_armor_legendary_perk_effects`.
+**Important:** Armor perks (Armorer, Fix It Good, White Knight, Lucky Break, Funky Duds, Sizzling Style) affect ALL armor equally, so no junction tables are needed for item-specific tracking.
 
 ## Development Notes
 
 ### Completed Features
-- ✅ Complete database schema with all core tables
-- ✅ All 4 scrapers built and tested
-- ✅ All data scraped and imported (weapons, armor, power armor, perks, legendary perks)
+- ✅ Complete database schema with unified armor architecture
+- ✅ All 4 scrapers built and tested (weapon, armor, power armor, legendary perk)
+- ✅ All data collected and imported:
+  - 249 weapons fully scraped and imported
+  - 477 armor pieces imported (291 regular + 186 power armor)
+  - 240 regular perks with 449 ranks imported
+  - 28 legendary perks with 112 ranks imported
 - ✅ Weapon-perk relationships fully populated (1,689 links)
 - ✅ RAG-optimized database views created
 - ✅ Race support for Human/Ghoul perk differences
 - ✅ Multi-rank support for both regular and legendary perks
+- ✅ Normalized level tracking (one row per armor piece per level)
+- ✅ Unified armor schema (regular + power armor merged)
 
 ### Technical Considerations
 - All tables use InnoDB engine with proper foreign key constraints and cascading deletes
 - The `rank` column in perk_ranks and legendary_perk_ranks requires backticks in MySQL 8.0
-- Power armor creates 6 pieces per set (Helmet, Torso, Left/Right Arms, Left/Right Legs)
-- The scraper successfully extracts complete data including perks with conditional modifiers
+- Armor table uses ENUM for armor_type ('regular' or 'power')
+- No UNIQUE constraint on armor.name - same piece can exist at multiple levels
+- One row per armor piece per level for accurate stat tracking
+- Armor perks are universal (no junction tables needed)
 - Database credentials: username=root, password=secret (local dev environment)
 
 ### Known Gaps
-- Armor/power armor perk junction tables are unpopulated
+- Vulcan Power Armor stats not yet available (awaiting wiki data for per-piece stats)
 - `weapon_perk_rules` table schema exists but is unpopulated (conditional perk tracking)
 - No mutations, consumables, legendary effects, or SPECIAL stat tracking yet
 
