@@ -58,7 +58,7 @@ class F76DatabaseImporter:
             self.connection.close()
             print("✓ Database connection closed")
 
-    def import_perks(self, csv_file: str = "Perks.csv") -> int:
+    def import_perks(self, csv_file: str = "data/input/Perks.csv") -> int:
         """Import perks from CSV into perks and perk_ranks tables."""
         print(f"\n=== Importing Perks from {csv_file} ===")
 
@@ -130,7 +130,7 @@ class F76DatabaseImporter:
 
         return perks_inserted
 
-    def import_legendary_perks(self, csv_file: str = "LegendaryPerks.csv") -> int:
+    def import_legendary_perks(self, csv_file: str = "data/input/LegendaryPerks.csv") -> int:
         """Import legendary perks from CSV into legendary_perks and legendary_perk_ranks tables."""
         print(f"\n=== Importing Legendary Perks from {csv_file} ===")
 
@@ -347,7 +347,7 @@ class F76DatabaseImporter:
             # No variants, just return the perk name
             return [perk_str]
 
-    def import_weapons(self, csv_file: str = "human_corrected_weapons_clean.csv") -> int:
+    def import_weapons(self, csv_file: str = "data/input/human_corrected_weapons_clean.csv") -> int:
         """Import weapons from CSV into weapons table and populate weapon_perks."""
         print(f"\n=== Importing Weapons from {csv_file} ===")
 
@@ -476,9 +476,9 @@ class F76DatabaseImporter:
 
         return regular_links_created + legendary_links_created
 
-    def import_all(self, perks_csv: str = "Perks.csv",
-                   legendary_perks_csv: str = "LegendaryPerks.csv",
-                   weapons_csv: str = "human_corrected_weapons_clean.csv"):
+    def import_all(self, perks_csv: str = "data/input/Perks.csv",
+                   legendary_perks_csv: str = "data/input/LegendaryPerks.csv",
+                   weapons_csv: str = "data/input/human_corrected_weapons_clean.csv"):
         """Import all data: perks first, then weapons."""
         print("=" * 60)
         print("FALLOUT 76 DATABASE IMPORT")
@@ -568,14 +568,14 @@ def main():
                        default=os.getenv('MYSQL_DB', 'f76'),
                        help='MySQL database name (default: f76)')
     parser.add_argument('--perks-csv',
-                       default='Perks.csv',
-                       help='Path to perks CSV file (default: Perks.csv)')
+                       default='data/input/Perks.csv',
+                       help='Path to perks CSV file (default: data/input/Perks.csv)')
     parser.add_argument('--legendary-perks-csv',
-                       default='LegendaryPerks.csv',
-                       help='Path to legendary perks CSV file (default: LegendaryPerks.csv)')
+                       default='data/input/LegendaryPerks.csv',
+                       help='Path to legendary perks CSV file (default: data/input/LegendaryPerks.csv)')
     parser.add_argument('--weapons-csv',
-                       default='human_corrected_weapons_clean.csv',
-                       help='Path to weapons CSV file (default: human_corrected_weapons_clean.csv)')
+                       default='data/input/human_corrected_weapons_clean.csv',
+                       help='Path to weapons CSV file (default: data/input/human_corrected_weapons_clean.csv)')
 
     args = parser.parse_args()
 

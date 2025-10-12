@@ -23,10 +23,10 @@ The Great Fallout 76 DB Project is a Python-based data collection and database m
 - 1,689 weapon-perk relationship links established
 
 **Scrapers Complete:**
-- `scraper.py` - Weapon scraper ✅
-- `armor_scraper.py` - Armor scraper ✅ (updated for piece-level extraction)
-- `power_armor_scraper.py` - Power armor scraper ✅
-- `legendary_perk_scraper.py` - Legendary perk scraper ✅
+- `scrapers/scraper.py` - Weapon scraper ✅
+- `scrapers/armor_scraper.py` - Armor scraper ✅ (updated for piece-level extraction)
+- `scrapers/power_armor_scraper.py` - Power armor scraper ✅
+- `scrapers/legendary_perk_scraper.py` - Legendary perk scraper ✅
 
 **Note:** Vulcan Power Armor awaiting per-piece stat data from wiki
 
@@ -136,11 +136,11 @@ The schema includes views for efficient LLM queries:
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS f76;"
 
 # Import schema (drops all tables first, then recreates)
-mysql -u root -p f76 < f76_schema.sql
+mysql -u root -p f76 < database/f76_schema.sql
 
-# Import data
-python import_to_db.py -u root -p <password>
-python import_armor.py
+# Import data (run from project root)
+python database/import_to_db.py -u root -p <password>
+python database/import_armor.py
 ```
 
 **Important MySQL 8.0 Note:** The `rank` column is a reserved keyword. All queries must use backticks: `` `rank` ``
@@ -149,20 +149,20 @@ python import_armor.py
 
 ### Input Data
 
-- **urls.txt** - 257 Fallout Wiki weapon URLs (all scraped) ✅
-- **armor_urls.txt** - 18 armor set URLs (all scraped) ✅
-- **power_armor_urls.txt** - 12 power armor set URLs (all scraped) ✅
-- **legendary_perk_urls.txt** - 28 legendary perk URLs (all scraped) ✅
-- **Perks.csv** - 240 regular SPECIAL perks with 449 ranks
+- **data/urls/urls.txt** - 257 Fallout Wiki weapon URLs (all scraped) ✅
+- **data/urls/armor_urls.txt** - 18 armor set URLs (all scraped) ✅
+- **data/urls/power_armor_urls.txt** - 12 power armor set URLs (all scraped) ✅
+- **data/urls/legendary_perk_urls.txt** - 28 legendary perk URLs (all scraped) ✅
+- **data/input/Perks.csv** - 240 regular SPECIAL perks with 449 ranks
   - Columns: name, special, level, race, rank, description, form_id
-- **LegendaryPerks.csv** - 28 legendary perks with 112 total ranks (28 × 4)
+- **data/input/LegendaryPerks.csv** - 28 legendary perks with 112 total ranks (28 × 4)
   - Columns: name, rank, description, effect_value, effect_type, form_id, race
 
 ### Scraped/Processed Data
 
-- **human_corrected_weapons_clean.csv** - 249 weapons (all imported) ✅
+- **data/input/human_corrected_weapons_clean.csv** - 249 weapons (all imported) ✅
   - Columns: Name, Type, Class, Level, Damage, Projectile, Perks, Form ID, Editor ID, Source URL
-- **armor_unified.csv** - 477 armor pieces (all imported) ✅
+- **data/input/armor_unified.csv** - 477 armor pieces (all imported) ✅
   - Contains: 291 regular armor + 186 power armor
   - Columns: Name, Class, Slot, Armor Type, Damage Resistance, Energy Resistance, Radiation Resistance, Cryo Resistance, Fire Resistance, Poison Resistance, Set Name, Level, Source URL
   - **Format:** One row per piece per level (normalized level data)
@@ -174,17 +174,17 @@ python import_armor.py
 The typical workflow for this project:
 
 1. **Scraping** - Extract data from Fallout Wiki URLs
-   - Use `scraper.py`, `armor_scraper.py`, `power_armor_scraper.py`, `legendary_perk_scraper.py`
+   - Use `scrapers/scraper.py`, `scrapers/armor_scraper.py`, `scrapers/power_armor_scraper.py`, `scrapers/legendary_perk_scraper.py`
    - Playwright/BeautifulSoup4 to parse wiki pages
    - Handle dynamic content and infobox tables
 
 2. **Validation** (Optional)
-   - Validate against canonical perk list (Perks.csv)
+   - Validate against canonical perk list (data/input/Perks.csv)
    - Check form IDs, editor IDs, required fields
 
 3. **Import** - Load data into MySQL database
-   - `import_to_db.py` - Imports weapons, perks, legendary perks, and populates weapon_perks junction table
-   - `import_armor.py` - Imports unified armor data (regular + power armor)
+   - `database/import_to_db.py` - Imports weapons, perks, legendary perks, and populates weapon_perks junction table
+   - `database/import_armor.py` - Imports unified armor data (regular + power armor)
 
 ## Key Data Patterns
 
@@ -240,23 +240,23 @@ All scrapers follow the same command-line pattern:
 
 ```bash
 # Weapon scraper (COMPLETE - 249 weapons)
-python scraper.py -f urls.txt -o weapons_scraped.csv
-python scraper.py -u "https://fallout.fandom.com/wiki/Laser_gun_(Fallout_76)" -o laser.csv
+python scrapers/scraper.py -f data/urls/urls.txt -o weapons_scraped.csv
+python scrapers/scraper.py -u "https://fallout.fandom.com/wiki/Laser_gun_(Fallout_76)" -o laser.csv
 
 # Armor scraper (COMPLETE - 18 armor sets)
-python armor_scraper.py -f armor_urls.txt -o armor_scraped.csv
-python armor_scraper.py -u "https://fallout.fandom.com/wiki/Combat_armor_(Fallout_76)" -o output.csv
+python scrapers/armor_scraper.py -f data/urls/armor_urls.txt -o armor_scraped.csv
+python scrapers/armor_scraper.py -u "https://fallout.fandom.com/wiki/Combat_armor_(Fallout_76)" -o output.csv
 
 # Power armor scraper (COMPLETE - 72 power armor pieces)
-python power_armor_scraper.py -f power_armor_urls.txt -o power_armor_scraped.csv
-python power_armor_scraper.py -u "https://fallout.fandom.com/wiki/T-45_power_armor_(Fallout_76)" -o output.csv
+python scrapers/power_armor_scraper.py -f data/urls/power_armor_urls.txt -o power_armor_scraped.csv
+python scrapers/power_armor_scraper.py -u "https://fallout.fandom.com/wiki/T-45_power_armor_(Fallout_76)" -o output.csv
 
 # Legendary perk scraper (COMPLETE - 28 legendary perks, 112 ranks)
-python legendary_perk_scraper.py -f legendary_perk_urls.txt -o LegendaryPerks.csv
-python legendary_perk_scraper.py -u "https://fallout.fandom.com/wiki/Follow_Through" -o output.csv
+python scrapers/legendary_perk_scraper.py -f data/urls/legendary_perk_urls.txt -o LegendaryPerks.csv
+python scrapers/legendary_perk_scraper.py -u "https://fallout.fandom.com/wiki/Follow_Through" -o output.csv
 
 # Use Playwright for JavaScript-heavy pages (add --playwright flag)
-python scraper.py -f urls.txt -o weapons.csv --playwright
+python scrapers/scraper.py -f data/urls/urls.txt -o weapons.csv --playwright
 ```
 
 All scrapers:
@@ -272,7 +272,7 @@ All scrapers:
 Validate scraped data before importing to database:
 
 ```bash
-python validate_scraped_data.py weapons_scraped.csv
+python tests/validate_scraped_data.py weapons_scraped.csv
 ```
 
 This checks:
@@ -288,21 +288,21 @@ This checks:
 Imports weapons, perks, legendary perks, and populates junction tables.
 
 ```bash
-# Using command-line arguments
-python import_to_db.py -u root -p secret
+# Using command-line arguments (run from project root)
+python database/import_to_db.py -u root -p secret
 
 # Using environment variables
 export MYSQL_USER=root
 export MYSQL_PASS=secret
-python import_to_db.py
+python database/import_to_db.py
 
 # Custom files/settings
-python import_to_db.py \
+python database/import_to_db.py \
   -u root -p secret \
   -H localhost -d f76 \
-  --perks-csv Perks.csv \
-  --legendary-perks-csv LegendaryPerks.csv \
-  --weapons-csv human_corrected_weapons_clean.csv
+  --perks-csv data/input/Perks.csv \
+  --legendary-perks-csv data/input/LegendaryPerks.csv \
+  --weapons-csv data/input/human_corrected_weapons_clean.csv
 ```
 
 **What it does:**
@@ -325,11 +325,12 @@ python import_to_db.py \
 Imports unified armor data (regular + power armor).
 
 ```bash
-python import_armor.py
+# Run from project root
+python database/import_armor.py
 ```
 
 **What it does:**
-1. Imports 477 armor pieces from `armor_unified.csv` → `armor` table
+1. Imports 477 armor pieces from `data/input/armor_unified.csv` → `armor` table
    - 291 regular armor pieces (18 sets × multiple levels × pieces)
    - 186 power armor pieces (12 sets × multiple levels × 6 pieces each)
 2. Uses INSERT for initial import (no ON DUPLICATE KEY UPDATE needed - no unique name constraint)
@@ -374,11 +375,31 @@ See TODO.md for detailed future plans including:
 - Phase 3: Data enhancement (populate junction tables, conditional perk rules, damage formulas)
 - Phase 4: RAG system & LLM integration (build optimizer, damage calculator, build comparison)
 
+## Project Structure
+
+```
+fo76-ml-db/
+├── docs/                  # All documentation
+│   ├── README.md         # Detailed project documentation
+│   ├── CLAUDE.md         # This file - Claude Code guidance
+│   ├── TODO.md           # Roadmap and task tracking
+│   ├── SCHEMA_DESIGN.md  # Database architecture
+│   ├── SCRAPER_README.md # Scraper documentation
+│   └── IMPORT_GUIDE.md   # Database import guide
+├── data/                  # All data files
+│   ├── input/            # Source CSV data (Perks, weapons, armor)
+│   └── urls/             # URL lists for scrapers
+├── database/              # Database schema and import scripts
+├── scrapers/              # Web scraping scripts
+├── tests/                 # Test and validation scripts
+└── requirements.txt       # Python dependencies
+```
+
 ## Documentation
 
-For more details, see:
-- **README.md** - Project overview and quick start
-- **TODO.md** - Detailed roadmap and task tracking
-- **SCRAPER_README.md** - Comprehensive scraper documentation
-- **IMPORT_GUIDE.md** - Database import walkthrough
-- **SCHEMA_DESIGN.md** - Database architecture and RAG design
+For more details, see the `docs/` directory:
+- **docs/README.md** - Detailed project documentation
+- **docs/TODO.md** - Detailed roadmap and task tracking
+- **docs/SCRAPER_README.md** - Comprehensive scraper documentation
+- **docs/IMPORT_GUIDE.md** - Database import walkthrough
+- **docs/SCHEMA_DESIGN.md** - Database architecture and RAG design

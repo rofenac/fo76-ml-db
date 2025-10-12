@@ -126,7 +126,7 @@ def main():
         logger.info("Starting unified armor import...")
 
         # Import all armor from unified CSV
-        total, regular, power = import_unified_armor(conn, 'armor_unified.csv')
+        total, regular, power = import_unified_armor(conn, 'data/input/armor_unified.csv')
 
         # Show final counts
         counts = get_table_counts(conn)
