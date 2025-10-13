@@ -269,6 +269,171 @@ The following build components need to be researched, evaluated, and potentially
 
 ---
 
+---
+
+## Phase 6: Full-Stack Web GUI (STRETCH GOAL)
+
+### Goal: Build an interactive web application for browsing and querying Fallout 76 build data
+
+**Tech Stack (Proposed):**
+- **Frontend:** React + Vite + TypeScript + TailwindCSS + DaisyUI + GSAP (animations)
+- **Backend:** FastAPI (Python) + SQLAlchemy (ORM for MySQL)
+- **Database:** MySQL (existing schema)
+- **Deployment:** Docker + Docker Compose + Nginx
+
+### Features to Implement
+
+#### Core Browsing Features
+- [ ] **Weapon Browser** - Filterable grid/list view with type, class, damage sorting
+- [ ] **Armor Browser** - View regular and power armor with resistance comparisons
+- [ ] **Perk Browser** - Browse perks by SPECIAL category, view rank progressions
+- [ ] **Search & Filter** - Full-text search across all data types
+- [ ] **Detail Views** - In-depth pages for weapons, armor, perks with related data
+
+#### RAG Integration Features
+- [ ] **Chat Interface** - Natural language queries like "What's the best pistol build for stealth?"
+- [ ] **Query Results Display** - Present database results in clean, readable format
+- [ ] **Conversation History** - Store and display previous queries in session
+
+#### Advanced Build Tools
+- [ ] **Build Optimizer** - Input playstyle preferences, get recommended builds
+- [ ] **Damage Calculator** - Select weapon, perks, buffs → see total damage output
+- [ ] **Build Simulator** - Test builds before committing in-game
+- [ ] **Build Comparison** - Compare two builds side-by-side
+
+#### User Features (Optional)
+- [ ] **Authentication** - User registration and login (JWT tokens)
+- [ ] **Save Builds** - Store favorite builds to user account
+- [ ] **Share Builds** - Generate shareable URLs or export JSON
+- [ ] **Favorites** - Bookmark weapons, armor, perks for quick access
+
+#### UI/UX Features
+- [ ] **Responsive Design** - Mobile-friendly interface
+- [ ] **Dark/Light Mode** - Theme switcher
+- [ ] **Smooth Animations** - GSAP-powered transitions
+- [ ] **Loading States** - Skeletons and spinners for data fetching
+- [ ] **Error Handling** - User-friendly error messages
+
+### Backend API Design (RESTful)
+
+```
+# Weapons
+GET    /api/v1/weapons              # List all weapons (pagination, filters)
+GET    /api/v1/weapons/{id}         # Get weapon by ID
+GET    /api/v1/weapons/search       # Search weapons
+GET    /api/v1/weapons/{id}/perks   # Get perks affecting weapon
+
+# Armor
+GET    /api/v1/armor                # List all armor
+GET    /api/v1/armor/{id}           # Get armor by ID
+GET    /api/v1/armor/sets           # Get armor sets
+
+# Perks
+GET    /api/v1/perks                # List all regular perks
+GET    /api/v1/perks/{id}           # Get perk by ID
+GET    /api/v1/perks/{id}/ranks     # Get all ranks for perk
+GET    /api/v1/legendary-perks      # List legendary perks
+
+# RAG & Build Tools
+POST   /api/v1/rag/query            # Natural language query
+POST   /api/v1/builds/optimize      # Build optimizer
+POST   /api/v1/builds/calculate     # Damage calculator
+
+# User & Auth (Optional)
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
+GET    /api/v1/users/me
+POST   /api/v1/users/builds         # Save user builds
+GET    /api/v1/users/builds         # Get user builds
+
+# Docs & Health
+GET    /api/v1/health               # Health check
+GET    /docs                        # FastAPI auto-generated docs
+```
+
+### Implementation Phases
+
+**Phase 6.1: Backend Setup**
+- [ ] Create FastAPI application structure
+- [ ] Set up SQLAlchemy models (map to existing MySQL schema)
+- [ ] Implement Pydantic schemas for request/response validation
+- [ ] Build core CRUD endpoints for weapons, armor, perks
+- [ ] Integrate existing RAG query engine (`rag/query_engine.py`)
+- [ ] Add CORS middleware for frontend communication
+
+**Phase 6.2: Frontend Setup**
+- [ ] Initialize Vite + React + TypeScript project
+- [ ] Set up TailwindCSS + DaisyUI
+- [ ] Configure React Router for client-side routing
+- [ ] Set up Axios or TanStack Query for API calls
+- [ ] Create base layout components (Header, Sidebar, Footer)
+
+**Phase 6.3: Core Components**
+- [ ] Build weapon list/grid components with filtering
+- [ ] Build armor list/grid components with filtering
+- [ ] Build perk browser with SPECIAL categorization
+- [ ] Create detail view components for each data type
+- [ ] Implement search functionality
+
+**Phase 6.4: RAG Integration**
+- [ ] Build chat interface component
+- [ ] Integrate with `/api/v1/rag/query` endpoint
+- [ ] Display query results in formatted tables/cards
+- [ ] Add conversation history display
+- [ ] Handle loading and error states
+
+**Phase 6.5: Advanced Features**
+- [ ] Implement build optimizer UI
+- [ ] Implement damage calculator UI
+- [ ] Add build comparison tool
+- [ ] Implement user authentication (if desired)
+- [ ] Add save/share build functionality
+
+**Phase 6.6: Polish & Deployment**
+- [ ] Add GSAP animations for smooth transitions
+- [ ] Implement dark/light mode toggle
+- [ ] Ensure mobile responsiveness
+- [ ] Create Docker setup (Dockerfile + docker-compose.yml)
+- [ ] Write deployment documentation
+- [ ] Set up Nginx reverse proxy for production
+
+### Folder Structure
+
+```
+fo76-ml-db/
+├── backend/                    # FastAPI backend
+│   ├── app/
+│   │   ├── main.py            # FastAPI app entry point
+│   │   ├── config.py          # Configuration settings
+│   │   ├── database.py        # Database connection
+│   │   ├── models/            # SQLAlchemy models
+│   │   ├── schemas/           # Pydantic schemas
+│   │   ├── routers/           # API endpoints
+│   │   ├── services/          # Business logic
+│   │   └── utils/             # Helper functions
+│   ├── tests/
+│   └── requirements.txt
+├── frontend/                   # React frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── components/        # React components
+│   │   ├── pages/             # Page components
+│   │   ├── hooks/             # Custom React hooks
+│   │   ├── services/          # API client functions
+│   │   ├── types/             # TypeScript types
+│   │   └── utils/             # Helper functions
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts
+│   └── tailwind.config.js
+├── docker-compose.yml
+└── README_WEBAPP.md
+```
+
+**Status:** 🎯 **STRETCH GOAL** - Not yet started. This is a future enhancement to provide a user-friendly web interface for the database and RAG system.
+
+---
+
 ## Notes
 
 ### Current Database Summary
