@@ -121,13 +121,6 @@ For detailed information, see the `docs/` directory:
 - **docs/SCRAPER_README.md** - Comprehensive scraper documentation
 - **docs/IMPORT_GUIDE.md** - Step-by-step database import guide
 
-## Database Credentials (Local Dev)
-
-- **Host:** localhost
-- **User:** root
-- **Password:** secret
-- **Database:** f76
-
-## License
 
 This project is for educational and personal use. Game data is sourced from the [Fallout Wiki](https://fallout.fandom.com/).
+
