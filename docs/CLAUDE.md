@@ -13,14 +13,17 @@ The Great Fallout 76 DB Project is a Python-based data collection and database m
 ### ✅ Phase 1 Complete: Core Data Collection
 
 **Database Population:**
-- 249 weapons fully scraped and imported
+- 262 weapons fully scraped and imported
+  - Ranged: 127, Melee: 94, Grenade: 26, Mine: 8, Thrown: 4, Camera: 3
+  - 95.8% have damage data (251/262)
+  - 100% classified by type (0 NULL types)
 - 477 armor pieces fully imported (291 regular + 186 power armor)
   - 18 regular armor sets × multiple levels × pieces
   - 12 power armor sets × multiple levels × 6 pieces each
   - Level-specific data: one row per piece per level
 - 240 regular perks with 449 total ranks imported
 - 28 legendary perks with 112 total ranks imported (all 4 ranks per perk)
-- 1,689 weapon-perk relationship links established
+- 1,685 weapon-perk relationship links established
 
 **Scrapers Complete:**
 - `scrapers/scraper.py` - Weapon scraper ✅
@@ -69,10 +72,12 @@ The project uses a MySQL database (`f76`) with a normalized schema defined in `f
 
 ### Core Tables
 
-1. **weapons** - Weapon data table (249 rows)
-   - Contains: name, type, class, level, damage, projectile, form_id, editor_id, perks_raw, source_url
+1. **weapons** - Weapon data table (262 rows)
+   - Contains: name, type, class, level, damage, perks_raw, source_url
    - Unique constraint on weapon name
-   - Indexed on: form_id, type, class
+   - Indexed on: type, class
+   - Weapon types: Ranged (127), Melee (94), Grenade (26), Mine (8), Thrown (4), Camera (3)
+   - Classes include: Non-automatic pistol, Heavy gun, Rifle, Shotgun, One-Handed, Two-Handed, Unarmed, etc.
 
 2. **armor** - UNIFIED armor data table (477 rows - regular + power armor merged)
    - Contains: name, class, slot, damage_resistance, energy_resistance, radiation_resistance, cryo_resistance, fire_resistance, poison_resistance, set_name, armor_type, level, source_url
@@ -104,7 +109,7 @@ The project uses a MySQL database (`f76`) with a normalized schema defined in `f
 
 ### Junction Tables (Many-to-Many Relationships)
 
-7. **weapon_perks** - Links weapons to regular perks (1,689 rows)
+7. **weapon_perks** - Links weapons to regular perks (1,685 rows)
    - Primary key: (weapon_id, perk_id)
    - Foreign keys with CASCADE delete
 
@@ -122,12 +127,33 @@ The project uses a MySQL database (`f76`) with a normalized schema defined in `f
 
 ### RAG-Optimized Views
 
-The schema includes views for efficient LLM queries:
+The schema includes pre-built views (prefixed with `v_`) for efficient LLM queries. Views are **virtual tables** that combine data from multiple tables using optimized JOINs.
 
-- **v_weapons_with_perks** - Weapons with all affecting perks (regular + legendary)
-- **v_armor_complete** - Unified armor view (includes both regular and power armor)
-- **v_perks_all_ranks** - Regular perks with rank breakdowns
-- **v_legendary_perks_all_ranks** - Legendary perks with rank breakdowns
+**Purpose:** Simplify RAG system queries - the LLM can query a view instead of writing complex multi-table joins.
+
+**The 4 Views:**
+
+1. **v_weapons_with_perks** - Complete weapon info with all affecting perks
+   - Returns: weapon details + semicolon-separated perk lists (regular + legendary)
+   - Example: `SELECT * FROM v_weapons_with_perks WHERE weapon_name = 'Enclave plasma gun'`
+   - Use: "What perks affect this weapon?" or "Show all pistols with their perks"
+
+2. **v_armor_complete** - Unified armor view (regular + power armor)
+   - Returns: armor piece with all resistances (DR, ER, RR, Cryo, Fire, Poison)
+   - Example: `SELECT * FROM v_armor_complete WHERE armor_type = 'power'`
+   - Use: "Show power armor pieces" or "Compare armor sets"
+
+3. **v_perks_all_ranks** - Regular SPECIAL perks with all rank details
+   - Returns: perk info + rank descriptions (1-5 ranks per perk)
+   - Example: `SELECT * FROM v_perks_all_ranks WHERE perk_name = 'Gunslinger'`
+   - Use: "What does Gunslinger do at each rank?"
+
+4. **v_legendary_perks_all_ranks** - Legendary perks with rank progression
+   - Returns: legendary perk + rank effects (1-4 ranks per perk)
+   - Example: `SELECT * FROM v_legendary_perks_all_ranks WHERE perk_name = 'Follow Through'`
+   - Use: "How does Follow Through scale from rank 1 to 4?"
+
+**Key Benefit:** Views auto-update when data changes - no maintenance required. See SCHEMA_DESIGN.md for detailed documentation.
 
 ### Database Setup
 
@@ -160,8 +186,9 @@ python database/import_armor.py
 
 ### Scraped/Processed Data
 
-- **data/input/human_corrected_weapons_clean.csv** - 249 weapons (all imported) ✅
-  - Columns: Name, Type, Class, Level, Damage, Projectile, Perks, Form ID, Editor ID, Source URL
+- **data/input/human_corrected_weapons_clean.csv** - 262 weapons (all imported) ✅
+  - Columns: Name, Type, Class, Level, Damage, Perks, Source URL
+  - Authoritative source: Exported from database after manual corrections
 - **data/input/armor_unified.csv** - 477 armor pieces (all imported) ✅
   - Contains: 291 regular armor + 186 power armor
   - Columns: Name, Class, Slot, Armor Type, Damage Resistance, Energy Resistance, Radiation Resistance, Cryo Resistance, Fire Resistance, Poison Resistance, Set Name, Level, Source URL
@@ -207,9 +234,12 @@ When processing perks:
 ### Weapon Classification
 
 Weapons have multiple classification attributes:
-- **Type** - "Ranged", "Melee", "Thrown", etc.
-- **Class** - "Pistol/Rifle", "Heavy", "Shotgun", etc. (some weapons can be multiple classes)
-- **Projectile** - Game engine projectile type (e.g., "ProjectilePlasmaLarge", "ProjectileBallisticRifle")
+- **Type** - "Ranged" (127), "Melee" (94), "Grenade" (26), "Mine" (8), "Thrown" (4), "Camera" (3)
+- **Class** - Detailed weapon subtype:
+  - Ranged: "Non-automatic pistol", "Heavy gun", "Rifle", "Shotgun", "Automatic Rifle", "Bow", etc.
+  - Melee: "One-Handed", "Two-Handed", "Unarmed"
+  - Grenades/Mines: Typically no class specified
+- **Damage** - Weapon damage values, often level-scaled (e.g., "24 / 28 / 32")
 
 ### Armor Classification (Unified Regular + Power Armor)
 
@@ -239,7 +269,7 @@ The database tracks race-specific perks:
 All scrapers follow the same command-line pattern:
 
 ```bash
-# Weapon scraper (COMPLETE - 249 weapons)
+# Weapon scraper (COMPLETE - 262 weapons)
 python scrapers/scraper.py -f data/urls/urls.txt -o weapons_scraped.csv
 python scrapers/scraper.py -u "https://fallout.fandom.com/wiki/Laser_gun_(Fallout_76)" -o laser.csv
 
@@ -310,8 +340,8 @@ python database/import_to_db.py \
 2. Imports 449 perk ranks → `perk_ranks` table
 3. Imports 28 legendary perks → `legendary_perks` table
 4. Imports 112 legendary perk ranks → `legendary_perk_ranks` table
-5. Imports 249 weapons → `weapons` table
-6. Parses perks from weapon data and populates `weapon_perks` junction table (1,689 links)
+5. Imports 262 weapons → `weapons` table
+6. Parses perks from weapon data and populates `weapon_perks` junction table (1,685 links)
 7. Parses legendary perks and populates `weapon_legendary_perk_effects` junction table
 
 **Smart Perk Parsing:**
@@ -344,11 +374,11 @@ python database/import_armor.py
 - ✅ Complete database schema with unified armor architecture
 - ✅ All 4 scrapers built and tested (weapon, armor, power armor, legendary perk)
 - ✅ All data collected and imported:
-  - 249 weapons fully scraped and imported
+  - 262 weapons fully scraped and imported
   - 477 armor pieces imported (291 regular + 186 power armor)
   - 240 regular perks with 449 ranks imported
   - 28 legendary perks with 112 ranks imported
-- ✅ Weapon-perk relationships fully populated (1,689 links)
+- ✅ Weapon-perk relationships fully populated (1,685 links)
 - ✅ RAG-optimized database views created
 - ✅ Race support for Human/Ghoul perk differences
 - ✅ Multi-rank support for both regular and legendary perks

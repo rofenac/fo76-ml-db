@@ -85,7 +85,7 @@ Pre-built views aggregate common query patterns:
 
 #### `weapons`
 Ranged and melee weapons (guns, swords, etc.)
-- **Key fields:** damage, projectile, class (pistol/rifle/heavy)
+- **Key fields:** damage, class (pistol/rifle/heavy), type (ranged/melee/thrown)
 - **Use case:** "What's the best stealth pistol?" → Filter by class, join perks
 
 #### `armor`
@@ -163,16 +163,150 @@ Stores conditions for when perks apply:
 - aim_state ENUM (ADS vs hip)
 - vats_state ENUM
 
+## Database Views (RAG-Optimized Queries)
+
+### What Are Views?
+
+Database views are **pre-built, reusable SELECT statements** that combine data from multiple tables. They appear as tables but don't store data - they execute the underlying query when accessed.
+
+**Naming Convention:** All views use the `v_` prefix to distinguish them from actual data tables.
+
+### The 4 RAG-Optimized Views
+
+#### 1. `v_weapons_with_perks`
+**Purpose:** Complete weapon information with all affecting perks in a single query
+
+**Data Provided:**
+- Weapon details: id, name, type, class, level, damage, source_url
+- All regular perks (semicolon-separated): "Arms Keeper; Bloody Mess; Gunslinger..."
+- All legendary perks (semicolon-separated): "Follow Through; Far-Flung Fireworks"
+
+**Query:**
+```sql
+SELECT * FROM v_weapons_with_perks WHERE weapon_name = 'Enclave plasma gun';
+```
+
+**Use Cases:**
+- "What perks affect the Enclave plasma gun?"
+- "Show me all heavy guns and their perks"
+- "Which weapons benefit from Gunslinger?"
+
+#### 2. `v_armor_complete`
+**Purpose:** Unified view of all armor (regular + power armor) with resistances
+
+**Data Provided:**
+- Armor details: id, name, armor_type, class, slot, set_name, level
+- All resistances: DR, ER, RR, Cryo, Fire, Poison
+- Source URL
+
+**Query:**
+```sql
+SELECT * FROM v_armor_complete
+WHERE armor_type = 'regular' AND class = 'Heavy';
+```
+
+**Use Cases:**
+- "Show me all heavy armor sets"
+- "What's the DR of T-65 power armor chest?"
+- "Compare Scout armor vs Combat armor resistances"
+
+#### 3. `v_perks_all_ranks`
+**Purpose:** Regular SPECIAL perks with all rank details
+
+**Data Provided:**
+- Perk base info: perk_id, name, SPECIAL, min_level, race
+- Rank details: rank number (1-5), description, form_id
+- All ranks for each perk in separate rows
+
+**Query:**
+```sql
+SELECT * FROM v_perks_all_ranks
+WHERE perk_name = 'Gunslinger' AND rank = 3;
+```
+
+**Use Cases:**
+- "What does Gunslinger Master do?"
+- "Show me all Strength perks at rank 1"
+- "What's the difference between rank 1 and rank 3 of Bloody Mess?"
+
+#### 4. `v_legendary_perks_all_ranks`
+**Purpose:** Legendary perks with rank progression (1-4)
+
+**Data Provided:**
+- Legendary perk info: legendary_perk_id, name, base_description, race
+- Rank details: rank (1-4), rank_description, effect_value, effect_type
+- Scaling values parsed: "10%", "20%", "30%", "40%"
+
+**Query:**
+```sql
+SELECT * FROM v_legendary_perks_all_ranks
+WHERE perk_name = 'Follow Through'
+ORDER BY rank;
+```
+
+**Use Cases:**
+- "How does Follow Through scale from rank 1 to 4?"
+- "Which legendary perks are ghoul-only?"
+- "Show me all rank 4 legendary perk effects"
+
+### Why Views Are Essential for RAG
+
+**❌ Without Views:**
+```sql
+-- Complex 5-table join the LLM would need to generate
+SELECT w.name, w.damage,
+       GROUP_CONCAT(DISTINCT p.name) as regular_perks,
+       GROUP_CONCAT(DISTINCT lp.name) as legendary_perks
+FROM weapons w
+LEFT JOIN weapon_perks wp ON w.id = wp.weapon_id
+LEFT JOIN perks p ON wp.perk_id = p.id
+LEFT JOIN weapon_legendary_perk_effects wlpe ON w.id = wlpe.weapon_id
+LEFT JOIN legendary_perks lp ON wlpe.legendary_perk_id = lp.id
+WHERE w.name = 'Enclave plasma gun'
+GROUP BY w.id;
+```
+
+**✅ With Views:**
+```sql
+-- Simple, readable query
+SELECT * FROM v_weapons_with_perks
+WHERE weapon_name = 'Enclave plasma gun';
+```
+
+### Benefits
+
+1. **Simpler Queries** - LLM doesn't need to know table relationships or JOIN syntax
+2. **Faster Retrieval** - Pre-optimized joins, MySQL caches execution plans
+3. **Consistent Format** - Always returns data in the same structure
+4. **Single Source of Truth** - One canonical way to query common patterns
+5. **Reduced Errors** - No risk of incorrect joins or missing foreign keys
+6. **Better Performance** - Database can optimize view queries better than dynamic SQL
+
+### View Maintenance
+
+Views are automatically updated when underlying tables change:
+- Add weapon → Immediately appears in `v_weapons_with_perks`
+- Link new perk → View reflects change instantly
+- No manual refresh needed
+
+**Schema Updates:** If table structure changes, views must be recreated:
+```sql
+DROP VIEW v_weapons_with_perks;
+CREATE VIEW v_weapons_with_perks AS ...
+```
+
+This is handled automatically when importing `f76_schema.sql`.
+
 ## RAG Query Examples
 
 ### Example 1: Build Optimization
 **User:** "Best stealth sniper build for a human?"
 
 **RAG retrieval:**
-1. Query `v_weapons_with_perks` WHERE weapon_class = 'Rifle'
-2. Query `perks` WHERE name LIKE '%sneak%' OR name LIKE '%sniper%'
-3. Query `legendary_perks` WHERE description LIKE '%sneak%'
-4. Filter by race = 'Human' or 'Both'
+1. Query `v_weapons_with_perks` WHERE weapon_class LIKE '%Rifle%'
+2. Query `v_perks_all_ranks` WHERE perk_name LIKE '%sneak%' OR perk_name LIKE '%sniper%'
+3. Query `v_legendary_perks_all_ranks` WHERE base_description LIKE '%sneak%'
+4. Filter by race = 'Human' or 'Human, Ghoul'
 
 **LLM response:** Synthesize weapon recommendations + perk loadout
 
@@ -180,7 +314,7 @@ Stores conditions for when perks apply:
 **User:** "What's the base damage of the Enclave plasma gun?"
 
 **RAG retrieval:**
-1. Query `weapons` WHERE name = 'Enclave plasma gun'
+1. Query `v_weapons_with_perks` WHERE weapon_name = 'Enclave plasma gun'
 2. Return damage field
 
 **LLM response:** Parse multi-level damage "24 / 28 / 32"
@@ -189,9 +323,18 @@ Stores conditions for when perks apply:
 **User:** "What does Follow Through do at rank 3?"
 
 **RAG retrieval:**
-1. Query `v_legendary_perks_all_ranks` WHERE name = 'Follow Through' AND rank = 3
+1. Query `v_legendary_perks_all_ranks` WHERE perk_name = 'Follow Through' AND rank = 3
 
 **LLM response:** Explain rank 3 effect
+
+### Example 4: Weapon-Perk Relationships
+**User:** "Which weapons are affected by Gunslinger?"
+
+**RAG retrieval:**
+1. Query `v_weapons_with_perks` WHERE regular_perks LIKE '%Gunslinger%'
+2. Return list of weapons
+
+**LLM response:** List weapons with their classes (Non-automatic pistol, Pistol/Rifle, etc.)
 
 ## Performance Considerations
 

@@ -46,12 +46,49 @@
 
 ---
 
-## Phase 2: Additional Build Components
+## Phase 2: RAG System & LLM Integration (MVP PRIORITY)
 
-### 🔧 Immediate Tasks
-- [ ] Add Vulcan Power Armor when per-piece stat data becomes available from wiki
+### Goal: Get a working MVP that can answer questions about builds using existing data
 
-### 🔍 Research & Evaluation Phase
+**Current Data Available:**
+- 262 weapons with perk relationships
+- 477 armor pieces (regular + power armor)
+- 240 regular perks (449 ranks)
+- 28 legendary perks (112 ranks)
+- RAG-optimized views already created
+
+### Step 1: Choose RAG Framework & LLM
+- [ ] **Decision:** LangChain vs LlamaIndex vs custom implementation
+- [ ] **Decision:** OpenAI GPT-4 vs Anthropic Claude vs local model (Llama, Mistral)
+- [ ] **Decision:** Vector database (ChromaDB, Pinecone, Weaviate) or SQL-only retrieval
+
+### Step 2: Create Data Embedding Pipeline
+- [ ] Write script to convert database views to embeddings
+- [ ] Chunk data appropriately (per weapon, per perk, per armor piece)
+- [ ] Store embeddings in vector database
+- [ ] Test similarity search
+
+### Step 3: Build Query Interface
+- [ ] Create simple CLI/web interface for questions
+- [ ] Implement RAG retrieval logic
+- [ ] Connect to LLM for response generation
+- [ ] Add conversation history/context
+
+### Step 4: MVP Features
+- [ ] **Weapon lookup:** "What perks affect the Enclave plasma gun?"
+- [ ] **Perk information:** "What does Gunslinger do at each rank?"
+- [ ] **Build recommendations:** "What's a good stealth rifle build?"
+- [ ] **Comparison:** "Compare Combat armor vs Scout armor"
+
+### Step 5: Refinement
+- [ ] Add prompt engineering for better responses
+- [ ] Implement query reformulation
+- [ ] Add source citations (link to wiki URLs)
+- [ ] Handle edge cases and errors
+
+---
+
+## Phase 3: Additional Build Components
 
 The following build components need to be researched, evaluated, and potentially added to the database schema:
 
@@ -124,7 +161,7 @@ The following build components need to be researched, evaluated, and potentially
 
 ---
 
-## Phase 3: Data Enhancement
+## Phase 4: Data Enhancement
 
 ### Conditional Perk Rules
 - [ ] Implement `weapon_perk_rules` table population:
@@ -140,10 +177,9 @@ The following build components need to be researched, evaluated, and potentially
 
 ---
 
-## Phase 4: RAG System & LLM Integration
+## Phase 5: Advanced RAG Features
 
-### RAG-Optimized Views
-- [ ] Enhance existing views with computed fields
+### Enhanced Views
 - [ ] Create build archetype views:
   - Stealth commando builds
   - Heavy gunner builds
@@ -153,18 +189,6 @@ The following build components need to be researched, evaluated, and potentially
   - VATS builds
   - Tank/support builds
 - [ ] Create perk synergy views (perks that complement each other)
-
-### Query Patterns
-- [ ] Document common query patterns for RAG retrieval
-- [ ] Add full-text indexes for description searches
-- [ ] Create example prompts for LLM queries
-- [ ] Build query optimization for fast retrieval
-
-### Build Optimizer
-- [ ] Create LLM-powered build recommendation system
-- [ ] Input: Playstyle preferences, weapon choice, role (solo/team)
-- [ ] Output: Recommended perks, mutations, gear, consumables
-- [ ] Explain trade-offs and synergies
 
 ### Advanced Features
 - [ ] **Damage calculator** - Calculate effective DPS given build + weapon + perks + buffs
@@ -248,14 +272,15 @@ The following build components need to be researched, evaluated, and potentially
 ## Notes
 
 ### Current Database Summary
-- **Weapons:** 249
+- **Weapons:** 262 (Ranged: 127, Melee: 94, Grenade: 26, Mine: 8, Thrown: 4, Camera: 3)
 - **Armor (unified):** 477 (291 regular + 186 power armor)
   - 18 regular armor sets × multiple levels × pieces
   - 12 power armor sets × multiple levels × 6 pieces each
   - One row per piece per level for accurate stat tracking
 - **Regular Perks:** 240 (449 total ranks)
 - **Legendary Perks:** 28 (112 total ranks)
-- **Weapon-Perk Links:** 1,689
+- **Weapon-Perk Links:** 1,685
+- **Data Quality:** 100% type classification, 95.8% have damage data
 
 ### MySQL Reserved Keyword Fix
 - Fixed `rank` column in `perk_ranks` and `legendary_perk_ranks` tables

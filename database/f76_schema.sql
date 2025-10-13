@@ -25,8 +25,7 @@ CREATE TABLE weapons (
   type VARCHAR(64),
   class VARCHAR(64),
   level VARCHAR(64),
-  damage VARCHAR(64),
-  projectile VARCHAR(128),
+  damage VARCHAR(255),
   perks_raw TEXT,
   source_url TEXT,
   UNIQUE KEY uq_weapon_name (name),
@@ -178,7 +177,6 @@ SELECT
   w.class AS weapon_class,
   w.level,
   w.damage,
-  w.projectile,
   GROUP_CONCAT(DISTINCT p.name ORDER BY p.name SEPARATOR '; ') AS regular_perks,
   GROUP_CONCAT(DISTINCT lp.name ORDER BY lp.name SEPARATOR '; ') AS legendary_perks,
   w.source_url

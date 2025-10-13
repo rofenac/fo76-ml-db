@@ -218,17 +218,17 @@ class F76DatabaseImporter:
         self.legendary_perk_id_cache = {name: perk_id for perk_id, name in self.cursor.fetchall()}
         print(f"✓ Cached {len(self.legendary_perk_id_cache)} legendary perk IDs")
 
-    def parse_perks_field(self, perks_raw: str) -> List[str]:
+    def parse_perks_field(self, perks_raw: str) -> List[Tuple[str, Dict]]:
         """
-        Parse the perks_raw field into individual perk names.
+        Parse the perks_raw field into perk names with conditions.
 
         Handles cases like:
-        - "Bloody Mess"
-        - "Gunslinger (Expert, Master)"
-        - "Sniper (scoped) only"
-        - "Pistol: Gun Runner, Modern Renegade, Crack Shot (sighted only)"
+        - "Bloody Mess" -> ("Bloody Mess", {})
+        - "Gunslinger (Expert, Master)" -> [("Gunslinger", {}), ("Gunslinger Expert", {}), ...]
+        - "Sniper (scoped) only" -> ("Sniper", {'scope_state': 'scoped'})
+        - "Pistol: Gun Runner" -> ("Gun Runner", {'weapon_class': 'pistol'})
 
-        Returns list of canonical perk names.
+        Returns list of tuples: (perk_name, conditions_dict)
         """
         if not perks_raw or perks_raw.strip() == '':
             return []
@@ -246,10 +246,14 @@ class F76DatabaseImporter:
                 continue
 
             # Check if section has a class prefix (e.g., "Pistol: perk1, perk2")
+            weapon_class_prefix = None
             if ':' in section:
                 # Split on colon and process the perk list part
                 prefix, perk_list = section.split(':', 1)
-                section = perk_list.strip()
+                prefix_lower = prefix.strip().lower()
+                if prefix_lower in ['pistol', 'rifle', 'heavy', 'melee', 'auto pistol', 'non-auto pistol']:
+                    weapon_class_prefix = prefix_lower
+                    section = perk_list.strip()
 
             # Now we need to split on commas, but NOT commas inside parentheses
             # Use a smarter split that respects parentheses
@@ -259,17 +263,25 @@ class F76DatabaseImporter:
                 if not perk_part:
                     continue
 
-                # Extract base perk name and variants
-                perk_names = self._extract_perk_names(perk_part)
-                perks.extend(perk_names)
+                # Extract base perk name, variants, and conditions
+                perk_data = self._extract_perk_with_conditions(perk_part)
+
+                # Apply weapon class prefix if present
+                for perk_name, conditions in perk_data:
+                    if weapon_class_prefix:
+                        conditions['weapon_class'] = weapon_class_prefix
+                    perks.append((perk_name, conditions))
 
         # Remove duplicates while preserving order
         seen = set()
         unique_perks = []
-        for perk in perks:
-            if perk not in seen:
-                seen.add(perk)
-                unique_perks.append(perk)
+        for perk_tuple in perks:
+            # Create a hashable key from perk name and sorted conditions
+            perk_name, conditions = perk_tuple
+            key = (perk_name, tuple(sorted(conditions.items())))
+            if key not in seen:
+                seen.add(key)
+                unique_perks.append(perk_tuple)
 
         return unique_perks
 
@@ -299,22 +311,40 @@ class F76DatabaseImporter:
 
         return parts
 
-    def _extract_perk_names(self, perk_str: str) -> List[str]:
+    def _extract_perk_with_conditions(self, perk_str: str) -> List[Tuple[str, Dict]]:
         """
-        Extract perk name(s) from a string like:
-        - "Bloody Mess" -> ["Bloody Mess"]
-        - "Gunslinger (Expert, Master)" -> ["Gunslinger", "Gunslinger Expert", "Gunslinger Master"]
-        - "Sniper (scoped) only" -> ["Sniper"]
-        - "Crack Shot (sighted only)" -> ["Crack Shot"]
+        Extract perk name(s) and conditions from a string like:
+        - "Bloody Mess" -> [("Bloody Mess", {})]
+        - "Gunslinger (Expert, Master)" -> [("Gunslinger", {}), ("Gunslinger Expert", {}), ...]
+        - "Sniper (scoped) only" -> [("Sniper", {'scope_state': 'scoped'})]
+        - "Crack Shot (sighted only)" -> [("Crack Shot", {'aim_state': 'ads'})]
         """
-        # Remove trailing conditions like "only", "(scoped)", "(sighted only)", etc.
-        # These are conditions, not part of the perk name
-        perk_str = re.sub(r'\s*\((?:scoped|sighted|unscoped|pistol|rifle)(?:\s+only)?\)\s*(?:only)?', '', perk_str, flags=re.IGNORECASE)
-        perk_str = re.sub(r'\s+only\s*$', '', perk_str, flags=re.IGNORECASE)
-        perk_str = perk_str.strip()
+        conditions = {}
+
+        # Extract conditions from the string
+        # Look for: (scoped), (sighted), (unscoped), etc.
+        condition_patterns = [
+            (r'\bscoped\b', 'scope_state', 'scoped'),
+            (r'\bunscoped\b', 'scope_state', 'unscoped'),
+            (r'\bsighted\b', 'aim_state', 'ads'),
+            (r'\bhip\s*fire\b', 'aim_state', 'hip_fire'),
+            (r'\bauto\b', 'fire_mode', 'auto'),
+            (r'\bsemi(?:-auto)?\b', 'fire_mode', 'semi'),
+            (r'\bnon-auto\b', 'fire_mode', 'semi'),
+        ]
+
+        for pattern, key, value in condition_patterns:
+            if re.search(pattern, perk_str, flags=re.IGNORECASE):
+                conditions[key] = value
+
+        # Remove condition text and "only" from perk string
+        clean_str = perk_str
+        clean_str = re.sub(r'\s*\((?:scoped|sighted|unscoped|hip\s*fire|auto|semi|non-auto)(?:\s+only)?\)\s*', '', clean_str, flags=re.IGNORECASE)
+        clean_str = re.sub(r'\s+only\s*$', '', clean_str, flags=re.IGNORECASE)
+        clean_str = clean_str.strip()
 
         # Check for variants in parentheses like "(Expert, Master)"
-        variant_match = re.search(r'^(.+?)\s*\(([^)]+)\)$', perk_str)
+        variant_match = re.search(r'^(.+?)\s*\(([^)]+)\)$', clean_str)
 
         if variant_match:
             base_name = variant_match.group(1).strip()
@@ -332,20 +362,20 @@ class F76DatabaseImporter:
             for variant in variants:
                 if variant.lower() in rank_variants:
                     # This is a rank variant
-                    perk_names.append(f"{base_name} {variant.title()}")
+                    perk_names.append((f"{base_name} {variant.title()}", conditions.copy()))
                     has_ranks = True
 
             # If we found rank variants, also include the base perk
             if has_ranks:
-                perk_names.insert(0, base_name)
+                perk_names.insert(0, (base_name, conditions.copy()))
             else:
                 # Not rank variants, just return the base name
-                perk_names = [base_name]
+                perk_names = [(base_name, conditions.copy())]
 
             return perk_names
         else:
-            # No variants, just return the perk name
-            return [perk_str]
+            # No variants, just return the perk name with conditions
+            return [(clean_str, conditions)]
 
     def import_weapons(self, csv_file: str = "data/input/human_corrected_weapons_clean.csv") -> int:
         """Import weapons from CSV into weapons table and populate weapon_perks."""
@@ -424,32 +454,40 @@ class F76DatabaseImporter:
         return weapons_inserted + weapons_updated
 
     def _link_weapon_perks(self, weapon_id: int, perks_raw: str, weapon_name: str) -> int:
-        """Parse perks_raw and create weapon_perks and weapon_legendary_perks entries."""
-        perk_names = self.parse_perks_field(perks_raw)
+        """Parse perks_raw and create weapon_perks, weapon_legendary_perks, and weapon_perk_rules entries."""
+        perk_data = self.parse_perks_field(perks_raw)
 
-        if not perk_names:
+        if not perk_data:
             return 0
 
         # Clear existing links for this weapon
         self.cursor.execute("DELETE FROM weapon_perks WHERE weapon_id = %s", (weapon_id,))
         self.cursor.execute("DELETE FROM weapon_legendary_perk_effects WHERE weapon_id = %s", (weapon_id,))
+        self.cursor.execute("DELETE FROM weapon_perk_rules WHERE weapon_id = %s", (weapon_id,))
 
         regular_links_created = 0
         legendary_links_created = 0
+        rules_created = 0
         perks_not_found = []
 
-        for perk_name in perk_names:
+        for perk_name, conditions in perk_data:
             # Try regular perks first
             perk_id = self.perk_id_cache.get(perk_name)
 
             if perk_id:
                 try:
+                    # Always create basic link in weapon_perks
                     self.cursor.execute(
                         "INSERT IGNORE INTO weapon_perks (weapon_id, perk_id) VALUES (%s, %s)",
                         (weapon_id, perk_id)
                     )
                     if self.cursor.rowcount > 0:
                         regular_links_created += 1
+
+                    # If there are conditions, also create weapon_perk_rules entry
+                    if conditions:
+                        rules_created += self._create_perk_rule(weapon_id, perk_id, conditions, weapon_name)
+
                 except Error as e:
                     print(f"  ✗ Error linking perk '{perk_name}' to weapon '{weapon_name}': {e}")
             else:
@@ -474,7 +512,53 @@ class F76DatabaseImporter:
             for perk in perks_not_found:
                 print(f"    - '{perk}'")
 
+        if rules_created > 0:
+            print(f"  ✓ Created {rules_created} conditional perk rules")
+
         return regular_links_created + legendary_links_created
+
+    def _create_perk_rule(self, weapon_id: int, perk_id: int, conditions: Dict, weapon_name: str) -> int:
+        """Create a weapon_perk_rules entry for conditional perk application."""
+        # Map condition keys to database columns
+        weapon_class = conditions.get('weapon_class', 'any')
+        fire_mode = conditions.get('fire_mode', 'any')
+        scope_state = conditions.get('scope_state', 'any')
+        aim_state = conditions.get('aim_state', 'any')
+        vats_state = conditions.get('vats_state', 'any')
+
+        # Normalize weapon_class values
+        if weapon_class in ['auto pistol', 'non-auto pistol']:
+            weapon_class = 'pistol'
+
+        # Create human-readable note
+        note_parts = []
+        for key, value in conditions.items():
+            if key == 'weapon_class':
+                note_parts.append(f"{value} mode")
+            elif key == 'fire_mode':
+                note_parts.append(f"{value} fire")
+            elif key == 'scope_state':
+                note_parts.append(value)
+            elif key == 'aim_state':
+                if value == 'ads':
+                    note_parts.append("when aiming down sights")
+                else:
+                    note_parts.append(f"{value}")
+
+        note = ", ".join(note_parts) if note_parts else None
+
+        try:
+            self.cursor.execute("""
+                INSERT INTO weapon_perk_rules
+                (weapon_id, perk_id, weapon_class, fire_mode, scope_state, aim_state, vats_state, note)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (weapon_id, perk_id, weapon_class, fire_mode, scope_state, aim_state, vats_state, note))
+
+            return 1 if self.cursor.rowcount > 0 else 0
+
+        except Error as e:
+            print(f"  ✗ Error creating perk rule for weapon '{weapon_name}', perk_id {perk_id}: {e}")
+            return 0
 
     def import_all(self, perks_csv: str = "data/input/Perks.csv",
                    legendary_perks_csv: str = "data/input/LegendaryPerks.csv",
@@ -535,6 +619,11 @@ class F76DatabaseImporter:
         self.cursor.execute("SELECT COUNT(*) FROM weapon_legendary_perk_effects")
         legendary_link_count = self.cursor.fetchone()[0]
         print(f"Weapon → legendary perk effects: {legendary_link_count}")
+
+        # Count weapon perk rules (conditional)
+        self.cursor.execute("SELECT COUNT(*) FROM weapon_perk_rules")
+        rules_count = self.cursor.fetchone()[0]
+        print(f"Weapon perk rules (conditional): {rules_count}")
 
         # Show weapons with no perks at all
         self.cursor.execute("""

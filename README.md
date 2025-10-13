@@ -77,11 +77,13 @@ python database/import_armor.py
 
 **Phase 1 Complete:** Core data collection finished
 
-- ✅ 249 weapons fully scraped and imported
+- ✅ 262 weapons fully scraped and imported (Ranged: 127, Melee: 94, Grenade: 26, Mine: 8, Thrown: 4, Camera: 3)
 - ✅ 477 armor pieces fully imported (291 regular + 186 power armor)
 - ✅ 240 regular perks with 449 total ranks imported
 - ✅ 28 legendary perks with 112 total ranks imported
-- ✅ 1,689 weapon-perk relationship links established
+- ✅ 1,685 weapon-perk relationship links established
+- ✅ 100% of weapons classified by type (0 NULL types)
+- ✅ All grenades linked to Grenadier perk
 
 ## Usage Examples
 
