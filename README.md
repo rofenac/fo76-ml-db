@@ -11,6 +11,7 @@ A Python-based data collection and database management system for Fallout 76 gam
 
 ## Timeline
 
+**13OCT2025** - Ok, so I got a little excited and I MAY have generated a skeleton front end for the project. It can be found in the "react" folder. It is still unknown whether I will have time to do anything with it.
 **Week 5** - Huge progress. Got a MVP up and running. It's a Festivus miracle. I actually have something to show the class.
 **Week 4** - Discovered the miracle of Claude Code. Got it set up and started working on project in earnest.
 **Week 3** - Made some headway with Claude. Then Claude went off the rails. Started over from scratch.
