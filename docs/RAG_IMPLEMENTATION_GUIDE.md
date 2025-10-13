@@ -8,6 +8,17 @@ RAG combines:
 
 Instead of the LLM relying solely on its training data, RAG lets it access your specific Fallout 76 database to give accurate, up-to-date answers.
 
+## Implementation Status
+
+✅ **MVP Complete** - Basic SQL + LLM RAG system is operational with the following features:
+- Natural language to SQL query generation
+- Database query execution with error handling
+- Conversational context memory (last 3 exchanges)
+- Strict grounding to database results (prevents hallucination)
+- Reserved keyword handling (MySQL compatibility)
+- Empty result detection and reporting
+- Command-line interface for testing
+
 ---
 
 ## Architecture Options for Your MVP
@@ -119,12 +130,14 @@ pip freeze > requirements.txt
 
 ### Step 2: Create RAG Query System
 
-Create `rag/query_engine.py`:
+The implemented system is in `rag/query_engine.py` with the following key features:
 
+**Core Architecture:**
 ```python
 import anthropic
 import mysql.connector
 import os
+import re
 from typing import Dict, List
 
 class FalloutRAG:
@@ -142,75 +155,29 @@ class FalloutRAG:
             'database': 'f76'
         }
 
-    def query_database(self, sql: str) -> List[Dict]:
-        """Execute SQL query and return results"""
-        conn = mysql.connector.connect(**self.db_config)
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return results
-
-    def ask(self, question: str) -> str:
-        """Main RAG query function"""
-
-        # Step 1: Use LLM to generate SQL query
-        sql_prompt = f"""You are a SQL expert for a Fallout 76 game database.
-
-Database schema:
-- v_weapons_with_perks: weapon_name, weapon_type, weapon_class, damage, regular_perks, legendary_perks
-- v_armor_complete: name, armor_type, class, slot, set_name, damage_resistance, energy_resistance
-- v_perks_all_ranks: perk_name, special, min_level, race, rank, rank_description
-- v_legendary_perks_all_ranks: perk_name, race, rank, rank_description, effect_value, effect_type
-
-User question: {question}
-
-Generate ONLY the SQL query to answer this question. No explanations.
-Use views when possible for cleaner queries."""
-
-        # Get SQL from Claude
-        sql_response = self.client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=500,
-            messages=[{"role": "user", "content": sql_prompt}]
-        )
-
-        sql_query = sql_response.content[0].text.strip()
-        print(f"Generated SQL: {sql_query}\n")
-
-        # Step 2: Execute the query
-        try:
-            results = self.query_database(sql_query)
-        except Exception as e:
-            return f"Error executing query: {e}"
-
-        # Step 3: Format results with LLM
-        answer_prompt = f"""User asked: {question}
-
-SQL query executed: {sql_query}
-
-Results: {results}
-
-Please provide a clear, helpful answer to the user's question based on these results.
-Format the data in an easy-to-read way."""
-
-        answer_response = self.client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=1500,
-            messages=[{"role": "user", "content": answer_prompt}]
-        )
-
-        return answer_response.content[0].text
-
-# Example usage
-if __name__ == "__main__":
-    rag = FalloutRAG()
-
-    question = "What perks affect the Enclave plasma gun?"
-    answer = rag.ask(question)
-    print(answer)
+        # Conversation history for context (stores last 3 exchanges)
+        self.conversation_history = []
 ```
+
+**Key Features Implemented:**
+
+1. **Markdown Code Fence Removal** - Strips ````sql` and ` ``` from generated queries
+2. **MySQL Reserved Keyword Handling** - Properly handles `rank`, `order`, etc. with backticks
+3. **Empty Result Detection** - Returns clear message when queries return no data
+4. **Strict Result Grounding** - System prompt prevents LLM from using training data
+5. **Conversational Context** - Maintains last 3 Q&A exchanges for follow-up questions
+6. **Schema Documentation** - Accurate field descriptions (e.g., armor_type: 'regular' or 'power')
+
+**SQL Generation Prompt:**
+- Enforces MySQL ONLY_FULL_GROUP_BY compatibility
+- Includes proper schema with actual enum values
+- Provides context hints (weapon_type vs weapon_class distinction)
+- Requires backticks for reserved keywords
+
+**Answer Formatting:**
+- Uses system prompt to strictly limit responses to database results only
+- Prevents hallucination by forbidding use of training data
+- Returns empty result warnings instead of fabricating data
 
 ### Step 3: Create Simple CLI Interface
 
@@ -270,6 +237,18 @@ python rag/cli.py
 - "What does Gunslinger do at each rank?"
 - "Compare Combat armor vs Scout armor"
 - "What's a good rifle build?"
+
+**Testing Conversational Context:**
+The system now supports follow-up questions using context from previous exchanges:
+```
+You: What's the best shotgun in the game?
+Assistant: [Returns Combat shotgun info]
+
+You: Compare that to the Gauss Shotgun
+Assistant: [Understands "that" refers to Combat shotgun from previous answer]
+```
+
+The system maintains the last 3 Q&A exchanges to enable natural conversation flow.
 
 ---
 
@@ -342,17 +321,28 @@ You understand:
 Always cite specific weapon/perk names and stats when answering."""
 ```
 
-### 2. Add Conversation History
+### 2. Conversation History (✅ Implemented)
+The system now maintains conversation context automatically:
 ```python
-conversation_history = []
+# In __init__
+self.conversation_history = []
 
-# Add to history
-conversation_history.append({"role": "user", "content": question})
-conversation_history.append({"role": "assistant", "content": answer})
+# Before SQL generation, inject context
+if self.conversation_history:
+    context_section = "\n\nPrevious conversation context:\n"
+    for entry in self.conversation_history[-3:]:  # Last 3 exchanges
+        context_section += f"Q: {entry['question']}\nA: {entry['summary']}\n\n"
+    sql_prompt = context_section + sql_prompt
 
-# Use in next query
-messages = conversation_history + [{"role": "user", "content": new_question}]
+# After generating answer, store in history
+self.conversation_history.append({
+    'question': question,
+    'sql': sql_query,
+    'summary': final_answer[:200] + "..." if len(final_answer) > 200 else final_answer
+})
 ```
+
+This enables natural follow-up questions like "compare that to X" where "that" refers to a previous result.
 
 ### 3. Error Handling
 ```python
@@ -383,16 +373,22 @@ def safe_query(self, sql: str) -> List[Dict]:
 ## Common Pitfalls to Avoid
 
 ❌ **Don't:** Let the LLM hallucinate data - always retrieve from database
-✅ **Do:** Use RAG to ground responses in actual game data
+✅ **Do:** Use RAG to ground responses in actual game data (✅ Implemented via system prompt)
 
 ❌ **Don't:** Send entire database to LLM context window
-✅ **Do:** Retrieve only relevant data for each query
+✅ **Do:** Retrieve only relevant data for each query (✅ Implemented)
 
 ❌ **Don't:** Expose raw SQL errors to users
-✅ **Do:** Catch errors and retry with better prompts
+✅ **Do:** Catch errors and retry with better prompts (✅ Basic error handling implemented)
 
 ❌ **Don't:** Hardcode API keys in code
-✅ **Do:** Use environment variables
+✅ **Do:** Use environment variables (✅ Implemented)
+
+❌ **Don't:** Ignore MySQL reserved keywords
+✅ **Do:** Use backticks for columns like `rank`, `order`, etc. (✅ Implemented in prompt)
+
+❌ **Don't:** Provide inaccurate schema information
+✅ **Do:** Document actual enum values and field types (✅ Implemented - armor_type, weapon_class distinctions)
 
 ---
 

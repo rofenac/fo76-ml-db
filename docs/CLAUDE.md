@@ -8,7 +8,7 @@ The Great Fallout 76 DB Project is a Python-based data collection and database m
 
 **Project Goal:** Build a RAG-powered LLM system to help players optimize character builds, query game data, and answer complex questions like "What's the best bloodied heavy gunner build for solo play?"
 
-## Current Status (Last Updated: 2025-10-10)
+## Current Status (Last Updated: 2025-10-13)
 
 ### ✅ Phase 1 Complete: Core Data Collection
 
@@ -32,6 +32,36 @@ The Great Fallout 76 DB Project is a Python-based data collection and database m
 - `scrapers/legendary_perk_scraper.py` - Legendary perk scraper ✅
 
 **Note:** Vulcan Power Armor awaiting per-piece stat data from wiki
+
+### ✅ RAG System MVP Complete
+
+**Implementation Status:**
+- ✅ Natural language to SQL query generation (Claude Sonnet 4)
+- ✅ Database query execution with error handling
+- ✅ Conversational context memory (last 3 exchanges)
+- ✅ Strict database result grounding (prevents hallucination)
+- ✅ MySQL reserved keyword handling (`rank`, `order`, etc.)
+- ✅ Empty result detection and reporting
+- ✅ Markdown code fence stripping
+- ✅ Command-line interface (`rag/cli.py`)
+
+**Key Files:**
+- `rag/query_engine.py` - Core RAG query engine with FalloutRAG class
+- `rag/cli.py` - Interactive command-line interface
+
+**Usage:**
+```bash
+export ANTHROPIC_API_KEY="your-key-here"
+python rag/cli.py
+```
+
+**Example Queries:**
+- "What's the best shotgun in the game?"
+- "Compare that to the Gauss Shotgun" (uses conversational context)
+- "What does Gunslinger do at each rank?"
+- "Show me all heavy armor sets that aren't power armor"
+
+See `docs/RAG_IMPLEMENTATION_GUIDE.md` for complete documentation.
 
 ### 🔄 Next Phase: Additional Build Components
 
@@ -384,6 +414,12 @@ python database/import_armor.py
 - ✅ Multi-rank support for both regular and legendary perks
 - ✅ Normalized level tracking (one row per armor piece per level)
 - ✅ Unified armor schema (regular + power armor merged)
+- ✅ **RAG System MVP** - Functional natural language query interface with:
+  - SQL generation from natural language
+  - Conversational context memory
+  - Strict database grounding (no hallucination)
+  - MySQL compatibility layer
+  - Error handling and empty result detection
 
 ### Technical Considerations
 - All tables use InnoDB engine with proper foreign key constraints and cascading deletes
@@ -425,6 +461,48 @@ fo76-ml-db/
 └── requirements.txt       # Python dependencies
 ```
 
+## RAG System Implementation
+
+The RAG (Retrieval Augmented Generation) system enables natural language queries against the Fallout 76 database. Located in the `rag/` directory:
+
+### Key Components
+
+**`rag/query_engine.py`** - Core RAG engine with FalloutRAG class
+- Converts natural language questions to SQL queries
+- Executes queries against MySQL database
+- Maintains conversational context (last 3 exchanges)
+- Strict result grounding to prevent hallucination
+- Handles MySQL reserved keywords and syntax quirks
+
+**`rag/cli.py`** - Command-line interface
+- Interactive Q&A loop
+- Simple user experience for testing
+
+### Important Implementation Details
+
+1. **Conversational Context**: The system stores the last 3 Q&A exchanges and injects them into the SQL generation prompt, enabling follow-up questions like "compare that to X"
+
+2. **Hallucination Prevention**: Uses a strict system prompt that forbids the LLM from using training data - it must ONLY format database results
+
+3. **MySQL Compatibility**:
+   - Strips markdown code fences (````sql`) from generated queries
+   - Prompts Claude to use backticks for reserved keywords like `rank`
+   - Documents actual enum values in schema (armor_type: 'regular' or 'power')
+   - Enforces ONLY_FULL_GROUP_BY mode compatibility
+
+4. **Empty Result Handling**: Returns clear "no data found" message instead of allowing hallucination
+
+5. **Schema Documentation**: Provides accurate field descriptions and value ranges to improve SQL generation quality
+
+### Usage
+
+```bash
+export ANTHROPIC_API_KEY="your-api-key"
+python rag/cli.py
+```
+
+See `docs/RAG_IMPLEMENTATION_GUIDE.md` for complete documentation.
+
 ## Documentation
 
 For more details, see the `docs/` directory:
@@ -433,3 +511,4 @@ For more details, see the `docs/` directory:
 - **docs/SCRAPER_README.md** - Comprehensive scraper documentation
 - **docs/IMPORT_GUIDE.md** - Database import walkthrough
 - **docs/SCHEMA_DESIGN.md** - Database architecture and RAG design
+- **docs/RAG_IMPLEMENTATION_GUIDE.md** - RAG system implementation guide
