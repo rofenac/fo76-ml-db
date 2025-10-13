@@ -1,8 +1,12 @@
 import anthropic
 import mysql.connector
 import os
+from dotenv import load_dotenv
 import re
 from typing import Dict, List
+
+# Load environment variables
+load_dotenv()
 
 class FalloutRAG:
     def __init__(self):
@@ -13,10 +17,10 @@ class FalloutRAG:
 
         # Database connection
         self.db_config = {
-            'host': 'localhost',
-            'user': 'root',
-            'password': 'secret',
-            'database': 'f76'
+            'host': os.environ.get('DB_HOST', 'localhost'),
+            'user': os.environ.get('DB_USER', 'root'),
+            'password': os.environ.get('DB_PASSWORD'),
+            'database': os.environ.get('DB_NAME', 'f76')
         }
 
         # Conversation history for context
