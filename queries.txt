@@ -1,0 +1,50 @@
+Basic Queries (test single table lookups)
+
+  1. "List all legendary perks"
+  2. "What weapons do the most damage?"
+  3. "Show me all chest armor pieces"
+
+  Join Queries (test relationships between tables)
+
+  4. "What perks work with the Gauss shotgun?"
+  5. "Show me all Strength perks and their effects at each rank"
+  6. "What legendary perks affect heavy weapons?"
+
+  Aggregation/Grouping (test complex SQL)
+
+  7. "How many weapons are in each weapon class?"
+  8. "What's the average damage resistance for each armor set?"
+  9. "Which SPECIAL attribute has the most perks?"
+
+  Edge Cases (test error handling)
+
+  10. "What perks affect the Death Star?" (non-existent weapon)
+  11. "Show me armor with 1000+ damage resistance" (probably no results)
+  12. "What is the best energy weapon?" (vague query requiring interpretation)
+
+  Complex Logic (test query generation)
+
+  13. "Compare the Combat shotgun vs Pump action shotgun"
+  14. "What's a good build for stealth rifles?"
+  15. "Show me all Secret Service armor pieces with their stats"
+
+  Reserved Keywords (test your backtick escaping)
+
+  16. "What does Gunslinger do at rank 3?" (already tested, but good to retest)
+  17. "Show me all perks sorted by rank"
+
+  Data Validation (test data quality)
+
+  18. "What armor sets are available?" (test set_name grouping)
+  19. "Show me all automatic weapons" (test weapon_class filtering)
+  20. "What perks require level 50 or higher?"
+
+  Try a mix of these - especially the edge cases and complex queries. They'll help identify issues with:
+  - Empty result handling
+  - SQL syntax generation
+  - Data type mismatches
+  - Complex JOIN conditions
+  - Proper use of GROUP BY
+  - Handling ambiguous questions
+
+  Which ones would you like to try first?
