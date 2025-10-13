@@ -9,6 +9,14 @@ A Python-based data collection and database management system for Fallout 76 gam
 - Query game data (weapon damage, perk effects, stat buffs, etc.)
 - Answer questions like "What's the best pistol build for stealth?"
 
+## Timeline
+
+**Week 5** - Huge progress. Got a MVP up and running. It's a Festivus miracle. I actually have something to show the class.
+**Week 4** - Discovered the miracle of Claude Code. Got it set up and started working on project in earnest.
+**Week 3** - Made some headway with Claude. Then Claude went off the rails. Started over from scratch.
+**Week 2** - Tried to build MVP. Got lost in the weeds. Started over from scratch.
+**Week 1** - No Progress. Trying to get my life together.
+
 **Current Status:**
 - ✅ Database schema complete with unified armor architecture (weapons, armor, perks, legendary perks)
 - ✅ 240 regular perks with 449 total ranks imported
