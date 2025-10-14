@@ -1,5 +1,7 @@
 When asking about a build, the LLM should ask about things like: Is this for a stealth build? It will help inform the LLMs response.
 
+---------------
+
 The explanation at the end of the query should know definitive things like multiple damage values correlate to different weapon levels and should enumerate those levels. Example:
 
 "Based on the database results, the **Pipe revolver** has the following damage output:
@@ -7,4 +9,15 @@ The explanation at the end of the query should know definitive things like multi
 **51 / 57 / 65 / 83 / 105 / 134 / 171**
 
 The damage values appear to represent different tiers or upgrade levels, with damage ranging from 51 at the lowest level up to 171 at the highest level."
+
+---------------
+
+General explanations of human vs. ghoul character would be helpful. Maybe a general explanation of basic game machanics?
+
+--------------
+
+
+I asked, "What is the best two handed weapon in the game and it erred out. When the user asks vague questions like that, maybe prompt the LLM to ask followup questions to clarify the user's intent. "What do you mean by best?" It could be something simple like best damage aka highest base damage, or something more complex like the best overall based on user defined criteria which the LLM could tease out of the LLM.
+
+-----------------
 
