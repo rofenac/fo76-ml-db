@@ -1,0 +1,2 @@
+When asking about a build, the LLM should ask about things like: Is this for a stealth build? It will help inform the LLMs response.
+
