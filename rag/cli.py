@@ -72,8 +72,41 @@ def main():
             continue
 
         print("\nAssistant: ", end="")
-        answer = rag.ask(question)
-        print(answer)
+        response = rag.ask(question)
+
+        # Handle different response types
+        if response['type'] == 'clarification':
+            # Question needs clarification
+            print(f"\nI need more information to answer that question.\n")
+            print(f"Reason: {response['reason']}\n")
+
+            if response['questions']:
+                print("Please help me understand:")
+                for i, q in enumerate(response['questions'], 1):
+                    print(f"  {i}. {q}")
+
+                # Get user's clarification
+                print("\nPlease answer these questions or rephrase your original question:")
+                clarification = input("You: ").strip()
+
+                if clarification.lower() not in ['exit', 'quit', 'q']:
+                    # Combine original question with clarification
+                    enhanced_question = f"{question}\n\nAdditional context: {clarification}"
+                    print("\nAssistant: ", end="")
+                    # Skip classification on the enhanced question
+                    final_response = rag.ask(enhanced_question, skip_classification=True)
+                    print(final_response['content'])
+            else:
+                print("Could you please rephrase your question with more specific details?")
+
+        elif response['type'] == 'answer':
+            # Normal answer
+            print(response['content'])
+
+        elif response['type'] == 'error':
+            # Error occurred
+            print(f"ERROR: {response['content']}")
+
         print("\n" + "="*60 + "\n")
 
 if __name__ == "__main__":

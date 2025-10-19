@@ -1,0 +1,20 @@
+name,positive_effects,negative_effects,form_id,exclusive_with,source_url
+Adrenal Reaction,Increased damage based on Kill Streak (Max 10),reduced maximum hit points (-50 HP),004E1F14,,https://fallout.fandom.com/wiki/Adrenal_Reaction
+Bird Bones,"+4 Agility; -50% fall damage",-4 Strength,003C403D,,https://fallout.fandom.com/wiki/Bird_Bones
+Carnivore,"Eating meat provides double hunger satisfaction, HP restoration, and consumable buffs, with no disease chance and no rads taken","Eating vegetable-based food does not satisfy hunger, restore HP, or apply buffs",003C4049,Herbivore,https://fallout.fandom.com/wiki/Carnivore
+Chameleon,"The player character gains invisibility while unarmored, stationary, and having a weapon drawn but not attacking",None beyond the requirements for the perk's positive effects,004E4006,,https://fallout.fandom.com/wiki/Chameleon
+Eagle Eyes,+50% critical damage and +4 Perception Positive effects (with Strange in Numbers) +75% critical damage and +5 Perception,4 Strength,003C4037,,https://fallout.fandom.com/wiki/Eagle_Eyes
+Egg Head,+6 Intelligence,"3 Strength and Endurance With the Class Freak perk at max rank, this mutation's downsides will show as ""STR >-1 END >-1"" in the Pip-Boy, as 75% of 3 is not an integer",003C4045,,https://fallout.fandom.com/wiki/Egg_Head
+Electrically Charged,Chance to shock melee attackers upon being hit,Shock deals energy damage to player character,004E400D,,https://fallout.fandom.com/wiki/Electrically_Charged
+Empath,25% damage taken by teammates,+33% damage taken by player character,004E1F16,,https://fallout.fandom.com/wiki/Empath
+Grounded,+100 Energy Resistance,50% Energy weapon damage Grounded reduces all damage dealt by energy weapons by 50%,004E4002,,https://fallout.fandom.com/wiki/Grounded
+Healing Factor,Health regeneration +3% per second (only works when not in combat),"Chem effects -55% (including Stimpaks, Radaway, and Rad-X) The health regeneration effect functions regardless of hunger level, despite the mutation",004DF1DB,,https://fallout.fandom.com/wiki/Healing_Factor
+Herbivore,"Consuming fruit, herb or vegetable-based food/drink provides double the hunger/thirst satisfaction, HP restoration and consumable buffs, with no disease chance and no rads taken",Eating meat-based food does not satisfy,003C404E,Carnivore,https://fallout.fandom.com/wiki/Herbivore
+Herd Mentality,+2 to all SPECIAL stats when grouped,2 to all SPECIAL stats when solo,004E1F1E,,https://fallout.fandom.com/wiki/Herd_Mentality
+Marsupial,"Carry Weight +20, improved jump height",4 Intelligence,004DF1CE,,https://fallout.fandom.com/wiki/Marsupial
+Plague Walker,Poison aura scaling with the number of acquired diseases (4 max),-4 Agility when diseased,004E4021,,https://fallout.fandom.com/wiki/Plague_Walker
+Scaly Skin,+50 damage and energy resistance,50 AP,004DF1CF,,https://fallout.fandom.com/wiki/Scaly_Skin
+Speed Demon,+20% movement speed and +30% reload speed,Increased Hunger and Thirst accumulation by 50% while moving,004DF1E0,,https://fallout.fandom.com/wiki/Speed_Demon
+Talons,Unarmed attacks deal 25% more damage and amplifies bleeding attacks,4 Agility,0028D3BC,,https://fallout.fandom.com/wiki/Talons
+Twisted Muscles,"• Standard: +25% melee, unarmed and bashing damage and +20% chance to cripple enemy limbs",• -50% gun,003C402F,,https://fallout.fandom.com/wiki/Twisted_Muscles
+Unstable Isotope,10% chance to release a radiation blast when struck in melee,The radiation blast irradiates the player character,004E4017,,https://fallout.fandom.com/wiki/Unstable_Isotope

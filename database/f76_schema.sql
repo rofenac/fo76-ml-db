@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS legendary_perk_ranks;
 DROP TABLE IF EXISTS perk_ranks;
 DROP TABLE IF EXISTS legendary_perks;
 DROP TABLE IF EXISTS perks;
+DROP TABLE IF EXISTS mutations;
 DROP TABLE IF EXISTS power_armor;  -- Deprecated: merged into armor table
 DROP TABLE IF EXISTS armor;
 DROP TABLE IF EXISTS weapons;
@@ -236,3 +237,40 @@ SELECT
 FROM legendary_perks lp
 LEFT JOIN legendary_perk_ranks lpr ON lp.id = lpr.legendary_perk_id
 ORDER BY lp.name, lpr.`rank`;
+
+-- ============================================================================
+-- MUTATIONS TABLE
+-- ============================================================================
+
+CREATE TABLE mutations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(128) NOT NULL,
+  positive_effects TEXT,               -- Comma-separated or detailed positive effects
+  negative_effects TEXT,               -- Comma-separated or detailed negative effects
+  form_id CHAR(8),                     -- Game Form ID
+  exclusive_with VARCHAR(128),         -- Name of mutually exclusive mutation (e.g., "Carnivore" for Herbivore)
+  suppression_perk VARCHAR(128),       -- Perk that reduces negative effects (typically "Class Freak")
+  enhancement_perk VARCHAR(128),       -- Perk that enhances positive effects (typically "Strange in Numbers")
+  source_url TEXT,
+  UNIQUE KEY uq_mutation_name (name),
+  INDEX idx_mutation_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================================
+-- MUTATIONS VIEW (RAG-OPTIMIZED)
+-- ============================================================================
+
+-- View: All mutations with effects
+CREATE OR REPLACE VIEW v_mutations_complete AS
+SELECT
+  m.id AS mutation_id,
+  m.name AS mutation_name,
+  m.positive_effects,
+  m.negative_effects,
+  m.form_id,
+  m.exclusive_with,
+  m.suppression_perk,
+  m.enhancement_perk,
+  m.source_url
+FROM mutations m
+ORDER BY m.name;
