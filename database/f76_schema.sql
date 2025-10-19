@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS legendary_perk_ranks;
 DROP TABLE IF EXISTS perk_ranks;
 DROP TABLE IF EXISTS legendary_perks;
 DROP TABLE IF EXISTS perks;
+DROP TABLE IF EXISTS consumables;
 DROP TABLE IF EXISTS mutations;
 DROP TABLE IF EXISTS power_armor;  -- Deprecated: merged into armor table
 DROP TABLE IF EXISTS armor;
@@ -274,3 +275,59 @@ SELECT
   m.source_url
 FROM mutations m
 ORDER BY m.name;
+
+-- ============================================================================
+-- CONSUMABLES TABLE
+-- ============================================================================
+
+CREATE TABLE consumables (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  category ENUM('food', 'drink', 'chem', 'aid', 'alcohol', 'beverage') NOT NULL,
+  subcategory VARCHAR(64),                -- 'cooked', 'raw', 'preserved', 'nuka-cola', 'stimpak', etc.
+  effects TEXT,                           -- Stat buffs, healing, rad removal, etc.
+  duration VARCHAR(64),                   -- Effect duration (e.g., "1 hour", "30 minutes", "instant")
+  hp_restore VARCHAR(32),                 -- HP restoration amount
+  rads VARCHAR(32),                       -- Radiation added/removed
+  hunger_satisfaction VARCHAR(32),        -- Hunger meter fill
+  thirst_satisfaction VARCHAR(32),        -- Thirst meter fill
+  special_modifiers TEXT,                 -- SPECIAL stat changes (e.g., "+2 STR, -1 INT")
+  addiction_risk VARCHAR(32),             -- Addiction chance (for chems)
+  disease_risk VARCHAR(32),               -- Disease chance (for raw food)
+  weight DECIMAL(5,2),                    -- Item weight
+  value INT,                              -- Caps value
+  form_id CHAR(8),                        -- Game Form ID
+  crafting_station VARCHAR(64),           -- Where it's crafted (if applicable)
+  source_url TEXT,
+  UNIQUE KEY uq_consumable_name (name),
+  INDEX idx_consumable_category (category),
+  INDEX idx_consumable_subcategory (subcategory)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================================
+-- CONSUMABLES VIEW (RAG-OPTIMIZED)
+-- ============================================================================
+
+-- View: All consumables with effects
+CREATE OR REPLACE VIEW v_consumables_complete AS
+SELECT
+  c.id AS consumable_id,
+  c.name AS consumable_name,
+  c.category,
+  c.subcategory,
+  c.effects,
+  c.duration,
+  c.hp_restore,
+  c.rads,
+  c.hunger_satisfaction,
+  c.thirst_satisfaction,
+  c.special_modifiers,
+  c.addiction_risk,
+  c.disease_risk,
+  c.weight,
+  c.value,
+  c.form_id,
+  c.crafting_station,
+  c.source_url
+FROM consumables c
+ORDER BY c.category, c.name;

@@ -67,6 +67,15 @@ FALLOUT 76 GAME MECHANICS CONTEXT:
    - Strange in Numbers perk increases positive effects by 25% when in a team with other mutated players
    - Starched Genes perk prevents gaining/losing mutations
    - Common mutations: Marsupial (+carry weight, +jump/-INT), Speed Demon (+speed/+reload/-hunger increase)
+
+7. Consumables (Food, Chems, Drinks, Aid):
+   - Categories: chem, food, aid, alcohol, beverage
+   - Chems provide temporary combat buffs (damage, crit chance, perception) but have addiction risk
+   - Food provides HP, hunger satisfaction, and buffs (XP, SPECIAL stats)
+   - Aid items include Stimpaks (healing), RadAway (rad removal), Rad-X (rad resistance)
+   - Alcohol provides damage buffs with SPECIAL stat changes
+   - Common build consumables: Psychobuff (+STR/END), Psychotats (+PER/damage), Overdrive (+crit), Berry Mentats (+PER)
+   - XP food: Cranberry Relish (+10% XP), Brain Bombs (+7.5% XP +INT), Scorchbeast Stew (+20% XP)
 """
 
     def escape_reserved_keywords(self, sql: str) -> str:
@@ -170,6 +179,7 @@ Database schema:
 - v_perks_all_ranks: perk_name, special, min_level, race, `rank`, rank_description
 - v_legendary_perks_all_ranks: perk_name, race, `rank`, rank_description, effect_value, effect_type
 - v_mutations_complete: mutation_name, positive_effects, negative_effects, form_id, exclusive_with, suppression_perk, enhancement_perk
+- v_consumables_complete: consumable_name, category, subcategory, effects, duration, hp_restore, rads, hunger_satisfaction, thirst_satisfaction, special_modifiers, addiction_risk, crafting_station
 
 User question: {question}
 
