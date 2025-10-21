@@ -8,69 +8,35 @@ The Great Fallout 76 DB Project is a Python-based data collection and database m
 
 **Project Goal:** Build a RAG-powered LLM system to help players optimize character builds, query game data, and answer complex questions like "What's the best bloodied heavy gunner build for solo play?"
 
-## Current Status (Last Updated: 2025-10-13)
+## Current Status (Last Updated: 2025-10-20)
 
-### ✅ Phase 1 Complete: Core Data Collection
+### ✅ Phase 1-4 Complete: Hybrid RAG System Operational
 
-**Database Population:**
-- 262 weapons fully scraped and imported
-  - Ranged: 127, Melee: 94, Grenade: 26, Mine: 8, Thrown: 4, Camera: 3
-  - 95.8% have damage data (251/262)
-  - 100% classified by type (0 NULL types)
-- 477 armor pieces fully imported (291 regular + 186 power armor)
-  - 18 regular armor sets × multiple levels × pieces
-  - 12 power armor sets × multiple levels × 6 pieces each
-  - Level-specific data: one row per piece per level
-- 240 regular perks with 449 total ranks imported
-- 28 legendary perks with 112 total ranks imported (all 4 ranks per perk)
-- 1,685 weapon-perk relationship links established
+**Database:** 1,037 items across 6 data types (weapons, armor, perks, legendary perks, mutations, consumables)
+**Vector Database:** ChromaDB with OpenAI embeddings (see README.md for details)
+**System Health:** 96.7% (29/30 diagnostic tests passing)
 
-**Scrapers Complete:**
-- `scrapers/scraper.py` - Weapon scraper ✅
-- `scrapers/armor_scraper.py` - Armor scraper ✅ (updated for piece-level extraction)
-- `scrapers/power_armor_scraper.py` - Power armor scraper ✅
-- `scrapers/legendary_perk_scraper.py` - Legendary perk scraper ✅
+For detailed statistics, see README.md.
 
-**Note:** Vulcan Power Armor awaiting per-piece stat data from wiki
+### ✅ Hybrid RAG System
 
-### ✅ RAG System MVP Complete
+The project features a dual-mode RAG system:
+- **SQL mode** - Exact queries via natural language → SQL generation
+- **Vector mode** - Conceptual/semantic queries via ChromaDB embeddings
+- **Hybrid routing** - Automatic intent classification chooses best method
 
-**Implementation Status:**
-- ✅ Natural language to SQL query generation (Claude Sonnet 4)
-- ✅ Database query execution with error handling
-- ✅ Conversational context memory (last 3 exchanges)
-- ✅ Strict database result grounding (prevents hallucination)
-- ✅ MySQL reserved keyword handling (`rank`, `order`, etc.)
-- ✅ Empty result detection and reporting
-- ✅ Markdown code fence stripping
-- ✅ Command-line interface (`rag/cli.py`)
+**Key RAG Files:**
+- `rag/hybrid_query_engine.py` - Main hybrid engine (recommended)
+- `rag/query_engine.py` - SQL-only engine
+- `rag/hybrid_cli.py` - Interactive CLI
+- `rag/populate_vector_db.py` - Vector DB population script
+- `rag/chroma_db/` - ChromaDB persistent storage
 
-**Key Files:**
-- `rag/query_engine.py` - Core RAG query engine with FalloutRAG class
-- `rag/cli.py` - Interactive command-line interface
+**See `docs/RAG_IMPLEMENTATION_GUIDE.md` for complete RAG documentation, usage examples, and implementation details.**
 
-**Usage:**
-```bash
-export ANTHROPIC_API_KEY="your-key-here"
-python rag/cli.py
-```
+### 🔄 Next Phase
 
-**Example Queries:**
-- "What's the best shotgun in the game?"
-- "Compare that to the Gauss Shotgun" (uses conversational context)
-- "What does Gunslinger do at each rank?"
-- "Show me all heavy armor sets that aren't power armor"
-
-See `docs/RAG_IMPLEMENTATION_GUIDE.md` for complete documentation.
-
-### 🔄 Next Phase: Additional Build Components
-
-Research and evaluate adding:
-- **Mutations** (e.g., Marsupial, Speed Demon, Bird Bones)
-- **Consumables** (food, chems, drinks with stat buffs)
-- **Legendary Effects/Mods** (weapon and armor legendary modifications)
-- **SPECIAL Stats Tracking** (how stats are calculated and modified)
-- **Status Effects/Buffs** (temporary effects from consumables, mutations, environment)
+See `docs/TODO.md` for the full project roadmap and next steps.
 
 ## Environment Setup
 
@@ -461,54 +427,12 @@ fo76-ml-db/
 └── requirements.txt       # Python dependencies
 ```
 
-## RAG System Implementation
-
-The RAG (Retrieval Augmented Generation) system enables natural language queries against the Fallout 76 database. Located in the `rag/` directory:
-
-### Key Components
-
-**`rag/query_engine.py`** - Core RAG engine with FalloutRAG class
-- Converts natural language questions to SQL queries
-- Executes queries against MySQL database
-- Maintains conversational context (last 3 exchanges)
-- Strict result grounding to prevent hallucination
-- Handles MySQL reserved keywords and syntax quirks
-
-**`rag/cli.py`** - Command-line interface
-- Interactive Q&A loop
-- Simple user experience for testing
-
-### Important Implementation Details
-
-1. **Conversational Context**: The system stores the last 3 Q&A exchanges and injects them into the SQL generation prompt, enabling follow-up questions like "compare that to X"
-
-2. **Hallucination Prevention**: Uses a strict system prompt that forbids the LLM from using training data - it must ONLY format database results
-
-3. **MySQL Compatibility**:
-   - Strips markdown code fences (````sql`) from generated queries
-   - Prompts Claude to use backticks for reserved keywords like `rank`
-   - Documents actual enum values in schema (armor_type: 'regular' or 'power')
-   - Enforces ONLY_FULL_GROUP_BY mode compatibility
-
-4. **Empty Result Handling**: Returns clear "no data found" message instead of allowing hallucination
-
-5. **Schema Documentation**: Provides accurate field descriptions and value ranges to improve SQL generation quality
-
-### Usage
-
-```bash
-export ANTHROPIC_API_KEY="your-api-key"
-python rag/cli.py
-```
-
-See `docs/RAG_IMPLEMENTATION_GUIDE.md` for complete documentation.
-
 ## Documentation
 
-For more details, see the `docs/` directory:
-- **docs/README.md** - Detailed project documentation
-- **docs/TODO.md** - Detailed roadmap and task tracking
-- **docs/SCRAPER_README.md** - Comprehensive scraper documentation
-- **docs/IMPORT_GUIDE.md** - Database import walkthrough
-- **docs/SCHEMA_DESIGN.md** - Database architecture and RAG design
-- **docs/RAG_IMPLEMENTATION_GUIDE.md** - RAG system implementation guide
+For more details, see:
+- **README.md** - Project overview and quick start
+- **docs/TODO.md** - Project roadmap and task tracking
+- **docs/RAG_IMPLEMENTATION_GUIDE.md** - Complete RAG system documentation
+- **docs/SCHEMA_DESIGN.md** - Database architecture
+- **docs/SCRAPER_README.md** - Scraper documentation
+- **docs/IMPORT_GUIDE.md** - Database import guide

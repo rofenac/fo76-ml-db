@@ -10,14 +10,30 @@ Instead of the LLM relying solely on its training data, RAG lets it access your 
 
 ## Implementation Status
 
-✅ **MVP Complete** - Basic SQL + LLM RAG system is operational with the following features:
+✅ **Hybrid RAG System Complete** - Full SQL + Vector search system operational:
+
+**SQL-Based RAG (Exact Queries):**
 - Natural language to SQL query generation
 - Database query execution with error handling
 - Conversational context memory (last 3 exchanges)
 - Strict grounding to database results (prevents hallucination)
 - Reserved keyword handling (MySQL compatibility)
 - Empty result detection and reporting
-- Command-line interface for testing
+- CLI: `python rag/cli.py`
+
+**Vector-Based RAG (Conceptual Queries):**
+- OpenAI text-embedding-3-small (1536 dimensions)
+- ChromaDB with 1,037+ embeddings
+- Semantic search for build recommendations
+- Similarity search ("weapons like X")
+- Concept understanding (bloodied, stealth, tank, etc.)
+
+**Hybrid System (Auto-Routes Between Both):**
+- Intelligent intent classification
+- Automatically chooses SQL or Vector
+- Seamless integration with conversation context
+- Shows which search method was used
+- CLI: `python rag/hybrid_cli.py`
 
 ---
 
@@ -71,26 +87,33 @@ User Question → Convert to embedding → Find similar data in vector DB → LL
 
 ---
 
-### Option 3: Hybrid (SQL + Vector)
+### Option 3: Hybrid (SQL + Vector) ✅ IMPLEMENTED
 **Complexity:** ⭐⭐⭐⭐ Complex
-**Cost:** $$$ Higher
-**Setup Time:** 3-5 days
+**Cost:** $$$ Higher (~$0.001 to populate + minimal per-query cost)
+**Setup Time:** ~~3-5 days~~ **COMPLETE**
 
 **How it works:**
 ```
-User Question → Classify intent → Use SQL OR vector search → LLM generates answer
+User Question → Classify intent (EXACT/CONCEPTUAL) →
+  If EXACT:       SQL query → Results → Claude formats
+  If CONCEPTUAL:  Vector search → Get IDs → SQL enrichment → Claude formats
 ```
 
 **Pros:**
-- Best of both worlds
-- Structured queries use SQL, semantic queries use vectors
-- Most accurate results
+- ✅ Best of both worlds
+- ✅ Structured queries use SQL (fast, precise)
+- ✅ Semantic queries use vectors (smart, conceptual)
+- ✅ Most accurate results
+- ✅ Automatic intent detection and routing
 
-**Cons:**
-- Most complex to build and maintain
-- Higher costs (embeddings + LLM calls)
+**Implementation:**
+- ✅ `hybrid_query_engine.py` - Core engine
+- ✅ `hybrid_cli.py` - Interactive interface
+- ✅ `populate_vector_db.py` - Embedding generation
+- ✅ ChromaDB with 1,037+ embeddings
+- ✅ OpenAI text-embedding-3-small (premium quality)
 
-**Best for:** Production system after MVP proves value
+**Best for:** Production system - **NOW OPERATIONAL**
 
 ---
 

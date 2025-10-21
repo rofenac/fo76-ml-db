@@ -1,6 +1,6 @@
 # Project TODO List
 
-## Current Status (Last Updated: 2025-10-10)
+## Current Status (Last Updated: 2025-10-20)
 
 ### ✅ Phase 1: Core Data Collection - COMPLETE
 
@@ -46,76 +46,58 @@
 
 ---
 
-## Phase 2: RAG System & LLM Integration (MVP PRIORITY)
+## ✅ Phase 2: RAG System & LLM Integration - COMPLETE
 
-### Goal: Get a working MVP that can answer questions about builds using existing data
+**Hybrid RAG system operational** with SQL (exact queries) and Vector (conceptual queries) search modes.
 
-**Current Data Available:**
-- 262 weapons with perk relationships
-- 477 armor pieces (regular + power armor)
-- 240 regular perks (449 ranks)
-- 28 legendary perks (112 ranks)
-- RAG-optimized views already created
+**Key Features:**
+- ✅ Natural language to SQL generation (Claude Sonnet 4)
+- ✅ Semantic search via ChromaDB + OpenAI embeddings
+- ✅ Intelligent intent classification and routing
+- ✅ Conversational context memory
+- ✅ Hallucination prevention via strict database grounding
 
-### Step 1: Choose RAG Framework & LLM
-- [ ] **Decision:** LangChain vs LlamaIndex vs custom implementation
-- [ ] **Decision:** OpenAI GPT-4 vs Anthropic Claude vs local model (Llama, Mistral)
-- [ ] **Decision:** Vector database (ChromaDB, Pinecone, Weaviate) or SQL-only retrieval
-
-### Step 2: Create Data Embedding Pipeline
-- [ ] Write script to convert database views to embeddings
-- [ ] Chunk data appropriately (per weapon, per perk, per armor piece)
-- [ ] Store embeddings in vector database
-- [ ] Test similarity search
-
-### Step 3: Build Query Interface
-- [ ] Create simple CLI/web interface for questions
-- [ ] Implement RAG retrieval logic
-- [ ] Connect to LLM for response generation
-- [ ] Add conversation history/context
-
-### Step 4: MVP Features
-- [ ] **Weapon lookup:** "What perks affect the Enclave plasma gun?"
-- [ ] **Perk information:** "What does Gunslinger do at each rank?"
-- [ ] **Build recommendations:** "What's a good stealth rifle build?"
-- [ ] **Comparison:** "Compare Combat armor vs Scout armor"
-
-### Step 5: Refinement
-- [ ] Add prompt engineering for better responses
-- [ ] Implement query reformulation
-- [ ] Add source citations (link to wiki URLs)
-- [ ] Handle edge cases and errors
+**See `docs/RAG_IMPLEMENTATION_GUIDE.md` for complete implementation details.**
 
 ---
 
-## Phase 3: Additional Build Components
+## ✅ Phase 3: Additional Build Components - MUTATIONS & CONSUMABLES COMPLETE
 
-The following build components need to be researched, evaluated, and potentially added to the database schema:
+The following build components have been added to the database:
 
-#### 1. Mutations
-- [ ] Research mutation mechanics in Fallout 76
-- [ ] Identify all available mutations (e.g., Marsupial, Speed Demon, Bird Bones, Carnivore, Herbivore)
-- [ ] Determine schema requirements:
+#### 1. Mutations ✅ COMPLETE
+- ✅ Research mutation mechanics in Fallout 76
+- ✅ Identified all 19 available mutations (Marsupial, Speed Demon, Bird Bones, Carnivore, Herbivore, etc.)
+- ✅ Schema includes:
   - Positive effects (e.g., +20 carry weight, +20% jump height)
   - Negative effects (e.g., -4 Intelligence)
-  - Suppression mechanics (Class Freak perk, Starched Genes)
-  - Compatibility with perks
-- [ ] Create mutation scraper
-- [ ] Create `mutations` table and related junction tables
-- [ ] Import mutation data
+  - Exclusivity rules (mutually exclusive mutations)
+  - Suppression/enhancement perks (Class Freak, Starched Genes)
+  - Form IDs and source URLs
+- ✅ Created mutation scraper (`mutation_scraper.py`)
+- ✅ Created `mutations` table with complete effect tracking
+- ✅ Imported all 19 mutations to database
+- ✅ Created `v_mutations_complete` view for RAG queries
 
-#### 2. Consumables (Food, Chems, Drinks)
-- [ ] Research consumable categories:
-  - Food (cooked, raw, preserved)
-  - Chems (buffout, psycho, med-x, etc.)
-  - Drinks (nuka-cola variants, alcoholic beverages)
-  - Aid items (stimpaks, radaway, rad-x)
-- [ ] Identify stat buffs and durations
-- [ ] Determine stacking rules and conflicts
-- [ ] Consider perk interactions (e.g., Chem Fiend, Good With Salt, Party Boy/Girl)
-- [ ] Create consumables scraper
-- [ ] Create `consumables` table with effect tracking
-- [ ] Import consumable data
+#### 2. Consumables (Food, Chems, Drinks) ✅ PHASE 1 COMPLETE
+- ✅ Research consumable categories:
+  - Chems (Psycho, Psychobuff, etc.)
+  - Food (cooked, raw items)
+  - Drinks (Nuka-Cola variants)
+  - Aid items
+- ✅ Schema includes:
+  - Stat buffs and effects
+  - Duration tracking
+  - HP restore, rads, hunger/thirst satisfaction
+  - SPECIAL modifiers
+  - Addiction/disease risk
+  - Weight and value
+  - Crafting station requirements
+- ✅ Created consumable scraper (`consumable_scraper.py`)
+- ✅ Created `consumables` table with comprehensive effect tracking
+- ✅ Imported 11 essential build consumables
+- ✅ Created `v_consumables_complete` view for RAG queries
+- ⏳ **Next:** Expand to full consumable list (awaiting curated list from user)
 
 #### 3. Legendary Effects/Mods
 - [ ] Research legendary weapon effects (Bloodied, Anti-Armor, Two-Shot, Explosive, etc.)
@@ -161,7 +143,24 @@ The following build components need to be researched, evaluated, and potentially
 
 ---
 
-## Phase 4: Data Enhancement
+## ✅ Phase 4: Vector Database & Hybrid RAG - COMPLETE
+
+**Semantic search operational** via ChromaDB + OpenAI text-embedding-3-small embeddings.
+
+**Implementation:**
+- ✅ 1,037+ items embedded (1536 dimensions)
+- ✅ Hybrid query engine with intelligent routing
+- ✅ Interactive CLI with search method indicators
+- ✅ Inspection tools for viewing embeddings
+- ✅ Cost: ~$0.001 to populate
+
+**Results:** Semantic queries, similarity search, and build recommendations all working.
+
+**See `docs/RAG_IMPLEMENTATION_GUIDE.md` for architecture and implementation details.**
+
+---
+
+## Phase 5: Data Enhancement
 
 ### Conditional Perk Rules
 - [ ] Implement `weapon_perk_rules` table population:

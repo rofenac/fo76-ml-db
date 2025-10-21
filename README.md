@@ -10,34 +10,16 @@ A comprehensive Python-based data collection, database management, and **RAG-pow
 - Get build recommendations ("Best mutations for a bloodied rifle build")
 - Answer complex questions like "What consumables stack with Psychobuff?"
 
-## Current Status (2025-10-19)
+## Current Status (2025-10-20)
 
-### ✅ **PHASE 1-3: COMPLETE** - Full Data Collection & RAG System
+### ✅ **PHASE 1-4: COMPLETE** - Hybrid RAG System Operational
 
-**Database:** 1,037 game items fully imported
-- ✅ **262 Weapons** (Ranged: 127, Melee: 94, Grenade: 26, Mine: 8, Thrown: 4, Camera: 3)
-- ✅ **477 Armor Pieces** (Regular: 291, Power Armor: 186)
-- ✅ **240 Regular Perks** (449 total ranks)
-- ✅ **28 Legendary Perks** (112 total ranks)
-- ✅ **19 Mutations** (with positive/negative effects, exclusivity rules)
-- ✅ **11 Consumables** (build-essential chems, food, aid items)
-
-**RAG System:** MVP Operational
-- ✅ Natural language SQL query generation
-- ✅ Conversational context memory (last 3 exchanges)
-- ✅ Intent classification (detects vague questions, asks for clarification)
-- ✅ Strict database grounding (prevents hallucination)
-- ✅ Game mechanics knowledge integration
-- ✅ CLI interface functional
-- ✅ Supports queries across all data types (weapons, armor, perks, mutations, consumables)
-
+**Database:** 1,037 items (262 weapons, 477 armor, 240 perks, 28 legendary perks, 19 mutations, 11 consumables)
+**Vector Database:** ChromaDB with 1,037+ OpenAI embeddings (1536 dimensions)
+**RAG System:** Dual-mode (SQL + Vector) with intelligent routing
 **System Health:** 96.7% (29/30 diagnostic tests passing)
 
-### ⏳ **PHASE 4: IN PROGRESS** - Enhancements
-
-- ⏳ Awaiting user's curated consumables list for expansion
-- ⏳ React frontend (skeleton exists in `/react` folder)
-- ⏳ Vector database integration (for semantic search)
+**See `docs/TODO.md` for detailed roadmap and next steps.**
 
 ## Quick Start
 
@@ -91,70 +73,41 @@ python database/import_mutations.py                                # Mutations
 python database/import_consumables.py                              # Consumables
 ```
 
-### 4. Run RAG System
+### 4. Populate Vector Database (For Semantic Search)
 
 ```bash
-# Start interactive CLI
+# Generate embeddings for all 1,037 items
+# Requires OPENAI_API_KEY environment variable
+# Cost: ~$0.001 (less than a penny!)
+python rag/populate_vector_db.py
+```
+
+### 5. Run Hybrid RAG System
+
+```bash
+# Start interactive hybrid CLI (recommended - uses both SQL and vector search)
+python rag/hybrid_cli.py
+
+# Or use SQL-only CLI (original system)
 python rag/cli.py
 
-# Or test specific queries
-python test_mutations.py
+# Inspect vector database contents
+python rag/inspect_vector_db.py
+
+# View specific item embeddings
+python rag/show_embeddings.py weapon_42
 ```
 
-## RAG System Usage
+## Hybrid RAG System Usage
 
-### Example Queries
+The system automatically routes queries to SQL (exact lookups) or Vector search (semantic/conceptual queries).
 
-**Weapons:**
-```
-You: What shotguns do the most damage?
-You: List all heavy weapons
-You: Compare Combat shotgun vs Gauss shotgun
-```
+**Example Queries:**
+- *Exact:* "What's the damage of the Gauss Shotgun?"
+- *Conceptual:* "Best bloodied heavy gunner build"
+- *Similarity:* "Weapons similar to The Fixer"
 
-**Perks:**
-```
-You: What perks affect shotguns?
-You: Show me all Strength perks
-You: What does Gunslinger do at each rank?
-```
-
-**Mutations:**
-```
-You: List all mutations
-You: What does Marsupial do?
-You: Which mutations are mutually exclusive?
-You: What mutations help with carry weight?
-```
-
-**Consumables:**
-```
-You: What chems boost damage?
-You: Best food for XP farming?
-You: What heals me besides Stimpaks?
-```
-
-**Complex Build Questions:**
-```
-You: Best perks for a bloodied rifle build
-You: How do I min/max my shotgun build?
-You: What mutations work with heavy gunner?
-```
-
-### Intent Classification
-
-The RAG system intelligently handles vague questions:
-
-```
-You: What's the best weapon?
-Assistant: I need more information. What do you mean by "best"?
-  1. Highest damage output?
-  2. Best for a specific build type?
-  3. Most versatile overall?
-
-You: Highest damage output for rifles
-Assistant: [Returns top damage rifles with stats]
-```
+**See `docs/RAG_IMPLEMENTATION_GUIDE.md` for complete usage guide, examples, and architecture details.**
 
 ## Project Structure
 
@@ -166,7 +119,8 @@ fo76-ml-db/
 │   ├── TODO.md                       # Project roadmap
 │   ├── SCHEMA_DESIGN.md              # Database design
 │   ├── RAG_IMPLEMENTATION_GUIDE.md   # RAG system guide
-│   └── RAG_ENHANCEMENTS.md           # Recent enhancements
+│   ├── SCRAPER_README.md             # Scraper documentation
+│   └── IMPORT_GUIDE.md               # Database import guide
 ├── data/                             # All data files
 │   ├── input/                        # Source CSV data
 │   │   ├── Perks.csv                 # 240 perks, 449 ranks
@@ -193,9 +147,15 @@ fo76-ml-db/
 │   ├── mutation_scraper.py           # Mutation scraper
 │   ├── consumable_scraper.py         # Consumable scraper
 │   └── legendary_perk_scraper.py     # Legendary perk scraper
-├── rag/                              # RAG system
-│   ├── query_engine.py               # Core RAG engine
-│   └── cli.py                        # Interactive CLI
+├── rag/                              # Hybrid RAG system
+│   ├── query_engine.py               # SQL-based RAG engine
+│   ├── hybrid_query_engine.py        # Hybrid SQL + Vector engine
+│   ├── cli.py                        # SQL-only interactive CLI
+│   ├── hybrid_cli.py                 # Hybrid interactive CLI (recommended)
+│   ├── populate_vector_db.py         # Generate vector embeddings
+│   ├── inspect_vector_db.py          # View vector DB contents
+│   ├── show_embeddings.py            # View embedding vectors
+│   └── chroma_db/                    # ChromaDB storage (1,037+ embeddings)
 ├── tests/                            # Tests and validation
 │   ├── validate_scraped_data.py      # Data validation
 │   ├── test_mutations.py             # Mutation tests
@@ -236,33 +196,13 @@ SELECT * FROM v_weapons_with_perks WHERE weapon_name = 'Enclave plasma gun';
 
 ## RAG System Features
 
-### 1. Intent Classification
-- Detects vague/ambiguous questions
-- Asks clarifying questions before querying
-- Categories: SPECIFIC, VAGUE_CRITERIA, VAGUE_BUILD, AMBIGUOUS
+- **Intent Classification** - Detects vague questions and asks for clarification
+- **Conversational Context** - Maintains last 3 Q&A exchanges for follow-ups
+- **Hallucination Prevention** - Strictly grounded to database results only
+- **Game Mechanics Knowledge** - Understands build archetypes, mutations, perks
+- **Error Handling** - MySQL compatibility, query validation, retry logic
 
-### 2. Conversational Context
-- Maintains last 3 Q&A exchanges
-- Supports follow-up questions ("Compare that to X")
-- Natural conversation flow
-
-### 3. Hallucination Prevention
-- Strict grounding to database results ONLY
-- Forbidden from using training data
-- Empty result detection with clear messaging
-
-### 4. Game Mechanics Knowledge
-- Weapon damage level tiers
-- Character races (Human vs Ghoul)
-- Build archetypes (Bloodied, Stealth, etc.)
-- Armor types and resistances
-- Mutation mechanics (Class Freak, Strange in Numbers)
-- Consumable categories and effects
-
-### 5. Error Handling
-- MySQL reserved keyword handling (backticks)
-- ONLY_FULL_GROUP_BY compatibility
-- Query validation and retry logic
+**See `docs/RAG_IMPLEMENTATION_GUIDE.md` for detailed feature descriptions.**
 
 ## System Diagnostics
 
@@ -335,48 +275,16 @@ python scrapers/scraper.py -f urls.txt -o output.csv --playwright
 
 ## Documentation
 
-- **[RAG_IMPLEMENTATION_GUIDE.md](docs/RAG_IMPLEMENTATION_GUIDE.md)** - RAG system architecture and implementation
-- **[RAG_ENHANCEMENTS.md](docs/RAG_ENHANCEMENTS.md)** - Recent enhancements and features
+- **[RAG_IMPLEMENTATION_GUIDE.md](docs/RAG_IMPLEMENTATION_GUIDE.md)** - Complete RAG system documentation
+- **[TODO.md](docs/TODO.md)** - Project roadmap and task tracking
 - **[SCHEMA_DESIGN.md](docs/SCHEMA_DESIGN.md)** - Database architecture
-- **[TODO.md](docs/TODO.md)** - Project roadmap and status
-- **[CLAUDE.md](docs/CLAUDE.md)** - AI assistant guidance
+- **[CLAUDE.md](docs/CLAUDE.md)** - AI assistant guidance (for Claude Code)
+- **[SCRAPER_README.md](docs/SCRAPER_README.md)** - Web scraping documentation
+- **[IMPORT_GUIDE.md](docs/IMPORT_GUIDE.md)** - Database import guide
 
 ## API Costs
 
-### Anthropic Claude (Recommended)
-- **Model:** Claude Sonnet 4
-- **Input:** $3 per million tokens
-- **Output:** $15 per million tokens
-- **Typical query cost:** $0.01-0.03
-- **100 queries/day:** ~$2-3/month
-
-## Development Timeline
-
-**Week 5** (Current) - RAG MVP complete! Mutations and consumables systems added.
-**Week 4** - Discovered Claude Code. Made huge progress on database.
-**Week 3** - Rebuilt from scratch with better architecture.
-**Week 2** - Initial attempts, started over.
-**Week 1** - Project planning and research.
-
-## Future Plans
-
-### Phase 4: Data Expansion
-- [ ] Expand consumables (user-curated list pending)
-- [ ] Add legendary weapon/armor effects
-- [ ] SPECIAL stat tracking
-- [ ] Status effects/buffs
-
-### Phase 5: Advanced RAG
-- [ ] Vector database integration (ChromaDB/Pinecone)
-- [ ] Hybrid SQL + semantic search
-- [ ] Build recommendation engine
-- [ ] Damage calculator
-
-### Phase 6: Frontend
-- [ ] React web interface (skeleton exists)
-- [ ] Interactive build planner
-- [ ] Character sheet integration
-- [ ] Build sharing/export
+Typical usage: ~$0.01-0.03 per query (Claude Sonnet 4). For detailed cost breakdown, see `docs/RAG_IMPLEMENTATION_GUIDE.md`.
 
 ## Contributing
 
