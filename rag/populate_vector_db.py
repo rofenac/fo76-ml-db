@@ -22,6 +22,10 @@ from chromadb.config import Settings
 from tqdm import tqdm
 from typing import List, Dict, Any
 import time
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 
 class VectorDBPopulator:

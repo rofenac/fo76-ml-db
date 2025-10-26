@@ -148,11 +148,12 @@ The following build components have been added to the database:
 **Semantic search operational** via ChromaDB + OpenAI text-embedding-3-small embeddings.
 
 **Implementation:**
-- ✅ 1,037+ items embedded (1536 dimensions)
+- ✅ 1,330 items embedded (1536 dimensions)
 - ✅ Hybrid query engine with intelligent routing
-- ✅ Interactive CLI with search method indicators
+- ✅ Interactive CLI with search method indicators (`./python-start.sh` or `python rag/cli.py`)
 - ✅ Inspection tools for viewing embeddings
 - ✅ Cost: ~$0.001 to populate
+- ✅ Both API keys required (Anthropic for SQL/responses, OpenAI for embeddings)
 
 **Results:** Semantic queries, similarity search, and build recommendations all working.
 

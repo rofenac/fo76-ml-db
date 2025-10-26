@@ -5,8 +5,8 @@ A Python-based system that scrapes Fallout 76 game data from Fallout Wiki, store
 ## Quick Stats
 
 - **Database**: 1,037 items (262 weapons, 477 armor, 240 perks, 28 legendary perks, 19 mutations, 11 consumables)
-- **RAG System**: Hybrid SQL + Vector search with 1,037+ OpenAI embeddings (1536 dimensions)
-- **System Health**: 96.7% (29/30 diagnostic tests passing)
+- **RAG System**: Hybrid SQL + Vector search with 1,330 OpenAI embeddings (1536 dimensions)
+- **System Health**: 100% (30/30 diagnostic tests passing)
 
 ## Tech Stack
 
@@ -18,8 +18,8 @@ A Python-based system that scrapes Fallout 76 game data from Fallout Wiki, store
 ## Prerequisites
 
 - Python 3.9+, MySQL 8.0+, Git
-- [Anthropic API Key](https://console.anthropic.com/) (required)
-- [OpenAI API Key](https://platform.openai.com/api-keys) (optional, for vector search)
+- [Anthropic API Key](https://console.anthropic.com/) (required - for SQL generation & responses)
+- [OpenAI API Key](https://platform.openai.com/api-keys) (required - for vector embeddings & semantic search)
 
 ## Installation
 
@@ -38,25 +38,30 @@ mysql -u root -p f76 < database/f76_schema.sql
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your DB credentials and API keys
+# Edit .env with your DB credentials and API keys:
+#   - ANTHROPIC_API_KEY (for Claude - SQL generation & responses)
+#   - OPENAI_API_KEY (for embeddings - vector search)
+#   - DB_PASSWORD (MySQL password)
 
 # Import data
 bash database/import_all.sh
 
-# Generate embeddings (optional)
-python rag/populate_vector_db.py  # Cost: ~$0.001
+# Generate embeddings (required for vector search)
+python rag/populate_vector_db.py  # Cost: ~$0.001 (1,330 embeddings)
 ```
 
 ## Usage
 
 ```bash
-# Interactive RAG CLI (recommended)
-python rag/hybrid_cli.py
+# Interactive Hybrid RAG CLI (recommended)
+./python-start.sh
+# OR
+python rag/cli.py
 
 # Example queries:
-# - "What perks affect shotguns?"
-# - "Best bloodied heavy gunner build"
-# - "Weapons similar to The Fixer"
+# - "What perks affect shotguns?" (SQL search - exact)
+# - "Best bloodied heavy gunner build" (Vector search - semantic)
+# - "Weapons similar to The Fixer" (Vector search - similarity)
 ```
 
 **Other Commands:**
@@ -78,8 +83,8 @@ fo76-ml-db/
 │   └── import_*.py     # Import scripts
 ├── scrapers/           # Web scraping tools (weapon, armor, mutation, consumable scrapers)
 ├── rag/
-│   ├── hybrid_cli.py   # Main interactive CLI
-│   ├── hybrid_query_engine.py  # SQL + Vector routing
+│   ├── cli.py          # Main interactive CLI (hybrid SQL+Vector)
+│   ├── hybrid_query_engine.py  # SQL + Vector routing engine
 │   └── chroma_db/      # Vector database storage
 ├── tests/              # Validation and diagnostic scripts
 └── docs/
@@ -153,4 +158,4 @@ MIT License
 
 ---
 
-**Status**: ✅ Fully Operational | **Database**: 1,037 items | **RAG**: Hybrid SQL+Vector | **Health**: 96.7%
+**Status**: ✅ Fully Operational | **Database**: 1,037 items | **RAG**: Hybrid SQL+Vector | **Health**: 100%

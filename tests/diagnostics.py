@@ -139,10 +139,11 @@ class SystemDiagnostic:
             cursor = conn.cursor(dictionary=True)
 
             # Check for weapons with missing critical fields
+            # Note: type is now weapon_type_id in normalized schema
             cursor.execute("""
                 SELECT COUNT(*) as count
                 FROM weapons
-                WHERE name IS NULL OR name = '' OR type IS NULL
+                WHERE name IS NULL OR name = '' OR weapon_type_id IS NULL
             """)
             bad_count = cursor.fetchone()['count']
 
@@ -183,10 +184,11 @@ class SystemDiagnostic:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
 
-            # Check Carnivore/Herbivore exclusivity
+            # Check Carnivore/Herbivore exclusivity using normalized schema
+            # Note: exclusive_with is now exclusive_mutation_id in normalized schema
             cursor.execute("""
-                SELECT name, exclusive_with
-                FROM mutations
+                SELECT mutation_name, exclusive_with
+                FROM v_mutations_complete
                 WHERE exclusive_with IS NOT NULL AND exclusive_with != ''
             """)
             exclusive = cursor.fetchall()
@@ -196,7 +198,7 @@ class SystemDiagnostic:
 
             # Should have exactly 2 (Carnivore and Herbivore)
             passed = len(exclusive) == 2
-            names = [m['name'] for m in exclusive]
+            names = [m['mutation_name'] for m in exclusive]
             return passed, f"Exclusive mutations: {', '.join(names)}"
         except Exception as e:
             return False, f"Error: {e}"

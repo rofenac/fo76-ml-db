@@ -1,113 +1,99 @@
 #!/usr/bin/env python3
-"""Simple CLI for querying Fallout 76 build data"""
+"""
+Interactive CLI for Hybrid RAG System
+
+Combines SQL and Vector search for the best of both worlds!
+"""
 
 import os
-from pathlib import Path
-from query_engine import FalloutRAG
+import sys
+from hybrid_query_engine import HybridFalloutRAG
 
-def ensure_api_key():
-    """Check for API key and prompt user if missing"""
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
 
-    if not api_key:
-        print("No ANTHROPIC_API_KEY found in environment.")
-        print("Get your API key from: https://console.anthropic.com/settings/keys\n")
-        api_key = input("Enter your Anthropic API key: ").strip()
+def print_banner():
+    """Print welcome banner"""
+    print("\n" + "=" * 70)
+    print("  🎮 FALLOUT 76 HYBRID BUILD ASSISTANT 🎮")
+    print("=" * 70)
+    print("\n🧠 Powered by:")
+    print("   • SQL Database (exact queries)")
+    print("   • Vector Search (conceptual queries)")
+    print("   • Claude AI (intelligent responses)")
+    print("\n💡 Try asking:")
+    print("   • 'What's the damage of the Gauss Shotgun?' (SQL)")
+    print("   • 'Best bloodied heavy gunner build' (Vector)")
+    print("   • 'Mutations that work with stealth rifles' (Vector)")
+    print("   • 'Weapons similar to The Fixer' (Vector)")
+    print("\n📋 Commands:")
+    print("   • Type your question and press Enter")
+    print("   • Type 'exit', 'quit', or 'q' to leave")
+    print("   • Type 'clear' to reset conversation history")
+    print("=" * 70 + "\n")
 
-        if not api_key:
-            print("API key is required to use this tool.")
-            exit(1)
-
-        # Find .env file (should be in project root, one level up from rag/)
-        env_path = Path(__file__).parent.parent / '.env'
-
-        # Check if .env exists and update it, or create new
-        if env_path.exists():
-            # Read existing content
-            with open(env_path, 'r') as f:
-                lines = f.readlines()
-
-            # Check if ANTHROPIC_API_KEY already exists
-            key_exists = False
-            for i, line in enumerate(lines):
-                if line.startswith('ANTHROPIC_API_KEY='):
-                    lines[i] = f'ANTHROPIC_API_KEY={api_key}\n'
-                    key_exists = True
-                    break
-
-            # Add if it doesn't exist
-            if not key_exists:
-                lines.append(f'\nANTHROPIC_API_KEY={api_key}\n')
-
-            # Write back
-            with open(env_path, 'w') as f:
-                f.writelines(lines)
-        else:
-            # Create new .env file
-            with open(env_path, 'w') as f:
-                f.write(f'ANTHROPIC_API_KEY={api_key}\n')
-
-        print(f"\nAPI key saved to {env_path}")
-        print("Restart the CLI to use the saved key.\n")
-
-        # Set for current session
-        os.environ['ANTHROPIC_API_KEY'] = api_key
 
 def main():
-    print("=== Fallout 76 Build Assistant ===")
-    print("Ask questions about weapons, perks, and armor!")
-    print("Type 'exit' to quit\n")
+    """Main interactive loop"""
+    chroma_path = os.path.join(os.path.dirname(__file__), "chroma_db")
 
-    ensure_api_key()
-    rag = FalloutRAG()
+    try:
+        # Initialize hybrid engine
+        engine = HybridFalloutRAG(chroma_path)
 
-    while True:
-        question = input("You: ").strip()
+        print_banner()
 
-        if question.lower() in ['exit', 'quit', 'q']:
-            print("Goodbye!")
-            break
+        # Interactive loop
+        while True:
+            try:
+                # Get user input
+                question = input("💬 You: ").strip()
 
-        if not question:
-            continue
+                # Handle commands
+                if not question:
+                    continue
 
-        print("\nAssistant: ", end="")
-        response = rag.ask(question)
+                if question.lower() in ['exit', 'quit', 'q']:
+                    print("\n👋 Thanks for using the Fallout 76 Build Assistant!")
+                    print("   Happy wasteland wandering! ☢️\n")
+                    break
 
-        # Handle different response types
-        if response['type'] == 'clarification':
-            # Question needs clarification
-            print(f"\nI need more information to answer that question.\n")
-            print(f"Reason: {response['reason']}\n")
+                if question.lower() == 'clear':
+                    engine.conversation_history = []
+                    print("\n✅ Conversation history cleared!\n")
+                    continue
 
-            if response['questions']:
-                print("Please help me understand:")
-                for i, q in enumerate(response['questions'], 1):
-                    print(f"  {i}. {q}")
+                # Process question
+                print()  # Blank line for readability
+                answer, method = engine.ask(question)
 
-                # Get user's clarification
-                print("\nPlease answer these questions or rephrase your original question:")
-                clarification = input("You: ").strip()
+                # Display answer with method indicator
+                method_emoji = "🔍" if method == "SQL" else "🧠"
+                method_label = "SQL Search" if method == "SQL" else "Vector Search"
 
-                if clarification.lower() not in ['exit', 'quit', 'q']:
-                    # Combine original question with clarification
-                    enhanced_question = f"{question}\n\nAdditional context: {clarification}"
-                    print("\nAssistant: ", end="")
-                    # Skip classification on the enhanced question
-                    final_response = rag.ask(enhanced_question, skip_classification=True)
-                    print(final_response['content'])
-            else:
-                print("Could you please rephrase your question with more specific details?")
+                print(f"\n{method_emoji} Assistant [{method_label}]:")
+                print("-" * 70)
+                print(answer)
+                print("\n" + "=" * 70 + "\n")
 
-        elif response['type'] == 'answer':
-            # Normal answer
-            print(response['content'])
+            except KeyboardInterrupt:
+                print("\n\n👋 Interrupted. Goodbye!\n")
+                break
 
-        elif response['type'] == 'error':
-            # Error occurred
-            print(f"ERROR: {response['content']}")
+            except Exception as e:
+                print(f"\n❌ Error processing question: {e}")
+                print("Please try again.\n")
+                continue
 
-        print("\n" + "="*60 + "\n")
+    except Exception as e:
+        print(f"\n❌ Failed to initialize system: {e}")
+        print("\nMake sure:")
+        print("  1. Vector database exists (run populate_vector_db.py)")
+        print("  2. MySQL is running")
+        print("  3. Environment variables are set:")
+        print("     - OPENAI_API_KEY")
+        print("     - ANTHROPIC_API_KEY")
+        print("     - DB_PASSWORD (if needed)")
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
