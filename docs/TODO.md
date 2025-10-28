@@ -61,7 +61,7 @@
 
 ---
 
-## ✅ Phase 3: Additional Build Components - MUTATIONS & CONSUMABLES COMPLETE
+## ✅ Phase 3: Additional Build Components - MUTATIONS, CONSUMABLES & COLLECTIBLES COMPLETE
 
 The following build components have been added to the database:
 
@@ -79,12 +79,12 @@ The following build components have been added to the database:
 - ✅ Imported all 19 mutations to database
 - ✅ Created `v_mutations_complete` view for RAG queries
 
-#### 2. Consumables (Food, Chems, Drinks) ✅ PHASE 1 COMPLETE
+#### 2. Consumables (Food, Chems, Drinks, Aid) ✅ COMPLETE
 - ✅ Research consumable categories:
-  - Chems (Psycho, Psychobuff, etc.)
-  - Food (cooked, raw items)
-  - Drinks (Nuka-Cola variants)
-  - Aid items
+  - Chems (Psycho, Psychobuff, Berry Mentats, Overdrive, etc.)
+  - Food (cooked items, soups, prepared meals)
+  - Drinks (Nuka-Cola, alcohol, beverages)
+  - Aid items (Stimpaks, RadAway, etc.)
 - ✅ Schema includes:
   - Stat buffs and effects
   - Duration tracking
@@ -93,13 +93,32 @@ The following build components have been added to the database:
   - Addiction/disease risk
   - Weight and value
   - Crafting station requirements
-- ✅ Created consumable scraper (`consumable_scraper.py`)
+- ✅ Created consumable scraper with build-relevance filtering (`consumable_scraper.py`)
 - ✅ Created `consumables` table with comprehensive effect tracking
-- ✅ Imported 11 essential build consumables
+- ✅ Curated URL lists for food (88), soup (23), drinks (61), chems (22)
+- ✅ Scraped and imported **198 consumables** to database
+  - Food: 138 items
+  - Drinks/Alcohol/Beverages: 41 items
+  - Chems: 14 items
+  - Aid: 5 items
 - ✅ Created `v_consumables_complete` view for RAG queries
-- ⏳ **Next:** Expand to full consumable list (awaiting curated list from user)
+- ✅ Created multi-file import script (`import_consumables_multi.py`)
 
-#### 3. Legendary Effects/Mods
+#### 3. Collectibles (Bobbleheads & Magazines) ✅ BOBBLEHEADS COMPLETE
+- ✅ Separated collectibles from consumables (different mechanics)
+- ✅ Created normalized schema:
+  - `collectible_types` (bobblehead, magazine)
+  - `collectible_series` (pre-seeded with 12 magazine series)
+  - `collectibles` table with series/issue tracking
+  - `collectible_effects` and `collectible_special_modifiers` tables
+- ✅ Created collectible scraper (`collectible_scraper.py`)
+- ✅ Scraped and imported **20 bobbleheads** to database
+  - All SPECIAL stat bobbleheads
+  - All skill bobbleheads (Big Guns, Energy Weapons, Melee, etc.)
+- ✅ Created `v_collectibles_complete` view for RAG queries
+- ⏳ **Next:** Magazine scraping and import (user will provide curated list later)
+
+#### 4. Legendary Effects/Mods (Future Phase)
 - [ ] Research legendary weapon effects (Bloodied, Anti-Armor, Two-Shot, Explosive, etc.)
 - [ ] Research legendary armor effects (Unyielding, Vanguard's, Bolstering, etc.)
 - [ ] Determine effect values and how they stack
@@ -110,7 +129,7 @@ The following build components have been added to the database:
 - [ ] Create scrapers for legendary effects and mods
 - [ ] Import legendary effect and mod data
 
-#### 4. SPECIAL Stats Tracking
+#### 5. SPECIAL Stats Tracking (Future Phase)
 - [ ] Research how SPECIAL stats are calculated:
   - Base stats (minimum 1, maximum 15 without legendary perks)
   - Perk card point allocation
@@ -122,22 +141,20 @@ The following build components have been added to the database:
 - [ ] Create tables for SPECIAL calculations
 - [ ] Build stat calculation logic
 
-#### 5. Status Effects/Buffs
+#### 6. Status Effects/Buffs (Future Phase)
 - [ ] Research temporary status effects:
   - Environmental effects (well rested, well tuned)
   - Team buffs (Strange in Numbers for mutations)
-  - Bobbleheads and magazines
   - Disease effects
   - Addiction effects
 - [ ] Determine duration tracking
 - [ ] Create schema for status effects
 - [ ] Build effect application logic
 
-#### 6. Additional Build Elements to Consider
+#### 7. Additional Build Elements to Consider (Future)
 - [ ] Evaluate adding **Legendary Perk loadouts** (players can swap between builds)
 - [ ] Evaluate adding **Weapon/Armor legendary rolls** (specific combinations)
 - [ ] Evaluate adding **Food/Chem crafting recipes** (for self-sufficiency builds)
-- [ ] Evaluate adding **Bobbleheads and Magazines** (temporary buffs)
 - [ ] Evaluate adding **Team synergies** (perks that benefit teams)
 - [ ] Evaluate adding **Workshop and CAMP bonuses** (crafting benches, rest bonuses)
 
@@ -148,11 +165,12 @@ The following build components have been added to the database:
 **Semantic search operational** via ChromaDB + OpenAI text-embedding-3-small embeddings.
 
 **Implementation:**
-- ✅ 1,330 items embedded (1536 dimensions)
+- ✅ ~1,548 items embedded (1536 dimensions) - **UP TO DATE**
+- ✅ Includes all weapons, armor, perks, mutations, consumables (198), and collectibles (20)
 - ✅ Hybrid query engine with intelligent routing
 - ✅ Interactive CLI with search method indicators (`./python-start.sh` or `python rag/cli.py`)
 - ✅ Inspection tools for viewing embeddings
-- ✅ Cost: ~$0.001 to populate
+- ✅ Cost: ~$0.001-0.002 to populate
 - ✅ Both API keys required (Anthropic for SQL/responses, OpenAI for embeddings)
 
 **Results:** Semantic queries, similarity search, and build recommendations all working.
@@ -436,7 +454,7 @@ fo76-ml-db/
 
 ## Notes
 
-### Current Database Summary
+### Current Database Summary (Updated: 2025-10-27)
 - **Weapons:** 262 (Ranged: 127, Melee: 94, Grenade: 26, Mine: 8, Thrown: 4, Camera: 3)
 - **Armor (unified):** 477 (291 regular + 186 power armor)
   - 18 regular armor sets × multiple levels × pieces
@@ -444,8 +462,16 @@ fo76-ml-db/
   - One row per piece per level for accurate stat tracking
 - **Regular Perks:** 240 (449 total ranks)
 - **Legendary Perks:** 28 (112 total ranks)
+- **Mutations:** 19
+- **Consumables:** 198 (Food: 138, Drinks: 41, Chems: 14, Aid: 5)
+  - 118 SPECIAL modifiers
+  - 193 effects tracked
+- **Collectibles:** 20 (Bobbleheads: 20, Magazines: 0)
+  - 7 SPECIAL modifiers
+  - 20 effects tracked
 - **Weapon-Perk Links:** 1,685
 - **Data Quality:** 100% type classification, 95.8% have damage data
+- **Total Items in Database:** ~1,548 items
 
 ### MySQL Reserved Keyword Fix
 - Fixed `rank` column in `perk_ranks` and `legendary_perk_ranks` tables
@@ -453,8 +479,10 @@ fo76-ml-db/
 - Applied to CREATE TABLE statements and INSERT queries
 
 ### Next Immediate Steps
-1. Evaluate and research mutation system
-2. Evaluate and research consumable system
-3. Evaluate legendary effects and mods
-4. Consider SPECIAL stat tracking implementation
-5. Plan status effects schema
+1. **Test RAG System** - Verify queries work with new consumables/collectibles data
+2. **Magazine Import** (Optional) - User will provide curated magazine list when ready
+3. **Future Phases:**
+   - Legendary effects and mods research
+   - SPECIAL stat tracking implementation
+   - Status effects schema planning
+   - Web GUI development (stretch goal)

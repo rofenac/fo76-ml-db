@@ -1,0 +1,24 @@
+name,category,subcategory,effects,duration,hp_restore,rads,hunger_satisfaction,thirst_satisfaction,special_modifiers,addiction_risk,disease_risk,weight,value,form_id,crafting_station,source_url
+Appalachili,food,,+2 Luck+30 HP+5 Rads,,,,,,+2 LUC,,,,,003DB3E7,,https://fallout.fandom.com/wiki/Appalachili
+Blight soup,food,,+50% Critical Damage for 30 minutes,,,,,,,,,Thru-hiker,,002944EB,,https://fallout.fandom.com/wiki/Blight_soup
+Brain fungus soup,food,,+1.2 HP per second (10s)+4 Rads+2 INT (30m),,,,10%,15%,+2 INT,,,0.5,6,002944F1,,https://fallout.fandom.com/wiki/Brain_fungus_soup
+Canned meat stew,food,,+60 HP+2 Rads+5% XP for 1 hour,,,,20%,15%,,,,1,22,00343776,,https://fallout.fandom.com/wiki/Canned_meat_stew
+Cave fungus soup,food,,HP +12Poison Resistance +10%,,,,10%,15%,,,,0.5,8,0029450E,,https://fallout.fandom.com/wiki/Cave_fungus_soup
+Corn soup,food,,+5 Radiation+12 Hit Points+3 Action Point regeneration,,,,10%,15%,,,,0.5,6,00294510,,https://fallout.fandom.com/wiki/Corn_soup
+Firecap soup,food,,10 HP5 Rads 25 Energy Resistance,,,,10%,15%,,,,0.5,5,003787C4,,https://fallout.fandom.com/wiki/Firecap_soup
+Glowing fungus soup,food,,5 Radiation12 Hit Points20 Rad Resistance,,,,10%,15%,,,,0.5,6,00294517,,https://fallout.fandom.com/wiki/Glowing_fungus_soup
+Glowing fungus puree,food,,2 Radiation60 Hit Points35 Energy Resistance,,,,20%,15%,,,,0.5,22,003C60E6,,https://fallout.fandom.com/wiki/Glowing_fungus_puree
+Gourd soup,food,,12 HP4 Rads2 Perception,,,,10%,15%,2 PER,,,0.5,6,00294518,,https://fallout.fandom.com/wiki/Gourd_soup
+Iguana soup,food,,2 Rads60 HPLCK +3,,,,20%,15%,,,0%,0.5,22,00102157,,https://fallout.fandom.com/wiki/Iguana_soup_(Fallout_76)
+Megasloth mushroom soup,food,,5 Rads30 HP+50% Critical Damage,,,,10%,15%,,,,0.5,6,00294519,,https://fallout.fandom.com/wiki/Megasloth_mushroom_soup
+Pumpkin soup,food,,+30 HP+4 Rads,,,,12%,18%,,,,0.5,6,001C71AA,,https://fallout.fandom.com/wiki/Pumpkin_soup
+Radstag stew,food,,+35 Energy Resistance,,,,,,,,,1,44,0004696A,,https://fallout.fandom.com/wiki/Radstag_stew_(Fallout_76)
+Razorgrain soup,food,,+5 Rads+30 HP+10 Disease Resistance,,,,10%,15%,,,,0.5,5,0029451B,,https://fallout.fandom.com/wiki/Razorgrain_soup
+Rudy's Canned Pozole,food,,+2 Rads+60 HP+2 Charisma+1 Luck,,,,20%,15%,"+2 CHA, +1 LUC",,,0.1,22,006BE8C7,,https://fallout.fandom.com/wiki/Rudy%27s_Canned_Pozole
+Scorchbeast mixed meat stew,food,,+1 AGI for 60 min+2 END for 60 min+1 INT for 60 min+1 LCK for 60 min,,,,,,"+1 AGI, +2 END, +1 INT, +1 LCK",,,Thru-hiker,,003D749E,Super Duper,https://fallout.fandom.com/wiki/Scorchbeast_mixed_meat_stew
+Silt bean puree,food,,+60 HP+2 Rads+15 Damage Resist,,,,20%,15%,,,0%,0.5,22,003C60E9,,https://fallout.fandom.com/wiki/Silt_bean_puree
+Silt bean soup,food,,5 Radiation30 Hit Points2 Endurance,,,,10%,15%,2 END,,,0.5,6,0029451F,,https://fallout.fandom.com/wiki/Silt_bean_soup
+Soot flower herb paste,food,,+12 HP+5 Rads+20 Radiation Resistance,,,,15%,8%,,,,0.5,6,003D787E,,https://fallout.fandom.com/wiki/Soot_flower_herb_paste
+Stingwing stew,food,,+2 Rads+60 HP+3 PER,,,,20%,15%,+3 PER,,,1,20,003D7497,,https://fallout.fandom.com/wiki/Stingwing_stew
+Tasty mutant hound stew,food,,+85% melee damagefor 60 min,,,,,,,,,Thru-hiker,,003C60DF,,https://fallout.fandom.com/wiki/Tasty_mutant_hound_stew
+Tasty squirrel stew,food,,+10% XP for 60 minutes,,,,,,,,,Thru-hiker,,00036927,,https://fallout.fandom.com/wiki/Tasty_squirrel_stew

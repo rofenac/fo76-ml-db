@@ -72,12 +72,18 @@ class ConsumableData:
 class ConsumableScraper:
     """Scraper for Fallout Wiki consumable pages"""
 
-    def __init__(self):
-        """Initialize scraper"""
+    def __init__(self, filter_build_relevant: bool = True):
+        """Initialize scraper
+
+        Args:
+            filter_build_relevant: If True, only scrape consumables that affect character builds
+        """
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
+        self.filter_build_relevant = filter_build_relevant
+        self.skipped_items = []  # Track what was filtered out
 
     def scrape_consumable(self, url: str, use_playwright: bool = False) -> Optional[ConsumableData]:
         """
@@ -149,6 +155,18 @@ class ConsumableScraper:
                 crafting_station=crafting,
                 source_url=url
             )
+
+            # Filter for build relevance if enabled
+            if self.filter_build_relevant and not self._is_build_relevant(consumable):
+                reason = self._get_skip_reason(consumable)
+                logger.info(f"⊘ Skipped (not build-relevant): {name} - {reason}")
+                self.skipped_items.append({
+                    'name': name,
+                    'category': category,
+                    'reason': reason,
+                    'url': url
+                })
+                return None
 
             logger.info(f"✓ Scraped: {name} ({category})")
             return consumable
@@ -247,9 +265,11 @@ class ConsumableScraper:
             return ""
 
         for field_name in field_names:
-            for label in infobox.find_all('div', class_='pi-data-label'):
-                if field_name.lower() in label.text.lower():
-                    value_div = label.find_next_sibling('div', class_='pi-data-value')
+            # Check all pi-data items
+            for item in infobox.find_all('div', class_='pi-item'):
+                label = item.find('h3', class_='pi-data-label') or item.find('div', class_='pi-data-label')
+                if label and field_name.lower() in label.text.lower():
+                    value_div = item.find('div', class_='pi-data-value')
                     if value_div:
                         return value_div.text.strip()
         return ""
@@ -258,12 +278,23 @@ class ConsumableScraper:
         """Extract effects from page"""
         effects = []
 
-        # Look in infobox for effects
+        # Look in infobox for effects - check data-source="effects"
         infobox = soup.find('aside', class_='portable-infobox')
         if infobox:
-            for label in infobox.find_all('div', class_='pi-data-label'):
-                if 'effect' in label.text.lower():
-                    value_div = label.find_next_sibling('div', class_='pi-data-value')
+            # Find item with data-source="effects"
+            effects_item = infobox.find('div', {'data-source': 'effects'})
+            if effects_item:
+                value_div = effects_item.find('div', class_='pi-data-value')
+                if value_div:
+                    effect = value_div.text.strip()
+                    if effect:
+                        effects.append(effect)
+
+            # Also check for label containing "effect"
+            for item in infobox.find_all('div', class_='pi-item'):
+                label = item.find('h3', class_='pi-data-label') or item.find('div', class_='pi-data-label')
+                if label and 'effect' in label.text.lower():
+                    value_div = item.find('div', class_='pi-data-value')
                     if value_div:
                         effect = value_div.text.strip()
                         if effect and effect not in effects:
@@ -304,14 +335,115 @@ class ConsumableScraper:
 
         return ", ".join(special_stats) if special_stats else ""
 
+    def _is_build_relevant(self, consumable: ConsumableData) -> bool:
+        """
+        Determine if consumable is relevant to character builds.
+
+        Build-relevant items provide:
+        - SPECIAL stat modifiers
+        - Damage buffs (%, weapon-type specific, critical)
+        - XP bonuses
+        - Carry weight increases
+        - AP bonuses/regen
+        - Movement speed buffs
+        - Damage resistance increases
+        - Max HP increases (not just healing)
+        - Critical chance/damage
+        - Action point cost reductions
+        - Condition/durability bonuses
+
+        NOT build-relevant:
+        - Only hunger/thirst satisfaction
+        - Only HP restoration (healing without buffs)
+        - Only rad removal
+        - Only disease/addiction cure
+        """
+        # Has SPECIAL modifiers? → Definitely relevant
+        if consumable.special_modifiers and consumable.special_modifiers.strip():
+            return True
+
+        # Check effects for build-relevant keywords
+        effects_lower = consumable.effects.lower()
+
+        # Build-relevant effect keywords
+        relevant_keywords = [
+            'damage',           # Damage buffs
+            'critical',         # Critical chance/damage
+            'crit',            # Critical (abbreviated)
+            'xp',              # XP gain
+            'experience',      # XP gain
+            'carry weight',    # Carry capacity
+            'max hp',          # Maximum HP increase
+            'ap ',             # Action points
+            'action point',    # Action points (full)
+            'resistance',      # DR/ER/RR buffs
+            'speed',           # Movement speed
+            'reload',          # Reload speed
+            'accuracy',        # Weapon accuracy
+            'vats',            # VATS-related
+            'sneak',           # Stealth buffs
+            'limb damage',     # Limb damage
+            'durability',      # Weapon condition
+            'ballistic',       # Ballistic damage
+            'energy',          # Energy damage (but check context)
+            'melee',           # Melee damage
+            'unarmed',         # Unarmed damage
+            'explosive',       # Explosive damage
+            'fire rate',       # Fire rate
+            'condition',       # Item condition
+            '+%',              # Percentage buffs
+        ]
+
+        for keyword in relevant_keywords:
+            if keyword in effects_lower:
+                # Special case: "energy" might refer to ER (energy resistance)
+                # rather than damage, need more context
+                if keyword == 'energy' and 'damage' not in effects_lower and 'weapon' not in effects_lower:
+                    continue
+                return True
+
+        # If we got here, item only provides basic sustenance/healing
+        return False
+
+    def _get_skip_reason(self, consumable: ConsumableData) -> str:
+        """Generate reason why item was skipped"""
+        effects = consumable.effects.lower()
+        reasons = []
+
+        if consumable.hunger_satisfaction or 'hunger' in effects:
+            reasons.append("hunger only")
+        if consumable.thirst_satisfaction or 'thirst' in effects:
+            reasons.append("thirst only")
+        if consumable.hp_restore and not consumable.effects:
+            reasons.append("healing only")
+        if 'removes radiation' in effects or consumable.rads and not consumable.effects:
+            reasons.append("rad removal only")
+        if 'cures' in effects:
+            reasons.append("cure only")
+
+        if not reasons:
+            reasons.append("no build-affecting stats")
+
+        return ", ".join(reasons)
+
 
 def scrape_consumable_urls(
     url_file: str,
     output_csv: str,
-    use_playwright: bool = False
+    use_playwright: bool = False,
+    filter_build_relevant: bool = True,
+    skipped_log: str = None
 ):
-    """Scrape multiple consumable URLs from a file"""
-    scraper = ConsumableScraper()
+    """Scrape multiple consumable URLs from a file
+
+    Args:
+        url_file: File containing URLs to scrape
+        output_csv: Output CSV for build-relevant consumables
+        use_playwright: Use Playwright for JavaScript-heavy pages
+        filter_build_relevant: If True, only scrape build-relevant consumables
+        skipped_log: Optional file to write skipped items log
+    """
+    scraper = ConsumableScraper(filter_build_relevant=filter_build_relevant)
     consumables = []
 
     # Read URLs
@@ -319,6 +451,8 @@ def scrape_consumable_urls(
         urls = [line.strip() for line in f if line.strip() and not line.startswith('#')]
 
     logger.info(f"Found {len(urls)} URLs to scrape")
+    if filter_build_relevant:
+        logger.info("Filtering: Only build-relevant consumables will be saved")
 
     # Scrape each URL
     for url in urls:
@@ -326,7 +460,7 @@ def scrape_consumable_urls(
         if consumable:
             consumables.append(consumable)
 
-    # Write to CSV
+    # Write build-relevant consumables to CSV
     if consumables:
         with open(output_csv, 'w', newline='', encoding='utf-8') as f:
             fieldnames = ['name', 'category', 'subcategory', 'effects', 'duration', 'hp_restore', 'rads',
@@ -338,9 +472,28 @@ def scrape_consumable_urls(
             for consumable in consumables:
                 writer.writerow(consumable.to_csv_row())
 
-        logger.info(f"✓ Wrote {len(consumables)} consumables to {output_csv}")
+        logger.info(f"✓ Wrote {len(consumables)} build-relevant consumables to {output_csv}")
     else:
         logger.warning("No consumables scraped!")
+
+    # Write skipped items log if requested
+    if scraper.skipped_items and skipped_log:
+        with open(skipped_log, 'w', newline='', encoding='utf-8') as f:
+            fieldnames = ['name', 'category', 'reason', 'url']
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for item in scraper.skipped_items:
+                writer.writerow(item)
+
+        logger.info(f"✓ Wrote {len(scraper.skipped_items)} skipped items to {skipped_log}")
+
+    # Summary
+    total = len(consumables) + len(scraper.skipped_items)
+    logger.info(f"\n=== SUMMARY ===")
+    logger.info(f"Total scraped: {total}")
+    logger.info(f"Build-relevant: {len(consumables)}")
+    logger.info(f"Filtered out: {len(scraper.skipped_items)}")
 
 
 def main():
@@ -349,13 +502,23 @@ def main():
     parser.add_argument('-u', '--url', help='Single URL to scrape')
     parser.add_argument('-o', '--output', required=True, help='Output CSV file')
     parser.add_argument('--playwright', action='store_true', help='Use Playwright for JavaScript-heavy pages')
+    parser.add_argument('--no-filter', action='store_true', help='Disable build-relevance filtering (scrape ALL consumables)')
+    parser.add_argument('--skipped-log', help='Optional CSV file to log skipped (filtered) items')
 
     args = parser.parse_args()
 
+    filter_enabled = not args.no_filter
+
     if args.file:
-        scrape_consumable_urls(args.file, args.output, use_playwright=args.playwright)
+        scrape_consumable_urls(
+            args.file,
+            args.output,
+            use_playwright=args.playwright,
+            filter_build_relevant=filter_enabled,
+            skipped_log=args.skipped_log
+        )
     elif args.url:
-        scraper = ConsumableScraper()
+        scraper = ConsumableScraper(filter_build_relevant=filter_enabled)
         consumable = scraper.scrape_consumable(args.url, use_playwright=args.playwright)
         if consumable:
             with open(args.output, 'w', newline='', encoding='utf-8') as f:
@@ -366,6 +529,8 @@ def main():
                 writer.writeheader()
                 writer.writerow(consumable.to_csv_row())
             logger.info(f"✓ Wrote consumable to {args.output}")
+        elif filter_enabled and scraper.skipped_items:
+            logger.info(f"Item was filtered out as not build-relevant")
     else:
         parser.error("Must provide either --file or --url")
 
