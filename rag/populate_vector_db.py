@@ -108,18 +108,45 @@ class VectorDBPopulator:
         """
         Create text representation of weapon for embedding.
 
-        Includes: name, class, type, damage, and associated perks
+        Includes: name, class, type, damage, perks, and build context
         """
         text_parts = []
 
         # Basic info
         text_parts.append(f"Weapon: {weapon['weapon_name']}")
         if weapon.get('weapon_class'):
-            text_parts.append(f"Class: {weapon['weapon_class']}")
+            weapon_class = weapon['weapon_class']
+            text_parts.append(f"Class: {weapon_class}")
+
+            # Add build archetype context for better semantic matching
+            if weapon_class:
+                class_lower = weapon_class.lower()
+                text_parts.append(f"Suitable for {class_lower} builds")
+
         if weapon.get('weapon_type'):
             text_parts.append(f"Type: {weapon['weapon_type']}")
+
         if weapon.get('damage'):
-            text_parts.append(f"Damage: {weapon['damage']}")
+            damage_str = str(weapon['damage'])
+            text_parts.append(f"Damage: {damage_str}")
+
+            # Add damage tier context (helps with "best" queries)
+            # Extract first damage value for categorization
+            try:
+                # Handle damage ranges (e.g., "80.00-75.00")
+                damage_parts = damage_str.replace('-', '/').split('/')
+                first_damage = float(damage_parts[0].strip())
+
+                if first_damage >= 100:
+                    text_parts.append("Very high damage output weapon excellent for DPS builds")
+                elif first_damage >= 70:
+                    text_parts.append("High damage output weapon good for damage builds")
+                elif first_damage >= 40:
+                    text_parts.append("Moderate damage weapon suitable for balanced builds")
+                elif first_damage >= 15:
+                    text_parts.append("Lower damage weapon niche or specialized use")
+            except:
+                pass
 
         # Associated perks (important for semantic search)
         if weapon.get('regular_perks'):
@@ -129,6 +156,10 @@ class VectorDBPopulator:
         if weapon.get('legendary_perks'):
             leg_perks = weapon['legendary_perks'].replace(';', ',')
             text_parts.append(f"Legendary perks: {leg_perks}")
+
+        # Add universal build viability terms (helps match "full health", "bloodied", etc.)
+        # All weapons work with any build type - it's about optimization, not exclusion
+        text_parts.append("Viable for bloodied builds, full-health builds, stealth builds, tank builds, DPS builds")
 
         return ". ".join(text_parts)
 

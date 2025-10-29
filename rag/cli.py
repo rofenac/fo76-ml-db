@@ -34,6 +34,7 @@ def print_banner():
 def main():
     """Main interactive loop"""
     chroma_path = os.path.join(os.path.dirname(__file__), "chroma_db")
+    engine = None
 
     try:
         # Initialize hybrid engine
@@ -66,8 +67,15 @@ def main():
                 answer, method = engine.ask(question)
 
                 # Display answer with method indicator
-                method_emoji = "🔍" if method == "SQL" else "🧠"
-                method_label = "SQL Search" if method == "SQL" else "Vector Search"
+                if method == "SQL":
+                    method_emoji = "🔍"
+                    method_label = "SQL Search"
+                elif method == "HYBRID":
+                    method_emoji = "🎯"
+                    method_label = "Hybrid Search (SQL + Vector)"
+                else:
+                    method_emoji = "🧠"
+                    method_label = "Vector Search"
 
                 print(f"\n{method_emoji} Assistant [{method_label}]:")
                 print("-" * 70)
@@ -93,6 +101,11 @@ def main():
         print("     - ANTHROPIC_API_KEY")
         print("     - DB_PASSWORD (if needed)")
         sys.exit(1)
+
+    finally:
+        # Always cleanup resources on exit
+        if engine:
+            engine.cleanup()
 
 
 if __name__ == "__main__":
