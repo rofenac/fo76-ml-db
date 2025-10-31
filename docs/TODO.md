@@ -1,6 +1,6 @@
 # Project TODO List
 
-## Current Status (Last Updated: 2025-10-20)
+## Current Status (Last Updated: 2025-10-30)
 
 ### ✅ Phase 1: Core Data Collection - COMPLETE
 
@@ -61,7 +61,7 @@
 
 ---
 
-## ✅ Phase 3: Additional Build Components - MUTATIONS, CONSUMABLES & COLLECTIBLES COMPLETE
+## ✅ Phase 3: Additional Build Components - MUTATIONS & CONSUMABLES COMPLETE
 
 The following build components have been added to the database:
 
@@ -79,44 +79,32 @@ The following build components have been added to the database:
 - ✅ Imported all 19 mutations to database
 - ✅ Created `v_mutations_complete` view for RAG queries
 
-#### 2. Consumables (Food, Chems, Drinks, Aid) ✅ COMPLETE
+#### 2. Consumables (Build-Relevant Only) ✅ COMPLETE
 - ✅ Research consumable categories:
   - Chems (Psycho, Psychobuff, Berry Mentats, Overdrive, etc.)
-  - Food (cooked items, soups, prepared meals)
-  - Drinks (Nuka-Cola, alcohol, beverages)
-  - Aid items (Stimpaks, RadAway, etc.)
+  - Food (cooked items with SPECIAL/stat buffs)
+  - Drinks (Nuka-Cola, alcohol with buffs)
 - ✅ Schema includes:
   - Stat buffs and effects
   - Duration tracking
-  - HP restore, rads, hunger/thirst satisfaction
   - SPECIAL modifiers
-  - Addiction/disease risk
-  - Weight and value
-  - Crafting station requirements
+  - Build-relevance filtering
 - ✅ Created consumable scraper with build-relevance filtering (`consumable_scraper.py`)
 - ✅ Created `consumables` table with comprehensive effect tracking
-- ✅ Curated URL lists for food (88), soup (23), drinks (61), chems (22)
-- ✅ Scraped and imported **198 consumables** to database
-  - Food: 138 items
-  - Drinks/Alcohol/Beverages: 41 items
-  - Chems: 14 items
-  - Aid: 5 items
+- ✅ Imported **11 build-relevant consumables** to database (high-impact items for build optimization)
 - ✅ Created `v_consumables_complete` view for RAG queries
-- ✅ Created multi-file import script (`import_consumables_multi.py`)
 
-#### 3. Collectibles (Bobbleheads & Magazines) ✅ BOBBLEHEADS COMPLETE
-- ✅ Separated collectibles from consumables (different mechanics)
-- ✅ Created normalized schema:
+#### 3. Collectibles (Bobbleheads & Magazines) ⏳ PLANNED
+- [ ] Separate collectibles from consumables (different mechanics)
+- [ ] Create normalized schema:
   - `collectible_types` (bobblehead, magazine)
-  - `collectible_series` (pre-seeded with 12 magazine series)
+  - `collectible_series` (magazine series)
   - `collectibles` table with series/issue tracking
   - `collectible_effects` and `collectible_special_modifiers` tables
-- ✅ Created collectible scraper (`collectible_scraper.py`)
-- ✅ Scraped and imported **20 bobbleheads** to database
-  - All SPECIAL stat bobbleheads
-  - All skill bobbleheads (Big Guns, Energy Weapons, Melee, etc.)
-- ✅ Created `v_collectibles_complete` view for RAG queries
-- ⏳ **Next:** Magazine scraping and import (user will provide curated list later)
+- [ ] Create collectible scraper
+- [ ] Scrape and import bobbleheads
+- [ ] Scrape and import magazines
+- [ ] Create `v_collectibles_complete` view for RAG queries
 
 #### 4. Legendary Effects/Mods (Future Phase)
 - [ ] Research legendary weapon effects (Bloodied, Anti-Armor, Two-Shot, Explosive, etc.)
@@ -165,17 +153,15 @@ The following build components have been added to the database:
 **Semantic search operational** via ChromaDB + OpenAI text-embedding-3-small embeddings.
 
 **Implementation:**
-- ✅ ~1,548 items embedded (1536 dimensions) - **UP TO DATE**
-- ✅ Includes all weapons, armor, perks, mutations, consumables (198), and collectibles (20)
+- ✅ 1,330 embeddings (1536 dimensions) - **CURRENT**
+- ✅ Includes all weapons (262), armor (477), perk ranks (449), legendary perk ranks (112), mutations (19), consumables (11)
 - ✅ Hybrid query engine with intelligent routing
 - ✅ Interactive CLI with search method indicators (`./python-start.sh` or `python rag/cli.py`)
 - ✅ Inspection tools for viewing embeddings
-- ✅ Cost: ~$0.001-0.002 to populate
+- ✅ Cost: ~$0.001 to populate
 - ✅ Both API keys required (Anthropic for SQL/responses, OpenAI for embeddings)
 
 **Results:** Semantic queries, similarity search, and build recommendations all working.
-
-**See `docs/RAG_IMPLEMENTATION_GUIDE.md` for architecture and implementation details.**
 
 ---
 
@@ -454,24 +440,21 @@ fo76-ml-db/
 
 ## Notes
 
-### Current Database Summary (Updated: 2025-10-27)
+### Current Database Summary (Updated: 2025-10-30)
 - **Weapons:** 262 (Ranged: 127, Melee: 94, Grenade: 26, Mine: 8, Thrown: 4, Camera: 3)
 - **Armor (unified):** 477 (291 regular + 186 power armor)
   - 18 regular armor sets × multiple levels × pieces
   - 12 power armor sets × multiple levels × 6 pieces each
   - One row per piece per level for accurate stat tracking
-- **Regular Perks:** 240 (449 total ranks)
-- **Legendary Perks:** 28 (112 total ranks)
+- **Regular Perks:** 240 unique (449 total ranks)
+- **Legendary Perks:** 28 unique (112 total ranks)
 - **Mutations:** 19
-- **Consumables:** 198 (Food: 138, Drinks: 41, Chems: 14, Aid: 5)
-  - 118 SPECIAL modifiers
-  - 193 effects tracked
-- **Collectibles:** 20 (Bobbleheads: 20, Magazines: 0)
-  - 7 SPECIAL modifiers
-  - 20 effects tracked
-- **Weapon-Perk Links:** 1,685
+- **Consumables:** 11 (build-relevant items with high-impact stat buffs)
+- **Collectibles:** 0 (planned for future)
+- **Weapon-Perk Links:** 1,711
 - **Data Quality:** 100% type classification, 95.8% have damage data
-- **Total Items in Database:** ~1,548 items
+- **Total Unique Items:** 1,037
+- **Total Embeddings:** 1,330 (includes all perk ranks)
 
 ### MySQL Reserved Keyword Fix
 - Fixed `rank` column in `perk_ranks` and `legendary_perk_ranks` tables
@@ -479,10 +462,11 @@ fo76-ml-db/
 - Applied to CREATE TABLE statements and INSERT queries
 
 ### Next Immediate Steps
-1. **Test RAG System** - Verify queries work with new consumables/collectibles data
-2. **Magazine Import** (Optional) - User will provide curated magazine list when ready
+1. **Collectibles Import** (Planned) - Bobbleheads and magazines for temporary buffs
+2. **Legendary Effects** - Research and implement legendary weapon/armor effects
 3. **Future Phases:**
-   - Legendary effects and mods research
+   - Weapon/armor mods research
    - SPECIAL stat tracking implementation
    - Status effects schema planning
+   - Damage calculator
    - Web GUI development (stretch goal)

@@ -18,7 +18,7 @@ This document explains the technical controls implemented to minimize LLM halluc
 
 **Location:**
 - `rag/query_engine.py` (SQL mode, lines 257-286)
-- `rag/hybrid_query_engine.py` (Vector mode, lines 300-317)
+- `rag/hybrid_query_engine.py` (Vector mode, lines 561-585)
 
 **Implementation:**
 ```python
@@ -326,7 +326,7 @@ Train a custom model with examples of:
 
 - See `rag/test_no_hallucination.py` for testing
 - See `rag/query_engine.py` lines 257-286 for SQL mode prompts
-- See `rag/hybrid_query_engine.py` lines 300-317 for Vector mode prompts
+- See `rag/hybrid_query_engine.py` lines 561-585 for Vector mode prompts
 - Check conversation history in both classes for context management
 
 **Remember:** Hallucination reduction is a continuous process, not a one-time fix.

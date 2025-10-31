@@ -4,9 +4,9 @@ A Python-based system that scrapes Fallout 76 game data from Fallout Wiki, store
 
 ## Quick Stats
 
-- **Database**: ~1,548 items (262 weapons, 477 armor, 240 perks, 28 legendary perks, 19 mutations, 198 consumables, 20 collectibles)
-- **RAG System**: Hybrid SQL + Vector search with ~1,548 OpenAI embeddings (1536 dimensions) - **CURRENT**
-- **Last Updated**: 2025-10-27
+- **Database**: 1,037 unique items (262 weapons, 477 armor, 240 perks, 28 legendary perks, 19 mutations, 11 consumables)
+- **RAG System**: Hybrid SQL + Vector search with 1,330 OpenAI embeddings (1536 dimensions, includes all perk ranks)
+- **Last Updated**: 2025-10-30
 
 ## Tech Stack
 
@@ -47,7 +47,7 @@ cp .env.example .env
 bash database/import_all.sh
 
 # Generate embeddings (required for vector search)
-python rag/populate_vector_db.py  # Cost: ~$0.001 (1,330 embeddings)
+python rag/populate_vector_db.py  # Cost: ~$0.001 (generates 1,330 embeddings)
 ```
 
 ## Usage
@@ -99,8 +99,7 @@ fo76-ml-db/
 - `perks` (240), `perk_ranks` (449) - SPECIAL perks with multi-rank support
 - `legendary_perks` (28), `legendary_perk_ranks` (112) - 4-rank legendary perks
 - `mutations` (19) - Positive/negative effects, exclusivity rules
-- `consumables` (198) - Food, chems, drinks, aid items with buff tracking
-- `collectibles` (20) - Bobbleheads and magazines with temporary buffs
+- `consumables` (11) - Build-relevant food, chems, drinks with stat buffs
 
 ### RAG-Optimized Views
 - `v_weapons_with_perks` - Weapons with affecting perks
@@ -109,7 +108,6 @@ fo76-ml-db/
 - `v_legendary_perks_all_ranks` - Legendary perks with effects
 - `v_mutations_complete` - Mutations with full effect details
 - `v_consumables_complete` - Consumables with buffs
-- `v_collectibles_complete` - Collectibles with effects
 
 ## RAG System
 
@@ -140,9 +138,8 @@ fo76-ml-db/
 ## Roadmap
 
 See [`docs/TODO.md`](docs/TODO.md) for:
-- ✅ **Completed**: Weapons, armor, perks, mutations, consumables, collectibles (bobbleheads), RAG system
-- ⏳ **Next**: Update vector embeddings with new consumables/collectibles data
-- 📋 **Planned**: Magazine import, legendary effects, SPECIAL tracking, damage calculator
+- ✅ **Completed**: Weapons, armor, perks, mutations, consumables, RAG system with vector search
+- 📋 **Planned**: Collectibles (bobbleheads/magazines), legendary effects, SPECIAL tracking, damage calculator
 - 🎯 **Stretch Goals**: Full-stack web GUI
 
 ## Contributing
@@ -161,4 +158,4 @@ MIT License
 
 ---
 
-**Status**: ✅ Fully Operational | **Database**: 1,037 items | **RAG**: Hybrid SQL+Vector | **Health**: 100%
+**Status**: ✅ Fully Operational | **Database**: 1,037 unique items | **Embeddings**: 1,330 | **RAG**: Hybrid SQL+Vector | **Health**: 100%

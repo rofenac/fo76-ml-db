@@ -3,8 +3,8 @@
 ## Project Context
 
 This is the frontend for the **Fallout 76 Character Builder** application, part of a larger project that includes:
-- MySQL database with 262 weapons, 477 armor pieces, and 268 perks
-- RAG-powered Claude AI interface for build optimization
+- MySQL database with 1,037 unique items (262 weapons, 477 armor, 240 perks, 28 legendary perks, 19 mutations, 11 consumables)
+- RAG-powered Claude AI with hybrid SQL + Vector search (1,330 embeddings)
 - Comprehensive game data scraped from Fallout Wiki
 - Python-based backend and data collection system
 
