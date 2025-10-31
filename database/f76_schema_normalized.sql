@@ -14,6 +14,8 @@ USE f76;
 -- DROP ALL TABLES (CLEAN SLATE)
 -- ============================================================================
 
+DROP TABLE IF EXISTS weapon_mechanics;
+DROP TABLE IF EXISTS weapon_mechanic_types;
 DROP TABLE IF EXISTS weapon_damage_components;
 DROP TABLE IF EXISTS armor_resistance_values;
 DROP TABLE IF EXISTS consumable_special_modifiers;
@@ -305,6 +307,36 @@ CREATE TABLE weapon_perk_rules (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ============================================================================
+-- WEAPON MECHANICS TABLES
+-- ============================================================================
+
+-- Lookup table for weapon mechanic types
+CREATE TABLE weapon_mechanic_types (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(64) NOT NULL UNIQUE,
+  description TEXT,
+  INDEX idx_mechanic_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Weapon mechanics (many-to-many with attributes)
+CREATE TABLE weapon_mechanics (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  weapon_id INT NOT NULL,
+  mechanic_type_id INT NOT NULL,
+  -- Generic attribute fields for flexibility
+  numeric_value DECIMAL(10,2),      -- For charge multiplier (0.50), AoE radius, damage reduction %, etc.
+  numeric_value_2 DECIMAL(10,2),    -- For secondary values (e.g., chain damage reduction per hop)
+  string_value VARCHAR(255),         -- For descriptions or specific conditions
+  unit VARCHAR(32),                  -- 'multiplier', 'percent', 'meters', 'seconds', etc.
+  notes TEXT,
+  FOREIGN KEY (weapon_id) REFERENCES weapons(id) ON DELETE CASCADE,
+  FOREIGN KEY (mechanic_type_id) REFERENCES weapon_mechanic_types(id),
+  INDEX idx_wm_weapon (weapon_id),
+  INDEX idx_wm_mechanic (mechanic_type_id),
+  UNIQUE KEY uq_weapon_mechanic (weapon_id, mechanic_type_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================================================
 -- MUTATIONS TABLE (NORMALIZED)
 -- ============================================================================
 
@@ -562,6 +594,27 @@ GROUP BY c.id, c.name, c.category, c.subcategory, c.duration_seconds, c.hp_resto
          c.rads, c.hunger_satisfaction, c.thirst_satisfaction, c.addiction_risk,
          c.disease_risk, c.weight, c.value, c.form_id, c.crafting_station, c.source_url
 ORDER BY c.category, c.name;
+
+-- View: Weapons with mechanics
+CREATE OR REPLACE VIEW v_weapons_with_mechanics AS
+SELECT
+  w.id,
+  w.name AS weapon_name,
+  wt.name AS weapon_type,
+  wc.name AS weapon_class,
+  wmt.name AS mechanic_type,
+  wmt.description AS mechanic_description,
+  wm.numeric_value,
+  wm.numeric_value_2,
+  wm.string_value,
+  wm.unit,
+  wm.notes AS mechanic_notes
+FROM weapons w
+JOIN weapon_mechanics wm ON w.id = wm.weapon_id
+JOIN weapon_mechanic_types wmt ON wm.mechanic_type_id = wmt.id
+LEFT JOIN weapon_types wt ON w.weapon_type_id = wt.id
+LEFT JOIN weapon_classes wc ON w.weapon_class_id = wc.id
+ORDER BY w.name, wmt.name;
 
 -- ============================================================================
 -- POPULATE LOOKUP TABLES
