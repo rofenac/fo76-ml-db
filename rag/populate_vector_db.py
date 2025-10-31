@@ -108,7 +108,7 @@ class VectorDBPopulator:
         """
         Create text representation of weapon for embedding.
 
-        Includes: name, class, type, damage, perks, and build context
+        Includes: name, class, type, damage, perks, mechanics, and build context
         """
         text_parts = []
 
@@ -147,6 +147,11 @@ class VectorDBPopulator:
                     text_parts.append("Lower damage weapon niche or specialized use")
             except:
                 pass
+
+        # Weapon mechanics (CRITICAL for charge, spin-up, chain lightning, etc.)
+        if weapon.get('mechanics'):
+            mechanics_text = weapon['mechanics']
+            text_parts.append(f"Special mechanics: {mechanics_text}")
 
         # Associated perks (important for semantic search)
         if weapon.get('regular_perks'):
@@ -372,7 +377,30 @@ class VectorDBPopulator:
         """Load weapons from MySQL and add to ChromaDB"""
         db = self.connect_db()
         cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM v_weapons_with_perks")
+
+        # Get weapons with perks and mechanics
+        cursor.execute("""
+            SELECT
+                wpv.*,
+                GROUP_CONCAT(
+                    CONCAT(
+                        wmt.name,
+                        CASE
+                            WHEN wm.numeric_value IS NOT NULL
+                            THEN CONCAT(' (', wm.numeric_value, COALESCE(CONCAT(' ', wm.unit), ''), ')')
+                            ELSE ''
+                        END,
+                        ': ',
+                        COALESCE(wm.notes, wmt.description)
+                    )
+                    SEPARATOR '; '
+                ) AS mechanics
+            FROM v_weapons_with_perks wpv
+            LEFT JOIN weapon_mechanics wm ON wpv.id = wm.weapon_id
+            LEFT JOIN weapon_mechanic_types wmt ON wm.mechanic_type_id = wmt.id
+            GROUP BY wpv.id, wpv.weapon_name, wpv.weapon_type, wpv.weapon_class,
+                     wpv.level, wpv.damage, wpv.regular_perks, wpv.legendary_perks, wpv.source_url
+        """)
         weapons = cursor.fetchall()
         cursor.close()
         db.close()

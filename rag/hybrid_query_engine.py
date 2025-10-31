@@ -234,10 +234,32 @@ class HybridFalloutRAG:
         )
         cursor = db.cursor(dictionary=True)
 
-        # SQL pre-filter to get ALL items in the category
+        # SQL pre-filter to get ALL items in the category (with mechanics)
         if category_filter['type'] == 'weapon':
             class_pattern = category_filter['class_pattern']
-            cursor.execute(f"SELECT * FROM v_weapons_with_perks WHERE weapon_class LIKE '{class_pattern}'")
+            cursor.execute(f"""
+                SELECT
+                    wpv.*,
+                    GROUP_CONCAT(
+                        CONCAT(
+                            wmt.name,
+                            CASE
+                                WHEN wm.numeric_value IS NOT NULL
+                                THEN CONCAT(' (', wm.numeric_value, COALESCE(CONCAT(' ', wm.unit), ''), ')')
+                                ELSE ''
+                            END,
+                            ': ',
+                            COALESCE(wm.notes, wmt.description)
+                        )
+                        SEPARATOR '; '
+                    ) AS mechanics
+                FROM v_weapons_with_perks wpv
+                LEFT JOIN weapon_mechanics wm ON wpv.id = wm.weapon_id
+                LEFT JOIN weapon_mechanic_types wmt ON wm.mechanic_type_id = wmt.id
+                WHERE wpv.weapon_class LIKE '{class_pattern}'
+                GROUP BY wpv.id, wpv.weapon_name, wpv.weapon_type, wpv.weapon_class,
+                         wpv.level, wpv.damage, wpv.regular_perks, wpv.legendary_perks, wpv.source_url
+            """)
             all_weapons = cursor.fetchall()
 
             # Get display name from pattern (strip wildcards)
@@ -447,10 +469,32 @@ class HybridFalloutRAG:
         )
         cursor = db.cursor(dictionary=True)
 
-        # Weapons
+        # Weapons (with mechanics)
         if 'weapon' in items_by_type:
             ids = ','.join(items_by_type['weapon'])
-            cursor.execute(f"SELECT * FROM v_weapons_with_perks WHERE id IN ({ids})")
+            cursor.execute(f"""
+                SELECT
+                    wpv.*,
+                    GROUP_CONCAT(
+                        CONCAT(
+                            wmt.name,
+                            CASE
+                                WHEN wm.numeric_value IS NOT NULL
+                                THEN CONCAT(' (', wm.numeric_value, COALESCE(CONCAT(' ', wm.unit), ''), ')')
+                                ELSE ''
+                            END,
+                            ': ',
+                            COALESCE(wm.notes, wmt.description)
+                        )
+                        SEPARATOR '; '
+                    ) AS mechanics
+                FROM v_weapons_with_perks wpv
+                LEFT JOIN weapon_mechanics wm ON wpv.id = wm.weapon_id
+                LEFT JOIN weapon_mechanic_types wmt ON wm.mechanic_type_id = wmt.id
+                WHERE wpv.id IN ({ids})
+                GROUP BY wpv.id, wpv.weapon_name, wpv.weapon_type, wpv.weapon_class,
+                         wpv.level, wpv.damage, wpv.regular_perks, wpv.legendary_perks, wpv.source_url
+            """)
             enriched['weapons'] = cursor.fetchall()
             print(f"         • Weapons: {', '.join([w['weapon_name'] for w in enriched['weapons']])}")
 
