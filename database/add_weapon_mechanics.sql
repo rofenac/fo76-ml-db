@@ -56,11 +56,12 @@ ON DUPLICATE KEY UPDATE description = VALUES(description);
 -- ============================================================================
 
 -- Gauss weapons: charge mechanic (50% damage uncharged)
+-- NOTE: Gauss minigun does NOT have charge mechanic, only spin-up
 INSERT INTO weapon_mechanics (weapon_id, mechanic_type_id, numeric_value, unit, notes)
 SELECT w.id, wmt.id, 0.50, 'multiplier', 'Uncharged damage is 50% of listed damage. Fully charged is 100%.'
 FROM weapons w
 JOIN weapon_mechanic_types wmt ON wmt.name = 'charge'
-WHERE w.name IN ('Gauss rifle', 'Gauss shotgun', 'Gauss pistol', 'Gauss minigun')
+WHERE w.name IN ('Gauss rifle', 'Gauss shotgun', 'Gauss pistol')
 ON DUPLICATE KEY UPDATE
   numeric_value = VALUES(numeric_value),
   unit = VALUES(unit),
@@ -88,20 +89,12 @@ ON DUPLICATE KEY UPDATE
   unit = VALUES(unit),
   notes = VALUES(notes);
 
--- Minigun: spin-up mechanic
+-- Minigun, Gatling weapons, and Pepper Shaker: spin-up mechanic
 INSERT INTO weapon_mechanics (weapon_id, mechanic_type_id, notes)
 SELECT w.id, wmt.id, 'Requires a moment to spin up before firing'
 FROM weapons w
 JOIN weapon_mechanic_types wmt ON wmt.name = 'spin_up'
-WHERE w.name = 'Minigun'
-ON DUPLICATE KEY UPDATE notes = VALUES(notes);
-
--- Gatling weapons: spin-up mechanic
-INSERT INTO weapon_mechanics (weapon_id, mechanic_type_id, notes)
-SELECT w.id, wmt.id, 'Requires a moment to spin up before firing'
-FROM weapons w
-JOIN weapon_mechanic_types wmt ON wmt.name = 'spin_up'
-WHERE w.name IN ('Gatling gun', 'Gatling laser', 'Gatling plasma', 'Ultracite Gatling laser')
+WHERE w.name IN ('Minigun', 'Gauss minigun', 'Gatling gun', 'Gatling laser', 'Gatling plasma', 'Ultracite Gatling laser', 'Pepper Shaker')
 ON DUPLICATE KEY UPDATE notes = VALUES(notes);
 
 -- Salvaged Assaultron head: charge with self-damage

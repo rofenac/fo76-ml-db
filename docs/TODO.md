@@ -1,472 +1,141 @@
 # Project TODO List
 
-## Current Status (Last Updated: 2025-10-30)
+## Current Status (2025-10-30)
 
-### ✅ Phase 1: Core Data Collection - COMPLETE
+### Database
+- **Weapons:** 262 (with special mechanics: charge, spin-up, chain lightning, explosive AOE)
+- **Armor:** 477 unified (291 regular + 186 power armor, one row per piece per level)
+- **Perks:** 240 regular (449 ranks), 28 legendary (112 ranks)
+- **Mutations:** 19
+- **Consumables:** 11 (build-relevant buffs)
+- **Weapon-Perk Links:** 1,711
+- **Total Items:** 1,037
+- **Vector Embeddings:** 1,517 (OpenAI text-embedding-3-small, 1536-dim)
 
-**Weapons:**
-- ✅ 249 weapons fully scraped and imported
-- ✅ All weapon-perk relationships established (1,689 links)
+### Completed Phases
+- ✅ **Phase 1:** Core data collection (weapons, armor, perks, legendary perks)
+- ✅ **Phase 2:** RAG system with hybrid SQL + Vector search
+- ✅ **Phase 3:** Mutations and consumables
+- ✅ **Phase 4:** ChromaDB vector database with 1,517 embeddings
+- ✅ **Weapon Mechanics:** Charge, spin-up, chain lightning, explosive AOE system
 
-**Armor (Unified Regular + Power Armor):**
-- ✅ 477 armor pieces fully imported (291 regular + 186 power armor)
-  - 18 regular armor sets × multiple levels × pieces
-  - 12 power armor sets × multiple levels × 6 pieces each
-  - Level-specific data: one row per piece per level
-- ✅ Unified schema: power armor merged into `armor` table with `armor_type` ENUM
-- ✅ Armor perks are universal (no junction tables needed)
-- ⏳ Vulcan Power Armor awaiting per-piece stat data from wiki
-
-**Regular Perks:**
-- ✅ 240 unique perks imported
-- ✅ 449 total perk ranks imported
-- ✅ Race classification complete (Human/Ghoul/Both)
-
-**Legendary Perks:**
-- ✅ 28 legendary perks fully scraped
-- ✅ 112 total legendary perk ranks (28 × 4 ranks)
-- ✅ Effect values and types parsed
-- ✅ Race breakdown: 26 universal, 2 ghoul-only
-
-**Database:**
-- ✅ Full schema implemented with all tables
-- ✅ RAG-optimized views created
-- ✅ Junction tables for weapon-perk relationships populated
-- ✅ Foreign key constraints and indexes in place
-
-**Scrapers:**
-- ✅ `scraper.py` - Weapon scraper (complete)
-- ✅ `armor_scraper.py` - Armor scraper (updated for piece-level extraction)
-- ✅ `power_armor_scraper.py` - Power armor scraper (complete)
-- ✅ `legendary_perk_scraper.py` - Legendary perk scraper (complete)
-
-**Data Collection:**
-- ✅ Manual collection of 477 armor pieces completed (with ChatGPT assistance)
-- ✅ All level variants documented for both regular and power armor
+### Notable Features
+- Normalized MySQL schema with views optimized for RAG
+- Hybrid query engine with intelligent SQL/Vector routing
+- Interactive CLI (`./python-start.sh` or `python rag/cli.py`)
+- Conversation history (3-message context)
+- Hallucination prevention via strict database grounding
+- Race support (Human/Ghoul-specific perks)
+- Multi-rank system (1-5 regular, 4 legendary)
 
 ---
 
-## ✅ Phase 2: RAG System & LLM Integration - COMPLETE
+## Active Development
 
-**Hybrid RAG system operational** with SQL (exact queries) and Vector (conceptual queries) search modes.
+### Phase 5: Data Enhancement
 
-**Key Features:**
-- ✅ Natural language to SQL generation (Claude Sonnet 4)
-- ✅ Semantic search via ChromaDB + OpenAI embeddings
-- ✅ Intelligent intent classification and routing
-- ✅ Conversational context memory
-- ✅ Hallucination prevention via strict database grounding
+#### Weapon Mechanics System ✅ COMPLETE
+- ✅ Flexible mechanic types table (charge, spin-up, chain lightning, explosive AOE, etc.)
+- ✅ Many-to-many relationship with attributes (numeric_value, numeric_value_2, string_value, unit, notes)
+- ✅ Gauss weapons: 50% uncharged → 100% charged (rifle, shotgun, pistol)
+- ✅ Spin-up weapons: Minigun, Gauss minigun, Gatling guns, Pepper Shaker (7 total)
+- ✅ Tesla rifle: Chain lightning (65% → 42.25% per hop)
+- ✅ View: `v_weapons_with_mechanics`
+- ✅ Documentation: `docs/WEAPON_MECHANICS.md`
+- ✅ Test queries: `database/test_weapon_mechanics.sql`
 
-**See `docs/RAG_IMPLEMENTATION_GUIDE.md` for complete implementation details.**
+#### Conditional Perk Rules ⏳ PLANNED
+- [ ] Populate `weapon_perk_rules` table with conditions
+- [ ] Parse conditional modifiers (scoped only, ADS only, in VATS, etc.)
+- [ ] Link weapon-perk combinations with rules
 
----
-
-## ✅ Phase 3: Additional Build Components - MUTATIONS & CONSUMABLES COMPLETE
-
-The following build components have been added to the database:
-
-#### 1. Mutations ✅ COMPLETE
-- ✅ Research mutation mechanics in Fallout 76
-- ✅ Identified all 19 available mutations (Marsupial, Speed Demon, Bird Bones, Carnivore, Herbivore, etc.)
-- ✅ Schema includes:
-  - Positive effects (e.g., +20 carry weight, +20% jump height)
-  - Negative effects (e.g., -4 Intelligence)
-  - Exclusivity rules (mutually exclusive mutations)
-  - Suppression/enhancement perks (Class Freak, Starched Genes)
-  - Form IDs and source URLs
-- ✅ Created mutation scraper (`mutation_scraper.py`)
-- ✅ Created `mutations` table with complete effect tracking
-- ✅ Imported all 19 mutations to database
-- ✅ Created `v_mutations_complete` view for RAG queries
-
-#### 2. Consumables (Build-Relevant Only) ✅ COMPLETE
-- ✅ Research consumable categories:
-  - Chems (Psycho, Psychobuff, Berry Mentats, Overdrive, etc.)
-  - Food (cooked items with SPECIAL/stat buffs)
-  - Drinks (Nuka-Cola, alcohol with buffs)
-- ✅ Schema includes:
-  - Stat buffs and effects
-  - Duration tracking
-  - SPECIAL modifiers
-  - Build-relevance filtering
-- ✅ Created consumable scraper with build-relevance filtering (`consumable_scraper.py`)
-- ✅ Created `consumables` table with comprehensive effect tracking
-- ✅ Imported **11 build-relevant consumables** to database (high-impact items for build optimization)
-- ✅ Created `v_consumables_complete` view for RAG queries
-
-#### 3. Collectibles (Bobbleheads & Magazines) ⏳ PLANNED
-- [ ] Separate collectibles from consumables (different mechanics)
-- [ ] Create normalized schema:
-  - `collectible_types` (bobblehead, magazine)
-  - `collectible_series` (magazine series)
-  - `collectibles` table with series/issue tracking
-  - `collectible_effects` and `collectible_special_modifiers` tables
-- [ ] Create collectible scraper
-- [ ] Scrape and import bobbleheads
-- [ ] Scrape and import magazines
-- [ ] Create `v_collectibles_complete` view for RAG queries
-
-#### 4. Legendary Effects/Mods (Future Phase)
-- [ ] Research legendary weapon effects (Bloodied, Anti-Armor, Two-Shot, Explosive, etc.)
-- [ ] Research legendary armor effects (Unyielding, Vanguard's, Bolstering, etc.)
-- [ ] Determine effect values and how they stack
-- [ ] Research weapon mods (receivers, barrels, stocks, sights)
-- [ ] Research armor mods (lining, padding, etc.)
-- [ ] Create schema for legendary effects
-- [ ] Create schema for mods
-- [ ] Create scrapers for legendary effects and mods
-- [ ] Import legendary effect and mod data
-
-#### 5. SPECIAL Stats Tracking (Future Phase)
-- [ ] Research how SPECIAL stats are calculated:
-  - Base stats (minimum 1, maximum 15 without legendary perks)
-  - Perk card point allocation
-  - Legendary perk bonuses (SPECIAL stat cards give +5 when maxed)
-  - Gear/armor bonuses (Unyielding gives +3 to all SPECIAL except END when low health)
-  - Mutation effects
-  - Consumable buffs
-- [ ] Determine schema for tracking stat modifiers
-- [ ] Create tables for SPECIAL calculations
-- [ ] Build stat calculation logic
-
-#### 6. Status Effects/Buffs (Future Phase)
-- [ ] Research temporary status effects:
-  - Environmental effects (well rested, well tuned)
-  - Team buffs (Strange in Numbers for mutations)
-  - Disease effects
-  - Addiction effects
-- [ ] Determine duration tracking
-- [ ] Create schema for status effects
-- [ ] Build effect application logic
-
-#### 7. Additional Build Elements to Consider (Future)
-- [ ] Evaluate adding **Legendary Perk loadouts** (players can swap between builds)
-- [ ] Evaluate adding **Weapon/Armor legendary rolls** (specific combinations)
-- [ ] Evaluate adding **Food/Chem crafting recipes** (for self-sufficiency builds)
-- [ ] Evaluate adding **Team synergies** (perks that benefit teams)
-- [ ] Evaluate adding **Workshop and CAMP bonuses** (crafting benches, rest bonuses)
+#### Damage Formulas ⏳ PLANNED
+- [ ] Research FO76 damage calculation formulas
+- [ ] Document perk stacking (additive vs multiplicative)
+- [ ] Create damage calculation views/functions
 
 ---
 
-## ✅ Phase 4: Vector Database & Hybrid RAG - COMPLETE
+## Future Phases
 
-**Semantic search operational** via ChromaDB + OpenAI text-embedding-3-small embeddings.
+### Phase 6: Additional Build Components
 
-**Implementation:**
-- ✅ 1,330 embeddings (1536 dimensions) - **CURRENT**
-- ✅ Includes all weapons (262), armor (477), perk ranks (449), legendary perk ranks (112), mutations (19), consumables (11)
-- ✅ Hybrid query engine with intelligent routing
-- ✅ Interactive CLI with search method indicators (`./python-start.sh` or `python rag/cli.py`)
-- ✅ Inspection tools for viewing embeddings
-- ✅ Cost: ~$0.001 to populate
-- ✅ Both API keys required (Anthropic for SQL/responses, OpenAI for embeddings)
+**Collectibles (Bobbleheads & Magazines):**
+- [ ] Schema: collectible_types, collectible_series, collectibles tables
+- [ ] Scraper + import scripts
+- [ ] Temporary buff tracking
 
-**Results:** Semantic queries, similarity search, and build recommendations all working.
+**Legendary Effects/Mods:**
+- [ ] Weapon legendary effects (Bloodied, Anti-Armor, Two-Shot, Explosive)
+- [ ] Armor legendary effects (Unyielding, Vanguard's, Bolstering)
+- [ ] Weapon/armor mods (receivers, barrels, stocks, linings)
+- [ ] Effect stacking research
 
----
-
-## Phase 5: Data Enhancement
-
-### Conditional Perk Rules
-- [ ] Implement `weapon_perk_rules` table population:
-  - Parse conditional modifiers from weapon perk data
-  - Store rules like "scoped only", "pistol configuration", "ADS only", "in VATS"
-  - Link specific weapon-perk combinations with conditions
-
-### Damage Formulas
-- [ ] Research Fallout 76 damage calculation formulas
-- [ ] Document how perks stack (additive vs multiplicative)
-- [ ] Add damage formula metadata to database
-- [ ] Create damage calculation functions/views
+**SPECIAL Stats Tracking:**
+- [ ] Base stats + perk allocations
+- [ ] Legendary perk bonuses (+5 when maxed)
+- [ ] Gear bonuses (Unyielding +3 SPECIAL)
+- [ ] Mutation/consumable modifiers
 
 ---
 
-## Phase 5: Advanced RAG Features
+## Phase 7: Advanced RAG Features
 
-### Enhanced Views
-- [ ] Create build archetype views:
-  - Stealth commando builds
-  - Heavy gunner builds
-  - Bloodied builds
-  - Shotgunner builds
-  - Melee builds
-  - VATS builds
-  - Tank/support builds
-- [ ] Create perk synergy views (perks that complement each other)
+**Build Archetypes:**
+- [ ] Views for common builds (bloodied, stealth commando, heavy gunner, VATS, tank)
+- [ ] Perk synergy analysis
 
-### Advanced Features
-- [ ] **Damage calculator** - Calculate effective DPS given build + weapon + perks + buffs
-- [ ] **Build simulator** - Test builds before committing in-game
-- [ ] **Build comparison** - Compare two builds side-by-side
-- [ ] **Perk conflict detection** - Identify mutually exclusive perks or inefficient combinations
-- [ ] **Gear recommendation** - Suggest legendary effects based on build
+**Build Tools:**
+- [ ] Damage calculator (weapon + perks + buffs → DPS)
+- [ ] Build simulator
+- [ ] Build comparison (side-by-side)
+- [ ] Perk conflict detection
+- [ ] Gear recommendation engine
+
+---
+
+## Phase 8: Web GUI (Stretch Goal)
+
+**Tech Stack:** React + Vite + TypeScript + TailwindCSS + FastAPI + MySQL
+
+**Core Features:**
+- Weapon/Armor/Perk browsers with filters
+- Natural language chat interface (RAG integration)
+- Build optimizer and damage calculator
+- User authentication + saved builds (optional)
+
+**Status:** 🎯 Not started. See `react/` directory for frontend scaffolding.
 
 ---
 
 ## Data Quality & Testing
 
-### Validation
-- [ ] Create validation script to check data integrity
-- [ ] Cross-reference with game data files (if accessible)
-- [ ] Verify perk descriptions match in-game text
-- [ ] Validate form IDs and editor IDs
+**Validation:**
+- [ ] Data integrity checks
+- [ ] Cross-reference with game files
+- [ ] Form ID verification
 
-### Testing
-- [ ] Add unit tests for scrapers
-- [ ] Add unit tests for import logic
-- [ ] Add integration tests for database queries
-- [ ] Test RAG retrieval accuracy
-
-### Documentation
-- [x] Update CLAUDE.md with unified armor architecture
-- [x] Update README.md with unified armor schema
-- [x] Update TODO.md with completed tasks
-- [ ] Complete SCRAPER_README.md with armor/PA scraper docs
-- [ ] Document all database views and their use cases
-- [ ] Create user guide for querying the database
+**Testing:**
+- [ ] Unit tests for scrapers
+- [ ] Integration tests for queries
+- [ ] RAG accuracy tests (`rag/test_no_hallucination.py`)
 
 ---
 
-## Completed Tasks Archive
+## Next Immediate Steps
 
-### ✅ Core Schema & Import Scripts
-- [x] Create weapon scraper for regular weapons
-- [x] Create database schema with weapon, perk, and legendary perk tables
-- [x] Create import script for CSV → MySQL
-- [x] Create legendary perk scraper
-- [x] Handle multi-rank legendary perks - scraper extracts all 4 ranks
-- [x] Re-scrape legendary perks - LegendaryPerks.csv has 112 rows (28 × 4)
-- [x] Update import script for legendary perk ranks
-- [x] Add race column to perk tables (Human/Ghoul)
-- [x] Create armor and power armor tables
-- [x] Create all junction tables for perk relationships
-- [x] Create RAG-optimized database views
-
-### ✅ Armor & Power Armor
-- [x] Build armor scraper
-- [x] Build power armor scraper
-- [x] Scrape all 18 armor sets
-- [x] Scrape all 12 power armor sets (72 pieces total)
-- [x] Manually collect 477 armor pieces with level-specific data (with ChatGPT assistance)
-- [x] Merge power armor into unified `armor` table with `armor_type` ENUM
-- [x] Remove armor perk junction tables (armor perks are universal)
-- [x] Import unified armor data to database (291 regular + 186 power armor)
-
-### ✅ Weapon Data Collection
-- [x] Gather 257 weapon URLs from Fallout Wiki
-- [x] Scrape all 249 weapons
-- [x] Import all weapons to database
-- [x] Populate weapon_perks junction table (1,689 links)
-
----
-
-## Project Goal
-
-**Build a RAG-powered LLM system** to help Fallout 76 players:
-1. **Optimize character builds** based on playstyle preferences
-2. **Query game data** (weapon damage, perk effects, legendary effects, mutations, consumables, etc.)
-3. **Answer complex questions** like:
-   - "What's the best bloodied heavy gunner build for solo play?"
-   - "Which mutations synergize with a VATS critical build?"
-   - "What food should I use for a melee tank build?"
-   - "How much damage does this weapon do with my current build?"
-
----
-
----
-
-## Phase 6: Full-Stack Web GUI (STRETCH GOAL)
-
-### Goal: Build an interactive web application for browsing and querying Fallout 76 build data
-
-**Tech Stack (Proposed):**
-- **Frontend:** React + Vite + TypeScript + TailwindCSS + DaisyUI + GSAP (animations)
-- **Backend:** FastAPI (Python) + SQLAlchemy (ORM for MySQL)
-- **Database:** MySQL (existing schema)
-- **Deployment:** Docker + Docker Compose + Nginx
-
-### Features to Implement
-
-#### Core Browsing Features
-- [ ] **Weapon Browser** - Filterable grid/list view with type, class, damage sorting
-- [ ] **Armor Browser** - View regular and power armor with resistance comparisons
-- [ ] **Perk Browser** - Browse perks by SPECIAL category, view rank progressions
-- [ ] **Search & Filter** - Full-text search across all data types
-- [ ] **Detail Views** - In-depth pages for weapons, armor, perks with related data
-
-#### RAG Integration Features
-- [ ] **Chat Interface** - Natural language queries like "What's the best pistol build for stealth?"
-- [ ] **Query Results Display** - Present database results in clean, readable format
-- [ ] **Conversation History** - Store and display previous queries in session
-
-#### Advanced Build Tools
-- [ ] **Build Optimizer** - Input playstyle preferences, get recommended builds
-- [ ] **Damage Calculator** - Select weapon, perks, buffs → see total damage output
-- [ ] **Build Simulator** - Test builds before committing in-game
-- [ ] **Build Comparison** - Compare two builds side-by-side
-
-#### User Features (Optional)
-- [ ] **Authentication** - User registration and login (JWT tokens)
-- [ ] **Save Builds** - Store favorite builds to user account
-- [ ] **Share Builds** - Generate shareable URLs or export JSON
-- [ ] **Favorites** - Bookmark weapons, armor, perks for quick access
-
-#### UI/UX Features
-- [ ] **Responsive Design** - Mobile-friendly interface
-- [ ] **Dark/Light Mode** - Theme switcher
-- [ ] **Smooth Animations** - GSAP-powered transitions
-- [ ] **Loading States** - Skeletons and spinners for data fetching
-- [ ] **Error Handling** - User-friendly error messages
-
-### Backend API Design (RESTful)
-
-```
-# Weapons
-GET    /api/v1/weapons              # List all weapons (pagination, filters)
-GET    /api/v1/weapons/{id}         # Get weapon by ID
-GET    /api/v1/weapons/search       # Search weapons
-GET    /api/v1/weapons/{id}/perks   # Get perks affecting weapon
-
-# Armor
-GET    /api/v1/armor                # List all armor
-GET    /api/v1/armor/{id}           # Get armor by ID
-GET    /api/v1/armor/sets           # Get armor sets
-
-# Perks
-GET    /api/v1/perks                # List all regular perks
-GET    /api/v1/perks/{id}           # Get perk by ID
-GET    /api/v1/perks/{id}/ranks     # Get all ranks for perk
-GET    /api/v1/legendary-perks      # List legendary perks
-
-# RAG & Build Tools
-POST   /api/v1/rag/query            # Natural language query
-POST   /api/v1/builds/optimize      # Build optimizer
-POST   /api/v1/builds/calculate     # Damage calculator
-
-# User & Auth (Optional)
-POST   /api/v1/auth/register
-POST   /api/v1/auth/login
-GET    /api/v1/users/me
-POST   /api/v1/users/builds         # Save user builds
-GET    /api/v1/users/builds         # Get user builds
-
-# Docs & Health
-GET    /api/v1/health               # Health check
-GET    /docs                        # FastAPI auto-generated docs
-```
-
-### Implementation Phases
-
-**Phase 6.1: Backend Setup**
-- [ ] Create FastAPI application structure
-- [ ] Set up SQLAlchemy models (map to existing MySQL schema)
-- [ ] Implement Pydantic schemas for request/response validation
-- [ ] Build core CRUD endpoints for weapons, armor, perks
-- [ ] Integrate existing RAG query engine (`rag/query_engine.py`)
-- [ ] Add CORS middleware for frontend communication
-
-**Phase 6.2: Frontend Setup**
-- [ ] Initialize Vite + React + TypeScript project
-- [ ] Set up TailwindCSS + DaisyUI
-- [ ] Configure React Router for client-side routing
-- [ ] Set up Axios or TanStack Query for API calls
-- [ ] Create base layout components (Header, Sidebar, Footer)
-
-**Phase 6.3: Core Components**
-- [ ] Build weapon list/grid components with filtering
-- [ ] Build armor list/grid components with filtering
-- [ ] Build perk browser with SPECIAL categorization
-- [ ] Create detail view components for each data type
-- [ ] Implement search functionality
-
-**Phase 6.4: RAG Integration**
-- [ ] Build chat interface component
-- [ ] Integrate with `/api/v1/rag/query` endpoint
-- [ ] Display query results in formatted tables/cards
-- [ ] Add conversation history display
-- [ ] Handle loading and error states
-
-**Phase 6.5: Advanced Features**
-- [ ] Implement build optimizer UI
-- [ ] Implement damage calculator UI
-- [ ] Add build comparison tool
-- [ ] Implement user authentication (if desired)
-- [ ] Add save/share build functionality
-
-**Phase 6.6: Polish & Deployment**
-- [ ] Add GSAP animations for smooth transitions
-- [ ] Implement dark/light mode toggle
-- [ ] Ensure mobile responsiveness
-- [ ] Create Docker setup (Dockerfile + docker-compose.yml)
-- [ ] Write deployment documentation
-- [ ] Set up Nginx reverse proxy for production
-
-### Folder Structure
-
-```
-fo76-ml-db/
-├── backend/                    # FastAPI backend
-│   ├── app/
-│   │   ├── main.py            # FastAPI app entry point
-│   │   ├── config.py          # Configuration settings
-│   │   ├── database.py        # Database connection
-│   │   ├── models/            # SQLAlchemy models
-│   │   ├── schemas/           # Pydantic schemas
-│   │   ├── routers/           # API endpoints
-│   │   ├── services/          # Business logic
-│   │   └── utils/             # Helper functions
-│   ├── tests/
-│   └── requirements.txt
-├── frontend/                   # React frontend
-│   ├── public/
-│   ├── src/
-│   │   ├── components/        # React components
-│   │   ├── pages/             # Page components
-│   │   ├── hooks/             # Custom React hooks
-│   │   ├── services/          # API client functions
-│   │   ├── types/             # TypeScript types
-│   │   └── utils/             # Helper functions
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── vite.config.ts
-│   └── tailwind.config.js
-├── docker-compose.yml
-└── README_WEBAPP.md
-```
-
-**Status:** 🎯 **STRETCH GOAL** - Not yet started. This is a future enhancement to provide a user-friendly web interface for the database and RAG system.
+1. **Conditional Perk Rules** - Populate weapon_perk_rules with parsed conditions
+2. **Damage Formulas** - Research and implement damage calculations
+3. **Collectibles** - Add bobbleheads and magazines
+4. **Legendary Effects** - Research and implement legendary item effects
+5. **Web GUI** - Begin FastAPI backend development (stretch goal)
 
 ---
 
 ## Notes
 
-### Current Database Summary (Updated: 2025-10-30)
-- **Weapons:** 262 (Ranged: 127, Melee: 94, Grenade: 26, Mine: 8, Thrown: 4, Camera: 3)
-- **Armor (unified):** 477 (291 regular + 186 power armor)
-  - 18 regular armor sets × multiple levels × pieces
-  - 12 power armor sets × multiple levels × 6 pieces each
-  - One row per piece per level for accurate stat tracking
-- **Regular Perks:** 240 unique (449 total ranks)
-- **Legendary Perks:** 28 unique (112 total ranks)
-- **Mutations:** 19
-- **Consumables:** 11 (build-relevant items with high-impact stat buffs)
-- **Collectibles:** 0 (planned for future)
-- **Weapon-Perk Links:** 1,711
-- **Data Quality:** 100% type classification, 95.8% have damage data
-- **Total Unique Items:** 1,037
-- **Total Embeddings:** 1,330 (includes all perk ranks)
+**Vulcan Power Armor:** Awaiting per-piece stat data from wiki before import.
 
-### MySQL Reserved Keyword Fix
-- Fixed `rank` column in `perk_ranks` and `legendary_perk_ranks` tables
-- Used backticks: `` `rank` `` in both schema and import scripts
-- Applied to CREATE TABLE statements and INSERT queries
+**MySQL Reserved Keywords:** Fixed `rank` column with backticks in schema and import scripts.
 
-### Next Immediate Steps
-1. **Collectibles Import** (Planned) - Bobbleheads and magazines for temporary buffs
-2. **Legendary Effects** - Research and implement legendary weapon/armor effects
-3. **Future Phases:**
-   - Weapon/armor mods research
-   - SPECIAL stat tracking implementation
-   - Status effects schema planning
-   - Damage calculator
-   - Web GUI development (stretch goal)
+**Cost:** Vector DB population ~$0.001 (OpenAI embeddings). RAG queries ~$0.01-0.03 each (Claude Sonnet 4).

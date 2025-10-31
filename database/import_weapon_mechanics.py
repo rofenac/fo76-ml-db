@@ -52,11 +52,11 @@ class WeaponMechanicsImporter:
         - notes: Description/notes about the mechanic
         """
         return [
-            # Charge mechanics - Gauss weapons
+            # Charge mechanics - Gauss weapons (NOT Gauss minigun - it only has spin-up)
             {
                 'mechanic_type': 'charge',
-                'weapon_names': ['Gauss rifle', 'Gauss shotgun', 'Gauss pistol', 'Gauss minigun'],
-                'weapon_name_patterns': [r'^Gauss\s+\w+'],
+                'weapon_names': ['Gauss rifle', 'Gauss shotgun', 'Gauss pistol'],
+                'weapon_name_patterns': [],  # Don't use pattern to avoid catching Gauss minigun
                 'numeric_value': 0.50,
                 'unit': 'multiplier',
                 'notes': 'Uncharged damage is 50% of listed damage. Fully charged is 100%.'
@@ -82,11 +82,11 @@ class WeaponMechanicsImporter:
                 'notes': 'First chain target takes 65% damage, each successive target takes 35% less (second chain: 42.25%)'
             },
 
-            # Spin-up - Minigun and Gatling weapons
+            # Spin-up - Minigun, Gatling weapons, and Pepper Shaker
             {
                 'mechanic_type': 'spin_up',
-                'weapon_names': ['Minigun', 'Gatling gun', 'Gatling laser', 'Gatling plasma', 'Ultracite Gatling laser'],
-                'weapon_name_patterns': [r'^Gatling\s+\w+', r'^Minigun$'],
+                'weapon_names': ['Minigun', 'Gauss minigun', 'Gatling gun', 'Gatling laser', 'Gatling plasma', 'Ultracite Gatling laser', 'Pepper Shaker'],
+                'weapon_name_patterns': [r'^Gatling\s+\w+', r'minigun$'],
                 'notes': 'Requires a moment to spin up before firing'
             },
 

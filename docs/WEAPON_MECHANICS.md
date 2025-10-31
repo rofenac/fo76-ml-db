@@ -98,7 +98,9 @@ WHERE weapon_name LIKE 'Gauss%';
 
 ### 1. Charge Mechanic
 
-**Weapons**: Gauss rifle, Gauss shotgun, Gauss pistol, Gauss minigun
+**Weapons**: Gauss rifle, Gauss shotgun, Gauss pistol
+
+**Note**: Gauss minigun does NOT have charge mechanic - it only has spin-up like other miniguns
 
 **Behavior**:
 - Uncharged shots deal **50% of listed damage**
@@ -132,7 +134,7 @@ unit: 'multiplier'
 
 ### 3. Spin-Up Delay
 
-**Weapons**: Minigun, Gatling gun, Gatling laser, Gatling plasma, Ultracite Gatling laser
+**Weapons**: Minigun, Gauss minigun, Gatling gun, Gatling laser, Gatling plasma, Ultracite Gatling laser, Pepper Shaker
 
 **Behavior**:
 - Requires time to spin up before firing
@@ -191,8 +193,9 @@ WHERE mechanic_type = 'charge';
 | Gauss rifle   | Uncharged damage is 50% of listed damage. Fully...   | 0.50          | multiplier |
 | Gauss shotgun | Uncharged damage is 50% of listed damage. Fully...   | 0.50          | multiplier |
 | Gauss pistol  | Uncharged damage is 50% of listed damage. Fully...   | 0.50          | multiplier |
-| Gauss minigun | Uncharged damage is 50% of listed damage. Fully...   | 0.50          | multiplier |
 ```
+
+**Note**: Only 3 Gauss weapons, not 4 - Gauss minigun has spin-up, not charge
 
 ### Find all weapons with explosive AOE
 
@@ -241,7 +244,8 @@ Weapons with charge mechanic:
 - Gauss rifle: 50% uncharged, 100% charged (also has explosive AOE)
 - Gauss shotgun: 50% uncharged, 100% charged
 - Gauss pistol: 50% uncharged, 100% charged
-- Gauss minigun: 50% uncharged, 100% charged
+
+Note: Gauss minigun does not have charge - it only has spin-up like other miniguns
 ```
 
 ### Update Vector Database
@@ -334,9 +338,10 @@ Potential mechanics to add:
 The weapon mechanics system provides:
 
 ✓ Accurate modeling of Gauss weapon charge mechanics (50% uncharged)
+✓ Gauss rifle, shotgun, and pistol have charge (Gauss minigun only has spin-up)
 ✓ Support for chain lightning, spin-up, and explosive AOE
 ✓ Flexible schema for future mechanics
 ✓ Easy querying via views
 ✓ Integration with RAG system
 
-All Gauss weapons now correctly represent that uncharged shots deal 50% damage!
+The three chargeable Gauss weapons (rifle, shotgun, pistol) now correctly represent that uncharged shots deal 50% damage!

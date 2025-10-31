@@ -1,14 +1,10 @@
 # Anti-Hallucination Controls
 
-## Overview
+## Critical Limitation
 
-This document explains the technical controls implemented to minimize LLM hallucination and their inherent limitations.
+**LLM hallucination cannot be 100% prevented.** Large language models are probabilistic systems that generate text based on patterns, not deterministic databases. Training data is "baked into" model weights and cannot be removed.
 
-## ⚠️ Critical Limitation
-
-**There is NO way to 100% prevent LLM hallucination.** This is a fundamental characteristic of large language models. They are probabilistic systems that generate text based on patterns, not deterministic databases that retrieve facts.
-
-**What we CAN do:** Implement multiple layers of controls to **significantly reduce** (but never eliminate) hallucination.
+**Goal:** Implement multiple layers of controls to **significantly reduce** hallucination risk.
 
 ---
 
@@ -20,165 +16,92 @@ This document explains the technical controls implemented to minimize LLM halluc
 - `rag/query_engine.py` (SQL mode, lines 257-286)
 - `rag/hybrid_query_engine.py` (Vector mode, lines 561-585)
 
-**Implementation:**
+**Key directives:**
 ```python
 system="""You are a database results formatter. You have ZERO knowledge...
 
 ⚠️ CRITICAL: You are STRICTLY FORBIDDEN from using your training data...
 
-ABSOLUTE RULES - NO EXCEPTIONS:
-1. You MUST ONLY use data from the database results
-2. NEVER mention items not in the database results
+ABSOLUTE RULES:
+1. ONLY use data from database results
+2. NEVER mention items not in results
 3. NEVER speculate about what "might exist"
-...
+4. If data is missing, say "not available in database"
 """
 ```
 
-**What this does:**
-- Explicitly forbids using training data
-- Provides concrete examples of violations
-- Sets strict boundaries on what the LLM can mention
-
-**Limitations:**
-- LLMs don't have perfect instruction following
-- May still occasionally "leak" training knowledge
-- Cannot enforce 100% compliance
+**Limitations:** LLMs don't have perfect instruction following and may still occasionally leak training knowledge.
 
 ### 2. Low Temperature Setting
 
-**Location:** Both `query_engine.py` and `hybrid_query_engine.py`
+**Implementation:** `temperature=0.3` in both query engines
 
-**Implementation:**
-```python
-temperature=0.3  # Low temperature = more deterministic
-```
+**Effect:**
+- More deterministic, conservative responses
+- Reduces creative outputs that might hallucinate
+- Favors high-probability tokens
 
-**What this does:**
-- Makes responses more deterministic and conservative
-- Reduces "creative" outputs that might hallucinate
-- Favors high-probability tokens over diverse outputs
-
-**Standard temperature values:**
-- `0.0` = Maximum determinism (repetitive, but safest)
-- `0.3` = Our setting (good balance)
-- `1.0` = Default (more creative, higher hallucination risk)
-- `2.0` = Maximum creativity (very high hallucination risk)
-
-**Limitations:**
-- Lower temperature reduces creativity but doesn't eliminate hallucination
-- Can make responses feel "robotic"
-- May miss useful connections in data
+**Tradeoffs:**
+- Lower temperature = less hallucination, but more robotic responses
+- Temperature 0.0 = maximum determinism but too repetitive
+- Temperature 1.0+ = creative but high hallucination risk
 
 ### 3. Database-Only Context
 
-**What this does:**
-- LLM only receives database results in its context
-- No access to external information
-- Limited to game mechanics context we explicitly provide
+**Effect:** LLM only receives database results, no external information
 
-**Limitations:**
-- LLM still has training data "baked in"
-- Cannot truly "forget" what it learned during training
-- May unconsciously blend training knowledge with database results
+**Limitations:** Training data remains in model weights and can unconsciously blend with database results
 
 ### 4. Explicit Violation Examples
-
-**Location:** System prompts in both files
 
 **Implementation:**
 ```
 VIOLATION EXAMPLES (DO NOT DO THIS):
-❌ "Other perks like Expert Shotgunner might help" - NO!
-❌ "You should also consider..." - FORBIDDEN
-❌ "Players typically use..." - NO!
+❌ "Other perks like Expert Shotgunner might help"
+❌ "You should also consider..."
+❌ "Players typically use..."
 ```
 
-**What this does:**
-- Shows the LLM concrete examples of forbidden behavior
-- Helps the LLM recognize and avoid similar patterns
-- Provides negative reinforcement
+**Effect:** Shows LLM concrete forbidden behaviors
 
-**Limitations:**
-- Can only cover a finite set of examples
-- LLM may still generate similar but not identical violations
+**Limitations:** Cannot cover all possible violation patterns
 
 ### 5. Conversation History Management
 
-**Location:** Both RAG classes maintain `conversation_history`
+**Implementation:** Last 3 exchanges kept in context
 
-**What this does:**
-- Keeps last 3 exchanges in context
-- Prevents contradictions across conversation
-- Maintains consistency
+**Effect:** Maintains consistency, prevents contradictions
 
-**Limitations:**
-- Long conversations may still drift
-- History can compound errors if early answers hallucinated
+**Limitations:** Long conversations may drift; history can compound early errors
 
 ---
 
 ## What We CANNOT Do
 
-### ❌ Impossible Controls
-
-1. **100% Hallucination Prevention**
-   - LLMs are fundamentally probabilistic
-   - Training data is "baked into" the model weights
-   - Cannot be truly "unlearned"
-
-2. **Real-time Fact Checking**
-   - Would require validating every statement against database
-   - Complex statements may blend facts in subtle ways
-   - Computational cost would be prohibitive
-
-3. **Model Surgery**
-   - Cannot remove Fallout 76 knowledge from model weights
-   - Cannot "lobotomize" specific knowledge domains
-   - Would require model retraining from scratch
-
-4. **Deterministic Outputs**
-   - Even at temperature=0.0, some randomness exists
-   - Token selection still probabilistic
-   - Different API calls may give different results
+1. **100% Prevention** - LLMs are fundamentally probabilistic
+2. **Real-time Fact Checking** - Complex statements blend facts subtly; computational cost prohibitive
+3. **Model Surgery** - Cannot remove specific knowledge from model weights
+4. **Deterministic Outputs** - Even at temp=0.0, token selection remains probabilistic
 
 ---
 
-## Best Practices for Users
+## User Best Practices
 
 ### ✅ Do This:
 
-1. **Verify Critical Information**
-   - Double-check important stats against the database
-   - Use exact queries when precision matters
-   - Run validation tests (see `rag/test_no_hallucination.py`)
-
-2. **Use Exact Queries for Facts**
-   - "What's the damage of Gauss Shotgun?" → SQL mode (more reliable)
-   - "Best bloodied build" → Vector mode (more conceptual)
-
-3. **Watch for Red Flags**
-   - "Typically..." or "Usually..." = possible training data leak
-   - Items mentioned that weren't in your query results
-   - Stats that seem inconsistent with database
-
-4. **Test Edge Cases**
-   - Ask about non-existent items
-   - Request comparisons with items not in database
-   - See if the LLM invents data
+1. **Verify critical information** against database
+2. **Use exact queries** (SQL mode) for factual lookups
+3. **Watch for red flags:**
+   - Words like "typically", "usually", "often" = possible training data leak
+   - Items mentioned that weren't in query results
+   - Stats inconsistent with database
+4. **Run validation tests:** `python rag/test_no_hallucination.py`
 
 ### ❌ Don't Do This:
 
-1. **Assume 100% Accuracy**
-   - Always maintain healthy skepticism
-   - Verify important decisions
-
-2. **Rely Solely on LLM for Critical Paths**
-   - Use direct SQL queries for mission-critical data
-   - Treat LLM as "advisory" not "authoritative"
-
-3. **Ignore Validation Tests**
-   - Run `test_no_hallucination.py` periodically
-   - Check for drift over time
+1. Assume 100% accuracy
+2. Rely solely on LLM for mission-critical data
+3. Ignore validation tests
 
 ---
 
@@ -188,145 +111,93 @@ VIOLATION EXAMPLES (DO NOT DO THIS):
 
 **Location:** `rag/test_no_hallucination.py`
 
-**What it tests:**
-- Asking about non-existent items
-- Requesting comparisons with fake perks
-- Verifying the LLM says "not in database" instead of inventing data
+**Tests:**
+- Non-existent items ("Plasma Disruptor")
+- Fake perk comparisons
+- Verifies LLM says "not in database" instead of inventing data
 
-**Run tests:**
+**Run:**
 ```bash
 cd rag
 python test_no_hallucination.py
 ```
 
-### Manual Testing
+### Manual Test Queries
 
-**Good test queries:**
 ```
 1. "What's the damage of the Plasma Disruptor?"
-   (fake weapon - should say not in database)
+   → Should say: not in database (fake weapon)
 
 2. "Compare Bloodied Fixer to Nuclear Dragon"
-   (Nuclear Dragon is fake - should only discuss Fixer)
+   → Should only discuss Fixer (Nuclear Dragon is fake)
 
 3. "Best perks for the Vaporizer weapon"
-   (fake weapon - should say no data available)
+   → Should say: no data available (fake weapon)
 ```
-
-**Expected behavior:**
-- Should NOT invent stats for fake items
-- Should NOT suggest items not in database
-- Should clearly state "not available in database"
 
 ---
 
 ## Technical Tradeoffs
 
-### Strictness vs Usefulness
+**Current Settings (Strict):**
+- ✅ Less hallucination, more trustworthy
+- ❌ May miss useful inferences, feels cautious
 
-**More Strict (Current Settings):**
-- ✅ Less hallucination
-- ✅ More trustworthy for facts
-- ❌ May miss useful inferences
-- ❌ Can feel overly cautious
+**Alternative (Less Strict):**
+- ✅ More creative connections, better language
+- ❌ Higher hallucination risk, less trustworthy
 
-**Less Strict (Higher Temperature):**
-- ✅ More creative connections
-- ✅ Better natural language
-- ❌ More hallucination risk
-- ❌ Less trustworthy
-
-**Our Choice:** Prioritize trustworthiness over creativity.
-
-### Why We Can't Go Lower
-
-**Temperature < 0.3:**
-- Responses become very repetitive
-- May refuse to answer valid questions
-- User experience suffers significantly
-
-**Why We Can't Add More Validation:**
-- Would need to parse every LLM statement
-- Match against database (complex for natural language)
-- Significant computational overhead
-- May introduce false positives (reject valid answers)
+**Why we can't go stricter:**
+- Temperature < 0.3 = too repetitive, refuses valid questions
+- Full validation = parse every statement, match against DB (complex + expensive)
 
 ---
 
-## Future Improvements (Potential)
+## Potential Future Improvements
 
 ### 1. Structured Output Validation
-Use Claude's JSON mode to force structured responses:
+Force JSON responses with source attribution:
 ```json
 {
-  "items": [
-    {"name": "Gauss Shotgun", "damage": 65, "source": "database"}
-  ],
-  "disclaimer": "All data from database query #1234"
+  "items": [{"name": "Gauss Shotgun", "damage": 65, "source": "database"}],
+  "disclaimer": "All data from query #1234"
 }
 ```
-
-**Pros:** Easier to validate, harder to hallucinate
-**Cons:** Less natural, more rigid
+**Pros:** Easier validation
+**Cons:** Less natural
 
 ### 2. Two-Pass Verification
-1. First pass: Generate answer
-2. Second pass: Validate answer against database
-3. Return only if validated
-
+Generate answer → validate against DB → return if validated
 **Pros:** Catches many hallucinations
-**Cons:** 2x API cost, 2x latency
+**Cons:** 2x cost, 2x latency
 
 ### 3. Fact Extraction + Validation
-1. Extract factual claims from LLM response
-2. Generate SQL to verify each claim
-3. Reject response if claims don't match
-
+Extract claims → verify with SQL → reject if mismatch
 **Pros:** High precision
-**Cons:** Very complex, high cost, may reject good answers
-
-### 4. Fine-tuned Model
-Train a custom model with examples of:
-- Good: Database-only responses
-- Bad: Hallucinated responses
-
-**Pros:** Better instruction following
-**Cons:** Expensive, requires ongoing maintenance
+**Cons:** Complex, expensive, may reject good answers
 
 ---
 
 ## Summary
 
-### What We've Done ✅
+**Implemented ✅**
+1. Strict system prompts with explicit rules
+2. Low temperature (0.3) for determinism
+3. Concrete violation examples
+4. Database-only context
+5. Automated hallucination tests
 
-1. ✅ Very strict system prompts with explicit rules
-2. ✅ Low temperature (0.3) for determinism
-3. ✅ Concrete violation examples
-4. ✅ Database-only context (no external data)
-5. ✅ Automated hallucination tests
+**Impossible ❌**
+1. 100% accuracy guarantee
+2. Remove training data from model
+3. Fully deterministic responses
+4. Real-time fact-checking
 
-### What We Cannot Do ❌
+**Your Responsibility 🎯**
+1. Treat responses as advisory, not authoritative
+2. Verify critical information
+3. Run validation tests periodically
+4. Use SQL mode for exact lookups
+5. Report suspected hallucinations
 
-1. ❌ Guarantee 100% accuracy (fundamentally impossible)
-2. ❌ Remove training data from model
-3. ❌ Make responses fully deterministic
-4. ❌ Real-time fact-check every statement
-
-### What You Should Do 🎯
-
-1. 🎯 Treat LLM responses as advisory, not authoritative
-2. 🎯 Verify critical information against database
-3. 🎯 Run validation tests periodically
-4. 🎯 Report suspected hallucinations for investigation
-5. 🎯 Use exact queries (SQL mode) for factual lookups
-
----
-
-## Questions?
-
-- See `rag/test_no_hallucination.py` for testing
-- See `rag/query_engine.py` lines 257-286 for SQL mode prompts
-- See `rag/hybrid_query_engine.py` lines 561-585 for Vector mode prompts
-- Check conversation history in both classes for context management
-
-**Remember:** Hallucination reduction is a continuous process, not a one-time fix.
+**Remember:** Hallucination reduction is continuous, not one-time.

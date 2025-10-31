@@ -29,8 +29,8 @@ JOIN weapons w ON wm.weapon_id = w.id
 GROUP BY wmt.name
 ORDER BY weapon_count DESC;
 
--- Test 3: Gauss weapons with charge mechanic
-SELECT '=== Test 3: Gauss Weapons with Charge Mechanic ===' AS test;
+-- Test 3: Gauss weapons with charge mechanic (should be 3, NOT including Gauss minigun)
+SELECT '=== Test 3: Gauss Weapons with Charge Mechanic (3 weapons) ===' AS test;
 SELECT
     w.name AS weapon_name,
     wmt.name AS mechanic_type,
@@ -72,8 +72,8 @@ JOIN weapon_mechanics wm ON w.id = wm.weapon_id
 JOIN weapon_mechanic_types wmt ON wm.mechanic_type_id = wmt.id
 WHERE w.name = 'Tesla rifle' AND wmt.name = 'chain_lightning';
 
--- Test 6: All weapons with spin-up mechanic
-SELECT '=== Test 6: Weapons with Spin-Up Delay ===' AS test;
+-- Test 6: All weapons with spin-up mechanic (should include Gauss minigun and Pepper Shaker)
+SELECT '=== Test 6: Weapons with Spin-Up Delay (7 weapons) ===' AS test;
 SELECT
     w.name AS weapon_name,
     wc.name AS weapon_class,
@@ -158,11 +158,13 @@ Expected results (if all weapons are imported):
 
 Test 1: Should show 7 mechanic types
 Test 2: Should show distribution of mechanics across weapons
-Test 3: Should show 4 Gauss weapons with numeric_value = 0.50, unit = 'multiplier'
+Test 3: Should show 3 Gauss weapons with numeric_value = 0.50, unit = 'multiplier'
+        (Gauss rifle, Gauss shotgun, Gauss pistol - NOT Gauss minigun!)
 Test 4: Gauss rifle should have BOTH 'charge' and 'explosive_aoe' (2 rows)
 Test 5: Tesla rifle should show chain_lightning with numeric_value = 0.65,
         numeric_value_2 = 0.35, second_chain = 0.4225
-Test 6: Should show Minigun and 4 Gatling variants (5 weapons)
+Test 6: Should show 7 weapons with spin-up:
+        (Minigun, Gauss minigun, Gatling gun, Gatling laser, Gatling plasma, Ultracite Gatling laser, Pepper Shaker)
 Test 7: Should show multiple explosive weapons (Gauss rifle, Fat Man, etc.)
 Test 8: View should work and show same data as direct queries
 Test 9: Should return 0 rows (no duplicates)
