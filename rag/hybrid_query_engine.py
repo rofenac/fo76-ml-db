@@ -15,12 +15,15 @@ Examples:
 import os
 import sys
 from typing import Dict, List, Any, Optional
-import mysql.connector
 from openai import OpenAI
 import chromadb
 from anthropic import Anthropic
 
-# Import existing SQL-based RAG
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+# Import database utility and SQL-based RAG
+from database.db_utils import get_db
 from query_engine import FalloutRAG
 
 
@@ -39,6 +42,9 @@ class HybridFalloutRAG:
             chroma_path: Path to ChromaDB storage
         """
         print("🚀 Initializing Hybrid RAG System...")
+
+        # Initialize database utility
+        self.db = get_db()
 
         # Initialize SQL-based RAG (existing system)
         print("   📊 Loading SQL RAG engine...")
@@ -226,18 +232,10 @@ class HybridFalloutRAG:
             'consumables': []
         }
 
-        db = mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', 'secret'),
-            database=os.getenv('DB_NAME', 'f76')
-        )
-        cursor = db.cursor(dictionary=True)
-
         # SQL pre-filter to get ALL items in the category (with mechanics)
         if category_filter['type'] == 'weapon':
             class_pattern = category_filter['class_pattern']
-            cursor.execute(f"""
+            all_weapons = self.db.execute_query(f"""
                 SELECT
                     wpv.*,
                     GROUP_CONCAT(
@@ -260,7 +258,6 @@ class HybridFalloutRAG:
                 GROUP BY wpv.id, wpv.weapon_name, wpv.weapon_type, wpv.weapon_class,
                          wpv.level, wpv.damage, wpv.regular_perks, wpv.legendary_perks, wpv.source_url
             """)
-            all_weapons = cursor.fetchall()
 
             # Get display name from pattern (strip wildcards)
             display_name = class_pattern.replace('%', '').title()
@@ -303,9 +300,6 @@ class HybridFalloutRAG:
                 if remaining:
                     print(f"         • Additional {len(remaining)} weapons below top {n_results}")
                 enriched['weapons'].extend(remaining)
-
-        cursor.close()
-        db.close()
 
         return enriched
 
@@ -384,43 +378,26 @@ class HybridFalloutRAG:
             'consumables': []
         }
 
-        db = mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', 'secret'),
-            database=os.getenv('DB_NAME', 'f76')
-        )
-        cursor = db.cursor(dictionary=True)
-
         # Build LIKE clauses for each name
         name_conditions = " OR ".join([f"weapon_name LIKE '%{name}%'" for name in item_names])
 
         # Search weapons
-        cursor.execute(f"SELECT * FROM v_weapons_with_perks WHERE {name_conditions}")
-        enriched['weapons'] = cursor.fetchall()
+        enriched['weapons'] = self.db.execute_query(f"SELECT * FROM v_weapons_with_perks WHERE {name_conditions}")
 
         # Search armor
-        cursor.execute(f"SELECT * FROM v_armor_complete WHERE {name_conditions.replace('weapon_name', 'name')}")
-        enriched['armor'] = cursor.fetchall()
+        enriched['armor'] = self.db.execute_query(f"SELECT * FROM v_armor_complete WHERE {name_conditions.replace('weapon_name', 'name')}")
 
         # Search perks
-        cursor.execute(f"SELECT * FROM v_perks_all_ranks WHERE {name_conditions.replace('weapon_name', 'perk_name')}")
-        enriched['perks'] = cursor.fetchall()
+        enriched['perks'] = self.db.execute_query(f"SELECT * FROM v_perks_all_ranks WHERE {name_conditions.replace('weapon_name', 'perk_name')}")
 
         # Search legendary perks
-        cursor.execute(f"SELECT * FROM v_legendary_perks_all_ranks WHERE {name_conditions.replace('weapon_name', 'perk_name')}")
-        enriched['legendary_perks'] = cursor.fetchall()
+        enriched['legendary_perks'] = self.db.execute_query(f"SELECT * FROM v_legendary_perks_all_ranks WHERE {name_conditions.replace('weapon_name', 'perk_name')}")
 
         # Search mutations
-        cursor.execute(f"SELECT * FROM v_mutations_complete WHERE {name_conditions.replace('weapon_name', 'mutation_name')}")
-        enriched['mutations'] = cursor.fetchall()
+        enriched['mutations'] = self.db.execute_query(f"SELECT * FROM v_mutations_complete WHERE {name_conditions.replace('weapon_name', 'mutation_name')}")
 
         # Search consumables
-        cursor.execute(f"SELECT * FROM v_consumables_complete WHERE {name_conditions.replace('weapon_name', 'consumable_name')}")
-        enriched['consumables'] = cursor.fetchall()
-
-        cursor.close()
-        db.close()
+        enriched['consumables'] = self.db.execute_query(f"SELECT * FROM v_consumables_complete WHERE {name_conditions.replace('weapon_name', 'consumable_name')}")
 
         return enriched
 
@@ -460,19 +437,12 @@ class HybridFalloutRAG:
                 items_by_type[item_type] = []
             items_by_type[item_type].append(item_id)
 
-        # Fetch full data from MySQL for each type
-        db = mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', 'secret'),
-            database=os.getenv('DB_NAME', 'f76')
-        )
-        cursor = db.cursor(dictionary=True)
+        # Fetch full data from MySQL for each type using new DB utility
 
         # Weapons (with mechanics)
         if 'weapon' in items_by_type:
             ids = ','.join(items_by_type['weapon'])
-            cursor.execute(f"""
+            enriched['weapons'] = self.db.execute_query(f"""
                 SELECT
                     wpv.*,
                     GROUP_CONCAT(
@@ -495,41 +465,32 @@ class HybridFalloutRAG:
                 GROUP BY wpv.id, wpv.weapon_name, wpv.weapon_type, wpv.weapon_class,
                          wpv.level, wpv.damage, wpv.regular_perks, wpv.legendary_perks, wpv.source_url
             """)
-            enriched['weapons'] = cursor.fetchall()
             print(f"         • Weapons: {', '.join([w['weapon_name'] for w in enriched['weapons']])}")
 
         # Armor
         if 'armor' in items_by_type:
             ids = ','.join(items_by_type['armor'])
-            cursor.execute(f"SELECT * FROM v_armor_complete WHERE id IN ({ids})")
-            enriched['armor'] = cursor.fetchall()
+            enriched['armor'] = self.db.execute_query(f"SELECT * FROM v_armor_complete WHERE id IN ({ids})")
 
         # Regular perks (need to handle rank)
         if 'perk' in items_by_type:
             ids = ','.join(items_by_type['perk'])
-            cursor.execute(f"SELECT * FROM v_perks_all_ranks WHERE perk_id IN ({ids})")
-            enriched['perks'] = cursor.fetchall()
+            enriched['perks'] = self.db.execute_query(f"SELECT * FROM v_perks_all_ranks WHERE perk_id IN ({ids})")
 
         # Legendary perks
         if 'legendary_perk' in items_by_type:
             ids = ','.join(items_by_type['legendary_perk'])
-            cursor.execute(f"SELECT * FROM v_legendary_perks_all_ranks WHERE legendary_perk_id IN ({ids})")
-            enriched['legendary_perks'] = cursor.fetchall()
+            enriched['legendary_perks'] = self.db.execute_query(f"SELECT * FROM v_legendary_perks_all_ranks WHERE legendary_perk_id IN ({ids})")
 
         # Mutations
         if 'mutation' in items_by_type:
             ids = ','.join(items_by_type['mutation'])
-            cursor.execute(f"SELECT * FROM v_mutations_complete WHERE mutation_id IN ({ids})")
-            enriched['mutations'] = cursor.fetchall()
+            enriched['mutations'] = self.db.execute_query(f"SELECT * FROM v_mutations_complete WHERE mutation_id IN ({ids})")
 
         # Consumables
         if 'consumable' in items_by_type:
             ids = ','.join(items_by_type['consumable'])
-            cursor.execute(f"SELECT * FROM v_consumables_complete WHERE consumable_id IN ({ids})")
-            enriched['consumables'] = cursor.fetchall()
-
-        cursor.close()
-        db.close()
+            enriched['consumables'] = self.db.execute_query(f"SELECT * FROM v_consumables_complete WHERE consumable_id IN ({ids})")
 
         # Merge in named items if provided (prevents duplicates using dict keying)
         if named_items:

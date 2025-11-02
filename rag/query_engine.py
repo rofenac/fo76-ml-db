@@ -1,9 +1,15 @@
 import anthropic
-import mysql.connector
 import os
+import sys
 from dotenv import load_dotenv
 import re
 from typing import Dict, List
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+# Import new database utility
+from database.db_utils import get_db
 
 # Load environment variables
 load_dotenv()
@@ -15,13 +21,8 @@ class FalloutRAG:
             api_key=os.environ.get("ANTHROPIC_API_KEY")
         )
 
-        # Database connection
-        self.db_config = {
-            'host': os.environ.get('DB_HOST', 'localhost'),
-            'user': os.environ.get('DB_USER', 'root'),
-            'password': os.environ.get('DB_PASSWORD'),
-            'database': os.environ.get('DB_NAME', 'f76')
-        }
+        # Initialize database using new utility
+        self.db = get_db()
 
         # Conversation history for context
         self.conversation_history = []
@@ -89,14 +90,8 @@ FALLOUT 76 GAME MECHANICS CONTEXT:
         return sql
 
     def query_database(self, sql: str) -> List[Dict]:
-        """Execute SQL query and return results"""
-        conn = mysql.connector.connect(**self.db_config)
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return results
+        """Execute SQL query and return results using new database utility"""
+        return self.db.execute_query(sql)
 
     def classify_intent(self, question: str) -> Dict:
         """Classify user intent and detect if clarification is needed"""

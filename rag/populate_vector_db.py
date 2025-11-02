@@ -15,7 +15,6 @@ Quality: Premium - 1536 dimensions, trained on massive datasets
 
 import os
 import sys
-import mysql.connector
 from openai import OpenAI
 import chromadb
 from chromadb.config import Settings
@@ -24,6 +23,12 @@ from typing import List, Dict, Any
 import time
 from dotenv import load_dotenv
 
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+# Import new database utility
+from database.db_utils import get_db
+
 # Load environment variables
 load_dotenv()
 
@@ -31,18 +36,19 @@ load_dotenv()
 class VectorDBPopulator:
     """Populates ChromaDB with embeddings from MySQL data using OpenAI"""
 
-    def __init__(self, db_config: Dict[str, str], chroma_path: str = "./chroma_db"):
+    def __init__(self, chroma_path: str = "./chroma_db"):
         """
         Initialize the populator.
 
         Args:
-            db_config: MySQL connection config (host, user, password, database)
             chroma_path: Path to store ChromaDB data (persistent storage)
         """
-        self.db_config = db_config
         self.chroma_path = chroma_path
 
         print("🚀 Initializing Vector DB Populator (Cadillac Edition)...")
+
+        # Initialize database utility
+        self.db = get_db()
 
         # Initialize OpenAI client
         api_key = os.getenv("OPENAI_API_KEY")
@@ -80,9 +86,9 @@ class VectorDBPopulator:
         self.batch_size = 100  # OpenAI allows up to 2048 items per batch
         self.delay_between_batches = 0.5  # Small delay to be polite
 
-    def connect_db(self):
-        """Connect to MySQL database"""
-        return mysql.connector.connect(**self.db_config)
+    def execute_query(self, query: str) -> List[Dict[str, Any]]:
+        """Execute a SQL query and return results"""
+        return self.db.execute_query(query)
 
     def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
         """
@@ -375,11 +381,8 @@ class VectorDBPopulator:
 
     def populate_weapons(self):
         """Load weapons from MySQL and add to ChromaDB"""
-        db = self.connect_db()
-        cursor = db.cursor(dictionary=True)
-
-        # Get weapons with perks and mechanics
-        cursor.execute("""
+        # Get weapons with perks and mechanics using new DB utility
+        weapons = self.execute_query("""
             SELECT
                 wpv.*,
                 GROUP_CONCAT(
@@ -401,65 +404,32 @@ class VectorDBPopulator:
             GROUP BY wpv.id, wpv.weapon_name, wpv.weapon_type, wpv.weapon_class,
                      wpv.level, wpv.damage, wpv.regular_perks, wpv.legendary_perks, wpv.source_url
         """)
-        weapons = cursor.fetchall()
-        cursor.close()
-        db.close()
 
         self.populate_batch(weapons, "weapons", self.create_weapon_text, "weapon_")
 
     def populate_armor(self):
         """Load armor from MySQL and add to ChromaDB"""
-        db = self.connect_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM v_armor_complete")
-        armor_pieces = cursor.fetchall()
-        cursor.close()
-        db.close()
-
+        armor_pieces = self.execute_query("SELECT * FROM v_armor_complete")
         self.populate_batch(armor_pieces, "armor", self.create_armor_text, "armor_")
 
     def populate_perks(self):
         """Load regular perks from MySQL and add to ChromaDB"""
-        db = self.connect_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM v_perks_all_ranks")
-        perks = cursor.fetchall()
-        cursor.close()
-        db.close()
-
+        perks = self.execute_query("SELECT * FROM v_perks_all_ranks")
         self.populate_batch(perks, "perks", self.create_perk_text, "perk_")
 
     def populate_legendary_perks(self):
         """Load legendary perks from MySQL and add to ChromaDB"""
-        db = self.connect_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM v_legendary_perks_all_ranks")
-        perks = cursor.fetchall()
-        cursor.close()
-        db.close()
-
+        perks = self.execute_query("SELECT * FROM v_legendary_perks_all_ranks")
         self.populate_batch(perks, "legendary perks", self.create_legendary_perk_text, "legendary_perk_")
 
     def populate_mutations(self):
         """Load mutations from MySQL and add to ChromaDB"""
-        db = self.connect_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM v_mutations_complete")
-        mutations = cursor.fetchall()
-        cursor.close()
-        db.close()
-
+        mutations = self.execute_query("SELECT * FROM v_mutations_complete")
         self.populate_batch(mutations, "mutations", self.create_mutation_text, "mutation_")
 
     def populate_consumables(self):
         """Load consumables from MySQL and add to ChromaDB"""
-        db = self.connect_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM v_consumables_complete")
-        consumables = cursor.fetchall()
-        cursor.close()
-        db.close()
-
+        consumables = self.execute_query("SELECT * FROM v_consumables_complete")
         self.populate_batch(consumables, "consumables", self.create_consumable_text, "consumable_")
 
     def populate_all(self):
@@ -491,28 +461,17 @@ class VectorDBPopulator:
 def main():
     """Main entry point"""
 
-    # Database configuration
-    db_config = {
-        'host': os.getenv('DB_HOST', 'localhost'),
-        'user': os.getenv('DB_USER', 'root'),
-        'password': os.getenv('DB_PASSWORD', 'secret'),
-        'database': os.getenv('DB_NAME', 'f76')
-    }
-
     # Path for ChromaDB storage
     chroma_path = os.path.join(os.path.dirname(__file__), "chroma_db")
 
     try:
-        populator = VectorDBPopulator(db_config, chroma_path)
+        # Database config is now handled by the centralized db_utils module
+        populator = VectorDBPopulator(chroma_path)
         populator.populate_all()
-
-    except mysql.connector.Error as e:
-        print(f"\n❌ Database error: {e}")
-        print("Make sure MySQL is running and credentials are correct.")
-        sys.exit(1)
 
     except Exception as e:
         print(f"\n❌ Error: {e}")
+        print("Make sure MySQL is running and environment variables are set (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME).")
         import traceback
         traceback.print_exc()
         sys.exit(1)
