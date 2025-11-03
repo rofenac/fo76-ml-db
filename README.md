@@ -11,7 +11,8 @@ Python-based system that scrapes FO76 data, stores it in normalized MySQL, and p
 
 ## Tech Stack
 
-- **Backend**: Python 3.9+, MySQL 8.0+, ChromaDB
+- **Backend**: Python 3.9+, MySQL 8.0+, ChromaDB, FastAPI
+- **Frontend**: React 19 + TypeScript + Vite + TailwindCSS
 - **AI/ML**: Anthropic Claude (SQL generation, responses), OpenAI (embeddings)
 - **Scraping**: Playwright, BeautifulSoup4
 - **Database**: Centralized utility (`database/db_utils.py`) with connection pooling and caching
@@ -45,14 +46,45 @@ python rag/populate_vector_db.py
 
 ## Usage
 
+### Interactive RAG CLI
+
 ```bash
-# Interactive RAG CLI
 ./python-start.sh  # OR: python rag/cli.py
 
 # Example queries:
 # - "What perks affect shotguns?" (SQL - exact)
 # - "Best bloodied heavy gunner build" (Vector - semantic)
 # - "Which weapons can be charged?" (Weapon mechanics)
+```
+
+### REST API Server
+
+```bash
+# Start FastAPI server
+./api-start.sh  # OR: cd api && uvicorn main:app --reload
+
+# API available at:
+# - http://localhost:8000 - Base URL
+# - http://localhost:8000/docs - Interactive API documentation
+# - http://localhost:8000/stats - Database statistics
+```
+
+**API Endpoints:**
+- `GET /api/weapons` - List weapons (paginated, filterable)
+- `GET /api/armor` - List armor pieces
+- `GET /api/perks` - List perks (regular + legendary)
+- `GET /api/mutations` - List mutations
+- `GET /api/consumables` - List consumables
+- `POST /api/rag/query` - Natural language queries
+
+See `api/README.md` for complete API documentation.
+
+### React Frontend
+
+```bash
+cd react
+npm install
+npm run dev  # http://localhost:5173
 ```
 
 ## Architecture
@@ -101,6 +133,21 @@ results = get_db().execute_query("SELECT * FROM weapons")
 
 ```
 fo76-ml-db/
+├── api/                    # FastAPI REST API
+│   ├── main.py             # API entry point
+│   ├── routes/             # API endpoints
+│   │   ├── weapons.py
+│   │   ├── armor.py
+│   │   ├── perks.py
+│   │   ├── mutations.py
+│   │   ├── consumables.py
+│   │   └── rag.py
+│   └── models/             # Pydantic models
+├── react/                  # React frontend
+│   ├── src/
+│   │   ├── App.tsx
+│   │   └── components/
+│   └── package.json
 ├── data/
 │   ├── input/              # CSV source data
 │   └── urls/               # Scraper URL lists
@@ -117,7 +164,11 @@ fo76-ml-db/
 │   ├── populate_vector_db.py
 │   └── chroma_db/          # Vector store
 ├── scrapers/               # Web scrapers
-└── docs/                   # Documentation
+├── scripts/                # Wrapper scripts for imports
+├── tests/                  # Test and diagnostic scripts
+├── docs/                   # Documentation
+├── api-start.sh            # API server launcher
+└── python-start.sh         # RAG CLI launcher
 ```
 
 ## Database Schema
