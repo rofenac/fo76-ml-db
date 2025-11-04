@@ -1,6 +1,6 @@
 # Fallout 76 Character Builder - Frontend
 
-React-based frontend for the Fallout 76 Character Builder, connecting to MySQL database with 1,037 items and RAG-powered Claude AI.
+React-based frontend for the Fallout 76 Character Builder, connecting to MySQL database with 1,206 items and RAG-powered Claude AI.
 
 ## Tech Stack
 

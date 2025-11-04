@@ -5,7 +5,7 @@ Python-based system that scrapes FO76 data, stores it in normalized MySQL, and p
 ## Quick Stats
 
 - **Database**: 1,206 items (262 weapons, 477 armor, 240 perks, 28 legendary perks, 19 mutations, 180 consumables, collectibles)
-- **RAG**: Hybrid SQL + Vector search, 1,519 OpenAI embeddings (1536-dim, cleaned 2025-11-03)
+- **RAG**: Hybrid SQL + Vector search, 1,519 OpenAI embeddings (1536-dim, rebuilt 2025-11-04)
 - **Architecture**: Centralized database utility with MCP integration
 - **Performance**: 5-10x faster queries, 300x faster lookups
 
@@ -29,15 +29,22 @@ pip install -r requirements.txt
 playwright install chromium
 
 # Setup MySQL
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS f76;"
-mysql -u root -p f76 < database/f76_schema_normalized.sql
+mysql -u your_user -p -e "CREATE DATABASE IF NOT EXISTS f76;"
+mysql -u your_user -p f76 < database/f76_master_schema.sql
 
 # Configure environment
 cp .env.example .env
-# Edit .env with DB credentials and API keys
+# Edit .env with:
+#   - DB_USER, DB_PASSWORD, DB_NAME (your MySQL credentials)
+#   - ANTHROPIC_API_KEY (get from https://console.anthropic.com/settings/keys)
+#   - OPENAI_API_KEY (get from https://platform.openai.com/api-keys)
 
-# Import data
-python database/import_to_db_normalized.py
+# Import all data (uses scripts in database/)
+bash database/import_all.sh
+
+# Optional: Populate weapon mechanics
+export MYSQL_USER=your_user
+export MYSQL_PASS=your_password
 python database/import_weapon_mechanics.py
 
 # Generate embeddings (~$0.001)
@@ -156,7 +163,8 @@ fo76-ml-db/
 │   ├── db_utils.py         # Core database utility (use this!)
 │   ├── import_utils.py     # Bulk import helpers
 │   ├── legacy_connector.py # Compatibility bridge
-│   ├── f76_schema_normalized.sql
+│   ├── f76_master_schema.sql # Master schema (SINGLE SOURCE OF TRUTH)
+│   ├── import_all.sh       # Complete rebuild script
 │   └── import_*.py         # Data import scripts
 ├── rag/
 │   ├── cli.py              # Interactive CLI

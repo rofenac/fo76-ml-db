@@ -1,6 +1,6 @@
 # Fallout 76 Build Database - API
 
-REST API backend for the Fallout 76 Build Database, providing access to 1,037 game items and RAG-powered AI queries.
+REST API backend for the Fallout 76 Build Database, providing access to 1,206 game items and RAG-powered AI queries.
 
 ## Quick Start
 
@@ -220,15 +220,10 @@ OPENAI_API_KEY=your_key
 
 ## Performance
 
-- **Database queries**: 5-10ms (with caching)
-- **RAG queries**: 2-3s (includes AI processing)
-- **Pagination**: Efficient with indexed queries
-- **Concurrent requests**: Handled by Uvicorn's async capabilities
-
 ## Related Documentation
 
 - Parent project: `../README.md`
-- Database schema: `../database/f76_schema_normalized.sql`
+- Database schema: `../database/f76_master_schema.sql`
 - RAG system: `../rag/`
 - Frontend: `../react/`
 

@@ -1,5 +1,11 @@
 #!/bin/bash
-# Master import script - restores all data to database
+# Master import script - restores all data to NORMALIZED database
+# 
+# NOTE: Database now uses normalized schema with lookup tables:
+#   - weapon_types, weapon_classes (FK from weapons table)
+#   - armor_types, armor_classes, armor_slots (FK from armor table)
+#   - Old VARCHAR fields remain for backward compatibility
+#   - Views use FK joins for optimal performance
 
 set -e  # Exit on error
 
@@ -31,7 +37,14 @@ echo "✓ Consumables imported"
 echo ""
 
 echo "[5/5] Verifying data..."
-mysql -u root -psecret f76 -e "
+# Load environment variables from .env if not already set
+if [ -z "$DB_USER" ] || [ -z "$DB_PASSWORD" ]; then
+  if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+  fi
+fi
+
+mysql -u "${DB_USER:-root}" -p"${DB_PASSWORD}" "${DB_NAME:-f76}" -e "
 SELECT
   'Weapons' as DataType, COUNT(*) as Count FROM weapons
 UNION ALL
