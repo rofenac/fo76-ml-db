@@ -12,11 +12,15 @@ logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 # Database connection config
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'secret',
-    'database': 'f76'
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', 'secret'),
+    'database': os.getenv('DB_NAME', 'f76')
 }
 
 
