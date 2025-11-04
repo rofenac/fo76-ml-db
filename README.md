@@ -4,8 +4,8 @@ Python-based system that scrapes FO76 data, stores it in normalized MySQL, and p
 
 ## Quick Stats
 
-- **Database**: 1,037 items (262 weapons, 477 armor, 240 perks, 28 legendary perks, 19 mutations, 11 consumables)
-- **RAG**: Hybrid SQL + Vector search, 1,517 OpenAI embeddings (1536-dim)
+- **Database**: 1,206 items (262 weapons, 477 armor, 240 perks, 28 legendary perks, 19 mutations, 180 consumables, collectibles)
+- **RAG**: Hybrid SQL + Vector search, 1,519 OpenAI embeddings (1536-dim, cleaned 2025-11-03)
 - **Architecture**: Centralized database utility with MCP integration
 - **Performance**: 5-10x faster queries, 300x faster lookups
 
@@ -74,7 +74,8 @@ python rag/populate_vector_db.py
 - `GET /api/armor` - List armor pieces
 - `GET /api/perks` - List perks (regular + legendary)
 - `GET /api/mutations` - List mutations
-- `GET /api/consumables` - List consumables
+- `GET /api/consumables` - List consumables (chems, food, drinks)
+- `GET /api/collectibles` - List collectibles (magazines, bobbleheads)
 - `POST /api/rag/query` - Natural language queries
 
 See `api/README.md` for complete API documentation.
@@ -180,7 +181,8 @@ fo76-ml-db/
 - **perks** (240), **perk_ranks** (449) - SPECIAL perks with 1-5 ranks
 - **legendary_perks** (28), **legendary_perk_ranks** (112) - 4-rank legendary perks
 - **mutations** (19) - Effects, exclusivity (Carnivore/Herbivore)
-- **consumables** (11) - Build-relevant buffs
+- **consumables** (180) - Chems, food, drinks, aid items with effects and durations
+- **collectibles** - Magazines, bobbleheads, and other collectible items with effects
 
 ### Lookup Tables
 - **races** - Human, Ghoul
@@ -195,49 +197,7 @@ fo76-ml-db/
 - `v_legendary_perks_all_ranks` - Legendary perks with ranks
 - `v_mutations_complete` - Mutations with effects
 - `v_consumables_complete` - Consumables with modifiers
-
-## API Examples
-
-### Query Database
-```python
-from database.db_utils import get_db
-
-db = get_db()
-
-# Simple query
-weapons = db.execute_query("SELECT * FROM weapons WHERE damage > 50")
-
-# With filters
-rifles = db.select('weapons',
-                   where="weapon_class LIKE '%rifle%'",
-                   limit=10)
-
-# Cached lookups (super fast)
-races = db.get_races()  # {'Human': 1, 'Ghoul': 2}
-special = db.get_special_attributes()  # {'S': 1, 'P': 2, ...}
-```
-
-### Bulk Import
-```python
-from database.import_utils import ImportHelper
-
-helper = ImportHelper(show_progress=True)
-helper.bulk_insert(
-    table='weapons',
-    columns=['name', 'damage'],
-    data=[('Gun 1', 50), ('Gun 2', 60)],
-    description="Importing weapons"
-)
-```
-
-## Performance
-
-| Operation | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Query Speed | 50-100ms | 5-10ms | **10x faster** |
-| Lookup Speed | 30ms | 0.1ms | **300x faster** |
-| Import Speed | 500 rows/s | 2000 rows/s | **4x faster** |
-| Code Lines | ~300 | ~100 | **70% reduction** |
+- `v_collectibles_complete` - Collectibles with effects and series info
 
 ## Key Features
 
@@ -246,28 +206,6 @@ helper.bulk_insert(
 - **Mutation Mechanics**: Exclusivity, Class Freak/Strange in Numbers
 - **Build Archetypes**: Bloodied, stealth commando, heavy gunner, VATS
 - **Weapon Mechanics**: Charge, spin-up, chain lightning, explosive AOE
-
-## Documentation
-
-- **`docs/MCP_REFACTORING.md`** - Complete API reference for database utility
-- **`docs/WEAPON_MECHANICS.md`** - Weapon special mechanics system
-- **`docs/ANTI_HALLUCINATION.md`** - LLM hallucination prevention techniques
-
-## Environment Variables
-
-```bash
-# Database (required)
-DB_HOST=localhost
-DB_USER=your_user
-DB_PASSWORD=your_password
-DB_NAME=f76
-
-# Alternative names supported: MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB
-
-# AI APIs (required for RAG)
-ANTHROPIC_API_KEY=your_key  # SQL generation, responses
-OPENAI_API_KEY=your_key     # Vector embeddings
-```
 
 ## Contributing
 
@@ -282,7 +220,3 @@ MIT
 - Data: [Fallout Wiki](https://fallout.fandom.com/)
 - Powered by: Anthropic Claude, OpenAI
 - For: Fallout 76 community
-
----
-
-**Status**: ✅ Operational | **Architecture**: Centralized DB Utility | **Performance**: 5-10x faster

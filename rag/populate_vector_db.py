@@ -252,6 +252,24 @@ class VectorDBPopulator:
 
         return ". ".join(text_parts)
 
+    def create_collectible_text(self, collectible: Dict[str, Any]) -> str:
+        """Create text representation of collectible for embedding"""
+        text_parts = []
+
+        text_parts.append(f"Collectible: {collectible['collectible_name']}")
+        if collectible.get('collectible_type'):
+            text_parts.append(f"Type: {collectible['collectible_type']}")
+        if collectible.get('series_name'):
+            text_parts.append(f"Series: {collectible['series_name']}")
+        if collectible.get('duration'):
+            text_parts.append(f"Duration: {collectible['duration']}")
+        if collectible.get('effects'):
+            text_parts.append(f"Effects: {collectible['effects']}")
+        if collectible.get('special_modifiers'):
+            text_parts.append(f"SPECIAL: {collectible['special_modifiers']}")
+
+        return ". ".join(text_parts)
+
     def populate_batch(self, items: List[Dict], item_type: str, text_creator_func, id_prefix: str):
         """
         Generic batch populator for any item type.
@@ -300,6 +318,8 @@ class VectorDBPopulator:
                         db_id = item['mutation_id']
                     elif item_type == "consumables":
                         db_id = item['consumable_id']
+                    elif item_type == "collectibles":
+                        db_id = item['collectible_id']
                     else:
                         db_id = item['id']
 
@@ -321,6 +341,8 @@ class VectorDBPopulator:
                         name = item.get('mutation_name')
                     elif item_type == "consumables":
                         name = item.get('consumable_name')
+                    elif item_type == "collectibles":
+                        name = item.get('collectible_name')
                     else:
                         name = item.get('name')
 
@@ -375,36 +397,15 @@ class VectorDBPopulator:
             "perks": "⭐",
             "legendary perks": "💎",
             "mutations": "🧬",
-            "consumables": "🍖"
+            "consumables": "🍖",
+            "collectibles": "🎁"
         }
         return emojis.get(item_type, "📦")
 
     def populate_weapons(self):
         """Load weapons from MySQL and add to ChromaDB"""
-        # Get weapons with perks and mechanics using new DB utility
-        weapons = self.execute_query("""
-            SELECT
-                wpv.*,
-                GROUP_CONCAT(
-                    CONCAT(
-                        wmt.name,
-                        CASE
-                            WHEN wm.numeric_value IS NOT NULL
-                            THEN CONCAT(' (', wm.numeric_value, COALESCE(CONCAT(' ', wm.unit), ''), ')')
-                            ELSE ''
-                        END,
-                        ': ',
-                        COALESCE(wm.notes, wmt.description)
-                    )
-                    SEPARATOR '; '
-                ) AS mechanics
-            FROM v_weapons_with_perks wpv
-            LEFT JOIN weapon_mechanics wm ON wpv.id = wm.weapon_id
-            LEFT JOIN weapon_mechanic_types wmt ON wm.mechanic_type_id = wmt.id
-            GROUP BY wpv.id, wpv.weapon_name, wpv.weapon_type, wpv.weapon_class,
-                     wpv.level, wpv.damage, wpv.regular_perks, wpv.legendary_perks, wpv.source_url
-        """)
-
+        # Get weapons with perks using new DB utility
+        weapons = self.execute_query("SELECT * FROM v_weapons_with_perks")
         self.populate_batch(weapons, "weapons", self.create_weapon_text, "weapon_")
 
     def populate_armor(self):
@@ -432,6 +433,11 @@ class VectorDBPopulator:
         consumables = self.execute_query("SELECT * FROM v_consumables_complete")
         self.populate_batch(consumables, "consumables", self.create_consumable_text, "consumable_")
 
+    def populate_collectibles(self):
+        """Load collectibles from MySQL and add to ChromaDB"""
+        collectibles = self.execute_query("SELECT * FROM v_collectibles_complete")
+        self.populate_batch(collectibles, "collectibles", self.create_collectible_text, "collectible_")
+
     def populate_all(self):
         """Populate all data types"""
         print("\n" + "="*60)
@@ -444,6 +450,7 @@ class VectorDBPopulator:
         self.populate_legendary_perks()
         self.populate_mutations()
         self.populate_consumables()
+        self.populate_collectibles()
 
         # Get stats
         stats = self.collection.count()
