@@ -1,6 +1,6 @@
 # Project Status & TODO
 
-## Current Status (2025-11-03)
+## Current Status (2025-11-10)
 
 ### Database
 - **Weapons**: 262 (with mechanics: charge, spin-up, chain lightning, explosive AOE)
@@ -49,13 +49,24 @@
   - Single active collection: fallout76
   - Size reduced from 32MB to 20MB
   - Backup created before cleanup
+- ✅ **React Frontend (Nov 2025)**
+  - Complete React 19 + TypeScript + Vite + TailwindCSS + DaisyUI stack
+  - Pages: Home, Weapons, WeaponDetail, Armor, Perks, Mutations, Consumables, Chat, BuildPlanner
+  - UI components: Card, Select, ErrorMessage
+  - Layout components with routing (react-router-dom)
+  - API integration with custom hooks (useAPI, useLocalStorage)
+  - Type-safe API calls with TypeScript interfaces
+- ✅ **LangChain removal (Nov 2025)**
+  - Simplified RAG implementation without LangChain dependency
+  - Direct Claude API integration
 
 ### In Progress
-- [ ] React frontend development (UI components for data visualization)
-- [ ] Expand collectibles data (populate with specific magazines/bobbleheads)
 - [ ] API collectibles endpoint implementation
+- [ ] Expand collectibles data (populate with specific magazines/bobbleheads)
 
 ### Future Enhancements
+- [ ] Frontend build planner functionality implementation
+- [ ] Frontend chat/RAG interface implementation
 - [ ] Add query logging and performance monitoring to API
 - [ ] Connection pooling for high-concurrency scenarios
 - [ ] Async/await support for concurrent operations
@@ -66,11 +77,15 @@
 - [ ] User build saving and sharing functionality
 - [ ] Build optimizer/recommendation engine
 - [ ] Synergy detection (perks that work well together)
-- [ ] Restore or update deleted documentation files
+- [ ] Testing suite (unit tests, integration tests)
+- [ ] API rate limiting and authentication
+- [ ] Frontend pagination and advanced filtering
+- [ ] Collectibles frontend page
 
 ### Known Issues
-- API collectibles endpoint may need implementation verification
+- Collectibles API endpoint not yet implemented (database schema exists)
+- Build Planner and Chat pages exist in frontend but need functional implementation
 
 ---
 
-**Last Updated**: 2025-11-03
+**Last Updated**: 2025-11-10
