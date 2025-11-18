@@ -153,13 +153,13 @@ async def get_weapon(weapon_id: int):
 async def list_weapon_types():
     """Get list of all weapon types"""
     db = get_db()
-    types = db.execute_query("SELECT id, name FROM weapon_types ORDER BY name")
-    return {"weapon_types": types}
+    types = db.execute_query("SELECT name FROM weapon_types ORDER BY name")
+    return [t["name"] for t in types]
 
 
 @router.get("/classes/list")
 async def list_weapon_classes():
     """Get list of all weapon classes"""
     db = get_db()
-    classes = db.execute_query("SELECT id, name FROM weapon_classes ORDER BY name")
-    return {"weapon_classes": classes}
+    classes = db.execute_query("SELECT name FROM weapon_classes ORDER BY name")
+    return [c["name"] for c in classes]

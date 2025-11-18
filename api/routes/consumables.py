@@ -93,4 +93,4 @@ async def list_consumable_categories():
     categories = db.execute_query(
         "SELECT DISTINCT category FROM consumables ORDER BY category"
     )
-    return {"categories": [c['category'] for c in categories]}
+    return [c["category"] for c in categories]

@@ -96,24 +96,24 @@ async def get_armor(armor_id: int):
 async def list_armor_types():
     """Get list of all armor types"""
     db = get_db()
-    types = db.execute_query("SELECT id, name FROM armor_types ORDER BY name")
-    return {"armor_types": types}
+    types = db.execute_query("SELECT name FROM armor_types ORDER BY name")
+    return [t["name"] for t in types]
 
 
 @router.get("/classes/list")
 async def list_armor_classes():
     """Get list of all armor classes"""
     db = get_db()
-    classes = db.execute_query("SELECT id, name FROM armor_classes ORDER BY name")
-    return {"armor_classes": classes}
+    classes = db.execute_query("SELECT name FROM armor_classes ORDER BY name")
+    return [c["name"] for c in classes]
 
 
 @router.get("/slots/list")
 async def list_armor_slots():
     """Get list of all armor slots"""
     db = get_db()
-    slots = db.execute_query("SELECT id, name FROM armor_slots ORDER BY name")
-    return {"armor_slots": slots}
+    slots = db.execute_query("SELECT name FROM armor_slots ORDER BY name")
+    return [s["name"] for s in slots]
 
 
 @router.get("/sets/list")
@@ -123,4 +123,4 @@ async def list_armor_sets():
     sets = db.execute_query(
         "SELECT DISTINCT set_name FROM armor WHERE set_name IS NOT NULL ORDER BY set_name"
     )
-    return {"armor_sets": [s['set_name'] for s in sets]}
+    return [s["set_name"] for s in sets]

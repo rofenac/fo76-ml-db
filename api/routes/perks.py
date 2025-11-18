@@ -170,5 +170,5 @@ async def get_legendary_perk(legendary_perk_id: int):
 async def list_special_attributes():
     """Get list of all SPECIAL attributes"""
     db = get_db()
-    special = db.execute_query("SELECT id, code, name FROM special_attributes ORDER BY id")
-    return {"special_attributes": special}
+    special = db.execute_query("SELECT name FROM special_attributes ORDER BY id")
+    return [s["name"] for s in special]
