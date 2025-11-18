@@ -150,6 +150,7 @@ export interface ContextItem {
 
 // Filter Types
 export interface WeaponFilters {
+  [key: string]: string | number | undefined;
   type?: string;
   weapon_class?: string;
   min_damage?: number;
@@ -159,6 +160,7 @@ export interface WeaponFilters {
 }
 
 export interface ArmorFilters {
+  [key: string]: string | undefined;
   type?: string;
   armor_class?: string;
   slot?: string;
@@ -167,6 +169,7 @@ export interface ArmorFilters {
 }
 
 export interface PerkFilters {
+  [key: string]: string | undefined;
   special_stat?: string;
   search?: string;
 }

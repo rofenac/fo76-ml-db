@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface UseAPIState<T> {
   data: T | null;
@@ -15,7 +15,7 @@ interface UseAPIReturn<T> extends UseAPIState<T> {
  */
 export function useAPI<T>(
   fetcher: () => Promise<T>,
-  dependencies: any[] = []
+  dependencies: readonly unknown[] = []
 ): UseAPIReturn<T> {
   const [state, setState] = useState<UseAPIState<T>>({
     data: null,
@@ -23,10 +23,14 @@ export function useAPI<T>(
     error: null,
   });
 
+  // Use ref to always have latest fetcher without causing re-renders
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+
   const fetchData = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
-      const result = await fetcher();
+      const result = await fetcherRef.current();
       setState({ data: result, loading: false, error: null });
     } catch (err) {
       setState({
@@ -35,6 +39,7 @@ export function useAPI<T>(
         error: err instanceof Error ? err.message : 'Unknown error',
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencies);
 
   useEffect(() => {
@@ -62,11 +67,15 @@ export function usePaginatedAPI<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Use ref to always have latest fetcher without causing re-renders
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetcher(page, pageSize);
+      const result = await fetcherRef.current(page, pageSize);
       setData(result.items);
       setTotal(result.total);
       setTotalPages(result.total_pages);
@@ -76,7 +85,7 @@ export function usePaginatedAPI<T>(
     } finally {
       setLoading(false);
     }
-  }, [fetcher, page, pageSize]);
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchData();

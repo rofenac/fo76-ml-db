@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 # Import database utility and SQL-based RAG
 from database.db_utils import get_db
-from query_engine import FalloutRAG
+from rag.query_engine import FalloutRAG
 
 
 class HybridFalloutRAG:

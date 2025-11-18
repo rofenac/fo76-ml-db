@@ -4,7 +4,7 @@ import { getPerks, getLegendaryPerks, getSpecialList } from '../utils/api';
 import { useAPI } from '../hooks/useAPI';
 import { SearchBar, Select, Pagination, Loading, ErrorMessage, Card, Button } from '../components/ui';
 import { getStatColor } from '../utils/format';
-import type { PerkFilters } from '../types/api';
+import type { PerkFilters, Perk, LegendaryPerk } from '../types/api';
 
 export function Perks() {
   const [viewMode, setViewMode] = useState<'regular' | 'legendary'>('regular');
@@ -104,10 +104,10 @@ export function Perks() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {currentView.data.map((perk: any) => (
-              <Card key={perk.perk_id || perk.legendary_perk_id} hoverable>
+            {currentView.data.map((perk: Perk | LegendaryPerk) => (
+              <Card key={'perk_id' in perk ? perk.perk_id : perk.legendary_perk_id} hoverable>
                 <h3 className="text-xl font-bold text-purple-300">{perk.name}</h3>
-                {perk.special_stat && (
+                {'special_stat' in perk && perk.special_stat && (
                   <div className={`badge badge-lg mt-2 ${getStatColor(perk.special_stat)}`}>
                     {perk.special_stat}
                   </div>
@@ -118,7 +118,7 @@ export function Perks() {
                     <span className="text-gray-400 text-sm">Max Rank:</span>
                     <span className="ml-2 text-yellow-400 font-bold">{perk.max_rank}</span>
                   </div>
-                  {perk.level_requirement && (
+                  {'level_requirement' in perk && perk.level_requirement && (
                     <div className="badge badge-sm badge-outline">
                       Lvl {perk.level_requirement}
                     </div>

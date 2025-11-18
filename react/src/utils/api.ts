@@ -41,7 +41,7 @@ async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> 
 }
 
 // Build query string from filters
-function buildQueryString(filters: Record<string, any>, page = 1, pageSize = DEFAULT_PAGE_SIZE): string {
+function buildQueryString<T extends Record<string, string | number | boolean | undefined | null>>(filters: T, page = 1, pageSize = DEFAULT_PAGE_SIZE): string {
   const params = new URLSearchParams();
 
   params.set('page', page.toString());

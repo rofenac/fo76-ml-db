@@ -6,7 +6,7 @@ import time
 
 # Add parent directory to path to import RAG modules
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-from rag.hybrid_query_engine import HybridQueryEngine
+from rag.hybrid_query_engine import HybridFalloutRAG
 from api.models.rag import RAGQueryRequest, RAGQueryResponse
 
 router = APIRouter(prefix="/rag", tags=["rag"])
@@ -19,7 +19,7 @@ def get_rag_engine():
     """Get or create RAG engine instance"""
     global _rag_engine
     if _rag_engine is None:
-        _rag_engine = HybridQueryEngine()
+        _rag_engine = HybridFalloutRAG()
     return _rag_engine
 
 
