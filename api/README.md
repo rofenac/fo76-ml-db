@@ -15,9 +15,10 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 API will be available at:
-- **Base URL**: http://localhost:8000
-- **Interactive Docs**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
+
+- **Base URL**: <http://localhost:8000>
+- **Interactive Docs**: <http://localhost:8000/docs>
+- **ReDoc**: <http://localhost:8000/redoc>
 
 ## Tech Stack
 
@@ -85,21 +86,25 @@ API will be available at:
 ## Example Requests
 
 ### Get all weapons (first page)
+
 ```bash
 curl "http://localhost:8000/api/weapons?page=1&limit=10"
 ```
 
 ### Search for weapons
+
 ```bash
 curl "http://localhost:8000/api/weapons?search=gauss&weapon_type=Ranged"
 ```
 
 ### Get specific weapon
+
 ```bash
 curl "http://localhost:8000/api/weapons/1"
 ```
 
 ### Query RAG system
+
 ```bash
 curl -X POST "http://localhost:8000/api/rag/query" \
   -H "Content-Type: application/json" \
@@ -107,6 +112,7 @@ curl -X POST "http://localhost:8000/api/rag/query" \
 ```
 
 ### Get database stats
+
 ```bash
 curl "http://localhost:8000/stats"
 ```
@@ -128,6 +134,7 @@ All list endpoints return paginated responses:
 ## CORS Configuration
 
 CORS is enabled for:
+
 - `http://localhost:5173` (React dev server - Vite)
 - `http://localhost:3000` (Alternative React port)
 - `http://127.0.0.1:5173`
@@ -137,7 +144,7 @@ To add more origins, edit `api/main.py` and add them to the `allow_origins` list
 
 ## Project Structure
 
-```
+```text
 api/
 ├── main.py                 # FastAPI app with route registration
 ├── routes/
@@ -196,6 +203,7 @@ uvicorn main:app --reload --log-level debug
 3. Register router in `api/main.py`
 
 Example:
+
 ```python
 # In api/main.py
 from api.routes import my_new_route

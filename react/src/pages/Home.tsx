@@ -74,7 +74,7 @@ export function Home() {
       <div className="text-center space-y-6">
         <h1
           ref={titleRef}
-          className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300"
+          className="text-6xl font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300"
         >
           Fallout 76 Character Builder
         </h1>

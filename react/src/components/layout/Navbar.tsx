@@ -53,7 +53,7 @@ export function Navbar() {
           </div>
           <ul
             tabIndex={0}
-            className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+            className="menu menu-sm dropdown-content mt-3 z-1 p-2 shadow bg-base-100 rounded-box w-52"
           >
             {navLinks.map((link) => (
               <li key={link.path}>
@@ -65,7 +65,7 @@ export function Navbar() {
           </ul>
         </div>
         <Link to="/" className="btn btn-ghost text-xl">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-cyan-300">
             FO76 Builder
           </span>
         </Link>
