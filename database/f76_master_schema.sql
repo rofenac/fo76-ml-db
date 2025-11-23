@@ -719,6 +719,93 @@ CREATE TABLE `weapons` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `weapon_mod_slots`
+--
+
+DROP TABLE IF EXISTS `weapon_mod_slots`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `weapon_mod_slots` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `weapon_mod_slots`
+--
+
+LOCK TABLES `weapon_mod_slots` WRITE;
+/*!40000 ALTER TABLE `weapon_mod_slots` DISABLE KEYS */;
+INSERT INTO `weapon_mod_slots` (`name`) VALUES
+  ('receiver'),('barrel'),('stock'),('magazine'),('sight'),('muzzle'),('grip');
+/*!40000 ALTER TABLE `weapon_mod_slots` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `weapon_mods`
+--
+
+DROP TABLE IF EXISTS `weapon_mods`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `weapon_mods` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `weapon_id` int NOT NULL,
+  `slot_id` int NOT NULL,
+  `name` varchar(128) NOT NULL,
+  `damage_change` decimal(6,2) DEFAULT NULL,
+  `damage_change_is_percent` tinyint(1) DEFAULT 0,
+  `fire_rate_change` int DEFAULT NULL,
+  `range_change` int DEFAULT NULL,
+  `accuracy_change` int DEFAULT NULL,
+  `ap_cost_change` decimal(5,2) DEFAULT NULL,
+  `recoil_change` int DEFAULT NULL,
+  `spread_change` decimal(5,2) DEFAULT NULL,
+  `converts_to_auto` tinyint(1) DEFAULT 0,
+  `converts_to_semi` tinyint(1) DEFAULT 0,
+  `crit_damage_bonus` int DEFAULT NULL,
+  `hip_fire_accuracy_bonus` int DEFAULT NULL,
+  `armor_penetration` int DEFAULT NULL,
+  `is_suppressed` tinyint(1) DEFAULT 0,
+  `is_scoped` tinyint(1) DEFAULT 0,
+  `mag_size_change` int DEFAULT NULL,
+  `reload_speed_change` decimal(5,2) DEFAULT NULL,
+  `weight_change` decimal(5,2) DEFAULT NULL,
+  `value_change_percent` int DEFAULT NULL,
+  `form_id` varchar(16) DEFAULT NULL,
+  `source_url` text,
+  PRIMARY KEY (`id`),
+  KEY `idx_weapon_mod_weapon` (`weapon_id`),
+  KEY `idx_weapon_mod_slot` (`slot_id`),
+  KEY `idx_weapon_mod_name` (`name`),
+  CONSTRAINT `fk_wm_weapon` FOREIGN KEY (`weapon_id`) REFERENCES `weapons` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_wm_slot` FOREIGN KEY (`slot_id`) REFERENCES `weapon_mod_slots` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `weapon_mod_crafting`
+--
+
+DROP TABLE IF EXISTS `weapon_mod_crafting`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `weapon_mod_crafting` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `mod_id` int NOT NULL,
+  `perk_id` int DEFAULT NULL,
+  `perk_rank` int DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `idx_wmc_mod` (`mod_id`),
+  CONSTRAINT `fk_wmc_mod` FOREIGN KEY (`mod_id`) REFERENCES `weapon_mods` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_wmc_perk` FOREIGN KEY (`perk_id`) REFERENCES `perks` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Final view structure for view `v_armor_complete`
 --
 
@@ -840,6 +927,24 @@ CREATE TABLE `weapons` (
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`rofenac`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `v_weapons_with_perks` AS select `w`.`id` AS `id`,`w`.`name` AS `weapon_name`,`wt`.`name` AS `weapon_type`,`wc`.`name` AS `weapon_class`,`w`.`level` AS `level`,`w`.`damage` AS `damage`,group_concat(distinct `p`.`name` order by `p`.`name` ASC separator ', ') AS `regular_perks`,group_concat(distinct `lp`.`name` order by `lp`.`name` ASC separator ', ') AS `legendary_perks`,`w`.`source_url` AS `source_url` from ((((((`weapons` `w` left join `weapon_types` `wt` on((`w`.`weapon_type_id` = `wt`.`id`))) left join `weapon_classes` `wc` on((`w`.`weapon_class_id` = `wc`.`id`))) left join `weapon_perks` `wp` on((`w`.`id` = `wp`.`weapon_id`))) left join `perks` `p` on((`wp`.`perk_id` = `p`.`id`))) left join `weapon_legendary_perk_effects` `wlp` on((`w`.`id` = `wlp`.`weapon_id`))) left join `legendary_perks` `lp` on((`wlp`.`legendary_perk_id` = `lp`.`id`))) group by `w`.`id`,`w`.`name`,`wt`.`name`,`wc`.`name`,`w`.`level`,`w`.`damage`,`w`.`source_url` order by `w`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `v_weapon_mods_complete`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_weapon_mods_complete`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_weapon_mods_complete` AS select `wm`.`id` AS `mod_id`,`w`.`name` AS `weapon_name`,`wms`.`name` AS `slot_name`,`wm`.`name` AS `mod_name`,`wm`.`damage_change` AS `damage_change`,`wm`.`damage_change_is_percent` AS `damage_is_percent`,`wm`.`fire_rate_change` AS `fire_rate_change`,`wm`.`range_change` AS `range_change`,`wm`.`accuracy_change` AS `accuracy_change`,`wm`.`ap_cost_change` AS `ap_cost_change`,`wm`.`recoil_change` AS `recoil_change`,`wm`.`spread_change` AS `spread_change`,`wm`.`converts_to_auto` AS `converts_to_auto`,`wm`.`converts_to_semi` AS `converts_to_semi`,`wm`.`crit_damage_bonus` AS `crit_damage_bonus`,`wm`.`hip_fire_accuracy_bonus` AS `hip_fire_accuracy_bonus`,`wm`.`armor_penetration` AS `armor_penetration`,`wm`.`is_suppressed` AS `is_suppressed`,`wm`.`is_scoped` AS `is_scoped`,`wm`.`mag_size_change` AS `mag_size_change`,`wm`.`reload_speed_change` AS `reload_speed_change`,`p`.`name` AS `required_perk`,`wmc`.`perk_rank` AS `required_perk_rank` from ((((`weapon_mods` `wm` join `weapons` `w` on((`wm`.`weapon_id` = `w`.`id`))) join `weapon_mod_slots` `wms` on((`wm`.`slot_id` = `wms`.`id`))) left join `weapon_mod_crafting` `wmc` on((`wm`.`id` = `wmc`.`mod_id`))) left join `perks` `p` on((`wmc`.`perk_id` = `p`.`id`))) order by `w`.`name`,`wms`.`name`,`wm`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;

@@ -17,6 +17,7 @@ import sys
 from typing import Dict, List, Any, Optional
 from openai import OpenAI
 import chromadb
+from chromadb.config import Settings
 from anthropic import Anthropic
 
 # Add parent directory to path for imports
@@ -67,7 +68,10 @@ class HybridFalloutRAG:
 
         # Initialize ChromaDB
         print(f"   💾 Loading vector database from {chroma_path}...")
-        self.chroma_client = chromadb.PersistentClient(path=chroma_path)
+        self.chroma_client = chromadb.PersistentClient(
+            path=chroma_path,
+            settings=Settings(anonymized_telemetry=False)
+        )
         try:
             self.collection = self.chroma_client.get_collection(name="fallout76")
             print(f"      ✓ Loaded {self.collection.count()} embeddings")

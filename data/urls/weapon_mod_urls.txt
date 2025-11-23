@@ -1,0 +1,112 @@
+# Fallout 76 Weapon Mod URLs
+# These are weapon pages (not mod pages) - mods are scraped from each weapon's mod table
+# Curated for build-relevant weapons with meaningful mod options
+#
+# Format: One URL per line, comments start with #
+
+# =============================================================================
+# RIFLES
+# =============================================================================
+https://fallout.fandom.com/wiki/Handmade_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/The_Fixer
+https://fallout.fandom.com/wiki/Combat_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Lever_action_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Railway_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Hunting_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Assault_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Radium_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Submachine_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/10mm_submachine_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/Pipe_bolt-action_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Pipe_revolver_(Fallout_76)
+https://fallout.fandom.com/wiki/Black_powder_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Dragon_(Fallout_76)
+
+# =============================================================================
+# HEAVY GUNS
+# =============================================================================
+https://fallout.fandom.com/wiki/50_cal_machine_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/Gatling_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/Minigun_(Fallout_76)
+https://fallout.fandom.com/wiki/Gatling_plasma_(Fallout_76)
+https://fallout.fandom.com/wiki/Gatling_laser_(Fallout_76)
+https://fallout.fandom.com/wiki/Light_machine_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/Flamer_(Fallout_76)
+https://fallout.fandom.com/wiki/Pepper_Shaker
+https://fallout.fandom.com/wiki/Cryolator_(Fallout_76)
+https://fallout.fandom.com/wiki/Harpoon_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/Broadsider_(Fallout_76)
+https://fallout.fandom.com/wiki/Auto_grenade_launcher_(Fallout_76)
+https://fallout.fandom.com/wiki/Missile_launcher_(Fallout_76)
+https://fallout.fandom.com/wiki/Fat_Man_(Fallout_76)
+
+# =============================================================================
+# PISTOLS
+# =============================================================================
+https://fallout.fandom.com/wiki/10mm_pistol_(Fallout_76)
+https://fallout.fandom.com/wiki/Western_revolver_(Fallout_76)
+https://fallout.fandom.com/wiki/.44_pistol_(Fallout_76)
+https://fallout.fandom.com/wiki/Crusader_pistol
+https://fallout.fandom.com/wiki/Single_action_revolver_(Fallout_76)
+https://fallout.fandom.com/wiki/Pipe_pistol_(Fallout_76)
+https://fallout.fandom.com/wiki/Black_powder_pistol_(Fallout_76)
+
+# =============================================================================
+# ENERGY WEAPONS
+# =============================================================================
+https://fallout.fandom.com/wiki/Laser_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/Plasma_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/Enclave_plasma_gun
+https://fallout.fandom.com/wiki/Ultracite_laser_gun
+https://fallout.fandom.com/wiki/Tesla_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Gamma_gun_(Fallout_76)
+https://fallout.fandom.com/wiki/Alien_blaster_(Fallout_76)
+https://fallout.fandom.com/wiki/Alien_disintegrator
+
+# =============================================================================
+# SHOTGUNS
+# =============================================================================
+https://fallout.fandom.com/wiki/Combat_shotgun_(Fallout_76)
+https://fallout.fandom.com/wiki/Pump_action_shotgun_(Fallout_76)
+https://fallout.fandom.com/wiki/Double-barrel_shotgun_(Fallout_76)
+https://fallout.fandom.com/wiki/Gauss_shotgun
+
+# =============================================================================
+# GAUSS WEAPONS
+# =============================================================================
+https://fallout.fandom.com/wiki/Gauss_rifle_(Fallout_76)
+https://fallout.fandom.com/wiki/Gauss_minigun
+https://fallout.fandom.com/wiki/Gauss_pistol
+
+# =============================================================================
+# BOWS
+# =============================================================================
+https://fallout.fandom.com/wiki/Bow_(Fallout_76)
+https://fallout.fandom.com/wiki/Compound_bow
+https://fallout.fandom.com/wiki/Crossbow_(Fallout_76)
+
+# =============================================================================
+# MELEE WEAPONS (with meaningful mods)
+# =============================================================================
+https://fallout.fandom.com/wiki/Super_sledge_(Fallout_76)
+https://fallout.fandom.com/wiki/Power_fist_(Fallout_76)
+https://fallout.fandom.com/wiki/Deathclaw_gauntlet_(Fallout_76)
+https://fallout.fandom.com/wiki/Shishkebab_(Fallout_76)
+https://fallout.fandom.com/wiki/Baseball_bat_(Fallout_76)
+https://fallout.fandom.com/wiki/Sledgehammer_(Fallout_76)
+https://fallout.fandom.com/wiki/War_glaive
+https://fallout.fandom.com/wiki/Plasma_cutter_(Fallout_76)
+https://fallout.fandom.com/wiki/Chainsaw_(Fallout_76)
+https://fallout.fandom.com/wiki/Auto_axe
+https://fallout.fandom.com/wiki/Drill_(Fallout_76)
+https://fallout.fandom.com/wiki/Ripper_(Fallout_76)
+https://fallout.fandom.com/wiki/Mr._Handy_buzz_blade_(Fallout_76)
+https://fallout.fandom.com/wiki/Pole_hook_(Fallout_76)
+https://fallout.fandom.com/wiki/Cultist_blade
+https://fallout.fandom.com/wiki/Machete_(Fallout_76)
+https://fallout.fandom.com/wiki/Combat_knife_(Fallout_76)
+https://fallout.fandom.com/wiki/Switchblade_(Fallout_76)
+https://fallout.fandom.com/wiki/Boxing_glove_(Fallout_76)
+https://fallout.fandom.com/wiki/Knuckles_(Fallout_76)
+https://fallout.fandom.com/wiki/Meat_hook_(Fallout_76)
+https://fallout.fandom.com/wiki/Mole_miner_gauntlet
