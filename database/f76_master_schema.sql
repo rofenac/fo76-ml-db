@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.43, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.44, for Linux (x86_64)
 --
 -- Host: localhost    Database: f76
 -- ------------------------------------------------------
--- Server version	8.0.43-0ubuntu0.24.04.2
+-- Server version	8.0.44-0ubuntu0.24.04.1
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -28,8 +28,6 @@ CREATE TABLE `armor` (
   `armor_class_id` int DEFAULT NULL,
   `armor_slot_id` int DEFAULT NULL,
   `armor_type_id` int DEFAULT NULL,
-  `class` varchar(64) DEFAULT NULL,
-  `slot` varchar(64) DEFAULT NULL,
   `damage_resistance` varchar(64) DEFAULT NULL,
   `energy_resistance` varchar(64) DEFAULT NULL,
   `radiation_resistance` varchar(64) DEFAULT NULL,
@@ -37,19 +35,16 @@ CREATE TABLE `armor` (
   `fire_resistance` varchar(64) DEFAULT NULL,
   `poison_resistance` varchar(64) DEFAULT NULL,
   `set_name` varchar(128) DEFAULT NULL,
-  `armor_type` enum('regular','power') DEFAULT 'regular',
   `level` varchar(64) DEFAULT NULL,
   `source_url` text,
   PRIMARY KEY (`id`),
   KEY `idx_armor_name` (`name`),
   KEY `idx_armor_set` (`set_name`),
-  KEY `idx_armor_slot` (`slot`),
-  KEY `idx_armor_class` (`class`),
-  KEY `idx_armor_type` (`armor_type`),
   KEY `idx_armor_level` (`level`),
   KEY `idx_armor_class_id` (`armor_class_id`),
   KEY `idx_armor_slot_id` (`armor_slot_id`),
   KEY `idx_armor_type_id` (`armor_type_id`),
+  KEY `idx_armor_type_class_slot` (`armor_type_id`,`armor_class_id`,`armor_slot_id`),
   CONSTRAINT `fk_armor_class` FOREIGN KEY (`armor_class_id`) REFERENCES `armor_classes` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_armor_slot` FOREIGN KEY (`armor_slot_id`) REFERENCES `armor_slots` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_armor_type` FOREIGN KEY (`armor_type_id`) REFERENCES `armor_types` (`id`) ON DELETE SET NULL
@@ -279,7 +274,7 @@ CREATE TABLE `legendary_perk_ranks` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_legendary_perk_rank` (`legendary_perk_id`,`rank`),
   CONSTRAINT `fk_lpr_perk` FOREIGN KEY (`legendary_perk_id`) REFERENCES `legendary_perks` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=113 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=225 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -297,7 +292,27 @@ CREATE TABLE `legendary_perks` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_legendary_perk_name` (`name`),
   KEY `idx_legendary_race` (`race`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `mutation_effects`
+--
+
+DROP TABLE IF EXISTS `mutation_effects`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mutation_effects` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `mutation_id` int NOT NULL,
+  `effect_type` enum('positive','negative') NOT NULL,
+  `description` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_me_mutation` (`mutation_id`),
+  KEY `idx_me_type` (`effect_type`),
+  KEY `idx_mutation_effects_type` (`mutation_id`,`effect_type`),
+  CONSTRAINT `fk_me_mutation` FOREIGN KEY (`mutation_id`) REFERENCES `mutations` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -314,13 +329,22 @@ CREATE TABLE `mutations` (
   `negative_effects` text,
   `form_id` char(8) DEFAULT NULL,
   `exclusive_with` varchar(128) DEFAULT NULL,
+  `exclusive_with_id` int DEFAULT NULL,
   `suppression_perk` varchar(128) DEFAULT NULL,
+  `suppression_perk_id` int DEFAULT NULL,
   `enhancement_perk` varchar(128) DEFAULT NULL,
+  `enhancement_perk_id` int DEFAULT NULL,
   `source_url` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_mutation_name` (`name`),
-  KEY `idx_mutation_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `idx_mutation_name` (`name`),
+  KEY `idx_mutation_suppression` (`suppression_perk_id`),
+  KEY `idx_mutation_enhancement` (`enhancement_perk_id`),
+  KEY `idx_mutation_exclusive` (`exclusive_with_id`),
+  CONSTRAINT `fk_mutation_enhancement` FOREIGN KEY (`enhancement_perk_id`) REFERENCES `perks` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_mutation_exclusive` FOREIGN KEY (`exclusive_with_id`) REFERENCES `mutations` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_mutation_suppression` FOREIGN KEY (`suppression_perk_id`) REFERENCES `perks` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -340,7 +364,7 @@ CREATE TABLE `perk_ranks` (
   UNIQUE KEY `uq_perk_rank` (`perk_id`,`rank`),
   KEY `idx_prank_rank` (`rank`),
   CONSTRAINT `fk_pr_perk` FOREIGN KEY (`perk_id`) REFERENCES `perks` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=450 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=899 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -354,13 +378,16 @@ CREATE TABLE `perks` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(128) NOT NULL,
   `special` char(1) DEFAULT NULL,
+  `special_id` int DEFAULT NULL,
   `level` int DEFAULT NULL,
   `race` varchar(32) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_perk_name` (`name`),
   KEY `idx_perk_special` (`special`),
-  KEY `idx_perk_race` (`race`)
-) ENGINE=InnoDB AUTO_INCREMENT=241 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `idx_perk_race` (`race`),
+  KEY `idx_perk_special_id` (`special_id`),
+  CONSTRAINT `fk_perk_special` FOREIGN KEY (`special_id`) REFERENCES `special_attributes` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=481 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -376,7 +403,7 @@ CREATE TABLE `races` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `idx_race_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -394,7 +421,7 @@ CREATE TABLE `special_attributes` (
   UNIQUE KEY `code` (`code`),
   UNIQUE KEY `name` (`name`),
   KEY `idx_special_code` (`code`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -527,12 +554,47 @@ SET @saved_cs_client     = @@character_set_client;
 /*!50001 CREATE VIEW `v_perks_all_ranks` AS SELECT 
  1 AS `perk_id`,
  1 AS `perk_name`,
- 1 AS `special`,
+ 1 AS `special_attribute`,
+ 1 AS `special_code`,
  1 AS `min_level`,
  1 AS `race`,
  1 AS `rank`,
  1 AS `rank_description`,
  1 AS `form_id`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `v_weapon_mods_complete`
+--
+
+DROP TABLE IF EXISTS `v_weapon_mods_complete`;
+/*!50001 DROP VIEW IF EXISTS `v_weapon_mods_complete`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `v_weapon_mods_complete` AS SELECT 
+ 1 AS `mod_id`,
+ 1 AS `weapon_name`,
+ 1 AS `slot_name`,
+ 1 AS `mod_name`,
+ 1 AS `damage_change`,
+ 1 AS `damage_is_percent`,
+ 1 AS `fire_rate_change`,
+ 1 AS `range_change`,
+ 1 AS `accuracy_change`,
+ 1 AS `ap_cost_change`,
+ 1 AS `recoil_change`,
+ 1 AS `spread_change`,
+ 1 AS `converts_to_auto`,
+ 1 AS `converts_to_semi`,
+ 1 AS `crit_damage_bonus`,
+ 1 AS `hip_fire_accuracy_bonus`,
+ 1 AS `armor_penetration`,
+ 1 AS `is_suppressed`,
+ 1 AS `is_scoped`,
+ 1 AS `mag_size_change`,
+ 1 AS `reload_speed_change`,
+ 1 AS `required_perk`,
+ 1 AS `required_perk_rank`*/;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -568,7 +630,7 @@ CREATE TABLE `weapon_classes` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `idx_weapon_class` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -631,6 +693,83 @@ CREATE TABLE `weapon_mechanics` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `weapon_mod_crafting`
+--
+
+DROP TABLE IF EXISTS `weapon_mod_crafting`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `weapon_mod_crafting` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `mod_id` int NOT NULL,
+  `perk_id` int DEFAULT NULL,
+  `perk_rank` int DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `idx_wmc_mod` (`mod_id`),
+  KEY `fk_wmc_perk` (`perk_id`),
+  CONSTRAINT `fk_wmc_mod` FOREIGN KEY (`mod_id`) REFERENCES `weapon_mods` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_wmc_perk` FOREIGN KEY (`perk_id`) REFERENCES `perks` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=297 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `weapon_mod_slots`
+--
+
+DROP TABLE IF EXISTS `weapon_mod_slots`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `weapon_mod_slots` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `weapon_mods`
+--
+
+DROP TABLE IF EXISTS `weapon_mods`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `weapon_mods` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `weapon_id` int NOT NULL,
+  `slot_id` int NOT NULL,
+  `name` varchar(128) NOT NULL,
+  `damage_change` decimal(6,2) DEFAULT NULL,
+  `damage_change_is_percent` tinyint(1) DEFAULT '0',
+  `fire_rate_change` int DEFAULT NULL,
+  `range_change` int DEFAULT NULL,
+  `accuracy_change` int DEFAULT NULL,
+  `ap_cost_change` decimal(5,2) DEFAULT NULL,
+  `recoil_change` int DEFAULT NULL,
+  `spread_change` decimal(5,2) DEFAULT NULL,
+  `converts_to_auto` tinyint(1) DEFAULT '0',
+  `converts_to_semi` tinyint(1) DEFAULT '0',
+  `crit_damage_bonus` int DEFAULT NULL,
+  `hip_fire_accuracy_bonus` int DEFAULT NULL,
+  `armor_penetration` int DEFAULT NULL,
+  `is_suppressed` tinyint(1) DEFAULT '0',
+  `is_scoped` tinyint(1) DEFAULT '0',
+  `mag_size_change` int DEFAULT NULL,
+  `reload_speed_change` decimal(5,2) DEFAULT NULL,
+  `weight_change` decimal(5,2) DEFAULT NULL,
+  `value_change_percent` int DEFAULT NULL,
+  `form_id` varchar(16) DEFAULT NULL,
+  `source_url` text,
+  PRIMARY KEY (`id`),
+  KEY `idx_weapon_mod_weapon` (`weapon_id`),
+  KEY `idx_weapon_mod_slot` (`slot_id`),
+  KEY `idx_weapon_mod_name` (`name`),
+  CONSTRAINT `fk_wm_slot` FOREIGN KEY (`slot_id`) REFERENCES `weapon_mod_slots` (`id`),
+  CONSTRAINT `fk_wm_weapon` FOREIGN KEY (`weapon_id`) REFERENCES `weapons` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=1149 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `weapon_perk_rules`
 --
 
@@ -653,7 +792,7 @@ CREATE TABLE `weapon_perk_rules` (
   KEY `fk_wpr_perk` (`perk_id`),
   CONSTRAINT `fk_wpr_perk` FOREIGN KEY (`perk_id`) REFERENCES `perks` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_wpr_weapon` FOREIGN KEY (`weapon_id`) REFERENCES `weapons` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=127 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -686,7 +825,7 @@ CREATE TABLE `weapon_types` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   KEY `idx_weapon_type` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -701,109 +840,23 @@ CREATE TABLE `weapons` (
   `name` varchar(255) NOT NULL,
   `weapon_type_id` int DEFAULT NULL,
   `weapon_class_id` int DEFAULT NULL,
-  `type` varchar(64) DEFAULT NULL,
-  `class` varchar(64) DEFAULT NULL,
   `level` varchar(64) DEFAULT NULL,
   `damage` varchar(255) DEFAULT NULL,
   `perks_raw` text,
   `source_url` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_weapon_name` (`name`),
-  KEY `idx_weapons_type` (`type`),
-  KEY `idx_weapons_class` (`class`),
   KEY `idx_weapon_type_id` (`weapon_type_id`),
   KEY `idx_weapon_class_id` (`weapon_class_id`),
+  KEY `idx_weapon_type_class` (`weapon_type_id`,`weapon_class_id`),
   CONSTRAINT `fk_weapon_class` FOREIGN KEY (`weapon_class_id`) REFERENCES `weapon_classes` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_weapon_type` FOREIGN KEY (`weapon_type_id`) REFERENCES `weapon_types` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=263 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=525 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `weapon_mod_slots`
+-- Dumping routines for database 'f76'
 --
-
-DROP TABLE IF EXISTS `weapon_mod_slots`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `weapon_mod_slots` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(64) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `weapon_mod_slots`
---
-
-LOCK TABLES `weapon_mod_slots` WRITE;
-/*!40000 ALTER TABLE `weapon_mod_slots` DISABLE KEYS */;
-INSERT INTO `weapon_mod_slots` (`name`) VALUES
-  ('receiver'),('barrel'),('stock'),('magazine'),('sight'),('muzzle'),('grip');
-/*!40000 ALTER TABLE `weapon_mod_slots` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `weapon_mods`
---
-
-DROP TABLE IF EXISTS `weapon_mods`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `weapon_mods` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `weapon_id` int NOT NULL,
-  `slot_id` int NOT NULL,
-  `name` varchar(128) NOT NULL,
-  `damage_change` decimal(6,2) DEFAULT NULL,
-  `damage_change_is_percent` tinyint(1) DEFAULT 0,
-  `fire_rate_change` int DEFAULT NULL,
-  `range_change` int DEFAULT NULL,
-  `accuracy_change` int DEFAULT NULL,
-  `ap_cost_change` decimal(5,2) DEFAULT NULL,
-  `recoil_change` int DEFAULT NULL,
-  `spread_change` decimal(5,2) DEFAULT NULL,
-  `converts_to_auto` tinyint(1) DEFAULT 0,
-  `converts_to_semi` tinyint(1) DEFAULT 0,
-  `crit_damage_bonus` int DEFAULT NULL,
-  `hip_fire_accuracy_bonus` int DEFAULT NULL,
-  `armor_penetration` int DEFAULT NULL,
-  `is_suppressed` tinyint(1) DEFAULT 0,
-  `is_scoped` tinyint(1) DEFAULT 0,
-  `mag_size_change` int DEFAULT NULL,
-  `reload_speed_change` decimal(5,2) DEFAULT NULL,
-  `weight_change` decimal(5,2) DEFAULT NULL,
-  `value_change_percent` int DEFAULT NULL,
-  `form_id` varchar(16) DEFAULT NULL,
-  `source_url` text,
-  PRIMARY KEY (`id`),
-  KEY `idx_weapon_mod_weapon` (`weapon_id`),
-  KEY `idx_weapon_mod_slot` (`slot_id`),
-  KEY `idx_weapon_mod_name` (`name`),
-  CONSTRAINT `fk_wm_weapon` FOREIGN KEY (`weapon_id`) REFERENCES `weapons` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_wm_slot` FOREIGN KEY (`slot_id`) REFERENCES `weapon_mod_slots` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `weapon_mod_crafting`
---
-
-DROP TABLE IF EXISTS `weapon_mod_crafting`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `weapon_mod_crafting` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `mod_id` int NOT NULL,
-  `perk_id` int DEFAULT NULL,
-  `perk_rank` int DEFAULT 1,
-  PRIMARY KEY (`id`),
-  KEY `idx_wmc_mod` (`mod_id`),
-  CONSTRAINT `fk_wmc_mod` FOREIGN KEY (`mod_id`) REFERENCES `weapon_mods` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_wmc_perk` FOREIGN KEY (`perk_id`) REFERENCES `perks` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
 -- Final view structure for view `v_armor_complete`
@@ -889,8 +942,8 @@ CREATE TABLE `weapon_mod_crafting` (
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `v_mutations_complete` AS select `m`.`id` AS `mutation_id`,`m`.`name` AS `mutation_name`,`m`.`positive_effects` AS `positive_effects`,`m`.`negative_effects` AS `negative_effects`,`m`.`form_id` AS `form_id`,`m`.`exclusive_with` AS `exclusive_with`,`m`.`suppression_perk` AS `suppression_perk`,`m`.`enhancement_perk` AS `enhancement_perk`,`m`.`source_url` AS `source_url` from `mutations` `m` order by `m`.`name` */;
+/*!50013 DEFINER=`rofenac`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_mutations_complete` AS select `m`.`id` AS `mutation_id`,`m`.`name` AS `mutation_name`,group_concat(distinct (case when (`me`.`effect_type` = 'positive') then `me`.`description` end) separator '; ') AS `positive_effects`,group_concat(distinct (case when (`me`.`effect_type` = 'negative') then `me`.`description` end) separator '; ') AS `negative_effects`,`m`.`form_id` AS `form_id`,`m2`.`name` AS `exclusive_with`,`ps`.`name` AS `suppression_perk`,`pe`.`name` AS `enhancement_perk`,`m`.`source_url` AS `source_url` from ((((`mutations` `m` left join `mutation_effects` `me` on((`m`.`id` = `me`.`mutation_id`))) left join `mutations` `m2` on((`m`.`exclusive_with_id` = `m2`.`id`))) left join `perks` `ps` on((`m`.`suppression_perk_id` = `ps`.`id`))) left join `perks` `pe` on((`m`.`enhancement_perk_id` = `pe`.`id`))) group by `m`.`id`,`m`.`name`,`m`.`form_id`,`m2`.`name`,`ps`.`name`,`pe`.`name`,`m`.`source_url` order by `m`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -907,26 +960,8 @@ CREATE TABLE `weapon_mod_crafting` (
 /*!50001 SET character_set_results     = utf8mb4 */;
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
-/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `v_perks_all_ranks` AS select `p`.`id` AS `perk_id`,`p`.`name` AS `perk_name`,`p`.`special` AS `special`,`p`.`level` AS `min_level`,`p`.`race` AS `race`,`pr`.`rank` AS `rank`,`pr`.`description` AS `rank_description`,`pr`.`form_id` AS `form_id` from (`perks` `p` left join `perk_ranks` `pr` on((`p`.`id` = `pr`.`perk_id`))) order by `p`.`name`,`pr`.`rank` */;
-/*!50001 SET character_set_client      = @saved_cs_client */;
-/*!50001 SET character_set_results     = @saved_cs_results */;
-/*!50001 SET collation_connection      = @saved_col_connection */;
-
---
--- Final view structure for view `v_weapons_with_perks`
---
-
-/*!50001 DROP VIEW IF EXISTS `v_weapons_with_perks`*/;
-/*!50001 SET @saved_cs_client          = @@character_set_client */;
-/*!50001 SET @saved_cs_results         = @@character_set_results */;
-/*!50001 SET @saved_col_connection     = @@collation_connection */;
-/*!50001 SET character_set_client      = utf8mb4 */;
-/*!50001 SET character_set_results     = utf8mb4 */;
-/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
-/*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`rofenac`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `v_weapons_with_perks` AS select `w`.`id` AS `id`,`w`.`name` AS `weapon_name`,`wt`.`name` AS `weapon_type`,`wc`.`name` AS `weapon_class`,`w`.`level` AS `level`,`w`.`damage` AS `damage`,group_concat(distinct `p`.`name` order by `p`.`name` ASC separator ', ') AS `regular_perks`,group_concat(distinct `lp`.`name` order by `lp`.`name` ASC separator ', ') AS `legendary_perks`,`w`.`source_url` AS `source_url` from ((((((`weapons` `w` left join `weapon_types` `wt` on((`w`.`weapon_type_id` = `wt`.`id`))) left join `weapon_classes` `wc` on((`w`.`weapon_class_id` = `wc`.`id`))) left join `weapon_perks` `wp` on((`w`.`id` = `wp`.`weapon_id`))) left join `perks` `p` on((`wp`.`perk_id` = `p`.`id`))) left join `weapon_legendary_perk_effects` `wlp` on((`w`.`id` = `wlp`.`weapon_id`))) left join `legendary_perks` `lp` on((`wlp`.`legendary_perk_id` = `lp`.`id`))) group by `w`.`id`,`w`.`name`,`wt`.`name`,`wc`.`name`,`w`.`level`,`w`.`damage`,`w`.`source_url` order by `w`.`name` */;
+/*!50001 VIEW `v_perks_all_ranks` AS select `p`.`id` AS `perk_id`,`p`.`name` AS `perk_name`,`sa`.`name` AS `special_attribute`,`p`.`special` AS `special_code`,`p`.`level` AS `min_level`,`p`.`race` AS `race`,`pr`.`rank` AS `rank`,`pr`.`description` AS `rank_description`,`pr`.`form_id` AS `form_id` from ((`perks` `p` left join `special_attributes` `sa` on((`p`.`special_id` = `sa`.`id`))) left join `perk_ranks` `pr` on((`p`.`id` = `pr`.`perk_id`))) order by `p`.`name`,`pr`.`rank` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
@@ -948,6 +983,24 @@ CREATE TABLE `weapon_mod_crafting` (
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `v_weapons_with_perks`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_weapons_with_perks`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`rofenac`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_weapons_with_perks` AS select `w`.`id` AS `id`,`w`.`name` AS `weapon_name`,`wt`.`name` AS `weapon_type`,`wc`.`name` AS `weapon_class`,`w`.`level` AS `level`,`w`.`damage` AS `damage`,group_concat(distinct `p`.`name` order by `p`.`name` ASC separator '; ') AS `regular_perks`,group_concat(distinct `lp`.`name` order by `lp`.`name` ASC separator '; ') AS `legendary_perks`,`w`.`source_url` AS `source_url` from ((((((`weapons` `w` left join `weapon_types` `wt` on((`w`.`weapon_type_id` = `wt`.`id`))) left join `weapon_classes` `wc` on((`w`.`weapon_class_id` = `wc`.`id`))) left join `weapon_perks` `wp` on((`w`.`id` = `wp`.`weapon_id`))) left join `perks` `p` on((`wp`.`perk_id` = `p`.`id`))) left join `weapon_legendary_perk_effects` `wlpe` on((`w`.`id` = `wlpe`.`weapon_id`))) left join `legendary_perks` `lp` on((`wlpe`.`legendary_perk_id` = `lp`.`id`))) group by `w`.`id`,`w`.`name`,`wt`.`name`,`wc`.`name`,`w`.`level`,`w`.`damage`,`w`.`source_url` order by `w`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -958,4 +1011,4 @@ CREATE TABLE `weapon_mod_crafting` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-04 10:15:33
+-- Dump completed on 2025-11-25 12:50:44

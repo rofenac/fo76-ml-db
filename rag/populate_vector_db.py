@@ -270,6 +270,33 @@ class VectorDBPopulator:
 
         return ". ".join(text_parts)
 
+    def create_legendary_effect_text(self, effect: Dict[str, Any]) -> str:
+        """Create text representation of legendary effect for embedding"""
+        text_parts = []
+
+        text_parts.append(f"Legendary Effect: {effect['effect_name']}")
+        if effect.get('item_type'):
+            text_parts.append(f"For: {effect['item_type']}")
+        if effect.get('star_level'):
+            text_parts.append(f"{effect['star_level']}-star")
+        if effect.get('category'):
+            text_parts.append(f"Category: {effect['category']}")
+        if effect.get('description'):
+            text_parts.append(f"Description: {effect['description']}")
+        if effect.get('effect_value'):
+            text_parts.append(f"Value: {effect['effect_value']}")
+        if effect.get('conditions'):
+            text_parts.append(f"Conditions: {effect['conditions']}")
+
+        # Add context for bloodied builds if relevant
+        effect_name_lower = effect['effect_name'].lower()
+        if 'bloodied' in effect_name_lower or 'low health' in effect.get('description', '').lower():
+            text_parts.append("Critical for bloodied builds, synergizes with Adrenal Reaction mutation and Nerd Rage perk")
+        elif 'unyielding' in effect_name_lower:
+            text_parts.append("Essential for bloodied builds, provides massive SPECIAL bonuses at low health")
+
+        return ". ".join(text_parts)
+
     def populate_batch(self, items: List[Dict], item_type: str, text_creator_func, id_prefix: str):
         """
         Generic batch populator for any item type.
@@ -320,6 +347,8 @@ class VectorDBPopulator:
                         db_id = item['consumable_id']
                     elif item_type == "collectibles":
                         db_id = item['collectible_id']
+                    elif item_type == "legendary effects":
+                        db_id = item['effect_id']
                     else:
                         db_id = item['id']
 
@@ -343,6 +372,8 @@ class VectorDBPopulator:
                         name = item.get('consumable_name')
                     elif item_type == "collectibles":
                         name = item.get('collectible_name')
+                    elif item_type == "legendary effects":
+                        name = item.get('effect_name')
                     else:
                         name = item.get('name')
 
@@ -363,6 +394,13 @@ class VectorDBPopulator:
                         if item.get('set_name'):
                             metadata['set_name'] = item['set_name']
                     elif item_type == "consumables":
+                        if item.get('category'):
+                            metadata['category'] = item['category']
+                    elif item_type == "legendary effects":
+                        if item.get('item_type'):
+                            metadata['item_type'] = item['item_type']
+                        if item.get('star_level'):
+                            metadata['star_level'] = str(item['star_level'])
                         if item.get('category'):
                             metadata['category'] = item['category']
 
@@ -396,6 +434,7 @@ class VectorDBPopulator:
             "armor": "🛡️",
             "perks": "⭐",
             "legendary perks": "💎",
+            "legendary effects": "✨",
             "mutations": "🧬",
             "consumables": "🍖",
             "collectibles": "🎁"
@@ -438,6 +477,11 @@ class VectorDBPopulator:
         collectibles = self.execute_query("SELECT * FROM v_collectibles_complete")
         self.populate_batch(collectibles, "collectibles", self.create_collectible_text, "collectible_")
 
+    def populate_legendary_effects(self):
+        """Load legendary effects from MySQL and add to ChromaDB"""
+        effects = self.execute_query("SELECT * FROM v_legendary_effects_complete")
+        self.populate_batch(effects, "legendary effects", self.create_legendary_effect_text, "legendary_effect_")
+
     def populate_all(self):
         """Populate all data types"""
         print("\n" + "="*60)
@@ -448,6 +492,7 @@ class VectorDBPopulator:
         self.populate_armor()
         self.populate_perks()
         self.populate_legendary_perks()
+        self.populate_legendary_effects()
         self.populate_mutations()
         self.populate_consumables()
         self.populate_collectibles()

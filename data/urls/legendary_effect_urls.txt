@@ -1,0 +1,12 @@
+# Fallout 76 Legendary Effects URLs
+# Primary legendary effects pages
+
+# Weapon legendary effects
+https://fallout.fandom.com/wiki/Fallout_76_legendary_effects/Weapons
+
+# Armor legendary effects
+https://fallout.fandom.com/wiki/Fallout_76_legendary_effects/Armor
+
+# Alternative/comprehensive pages
+https://fallout.fandom.com/wiki/Legendary_weapon
+https://fallout.fandom.com/wiki/Legendary_armor_and_power_armor

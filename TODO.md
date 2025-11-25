@@ -1,17 +1,19 @@
 # Project Status & TODO
 
-## Current Status (2025-11-10)
+## Current Status (2025-11-25)
 
 ### Database
 
 - **Weapons**: 262 (with mechanics: charge, spin-up, chain lightning, explosive AOE)
+- **Weapon Mods**: 1,148 (scraped from 75 weapons, fully normalized)
 - **Armor**: 477 (291 regular + 186 power armor)
 - **Perks**: 240 regular (449 ranks), 28 legendary (112 ranks)
+- **Legendary Effects**: 123 (60 weapon, 63 armor; 1-4 star effects)
 - **Mutations**: 19 (with exclusivity, Class Freak/Strange in Numbers)
 - **Consumables**: 180 (chems, food, drinks, aid items)
 - **Collectibles**: In database (magazines, bobbleheads, series tracking)
-- **Total Items**: 1,206+
-- **Vector Embeddings**: 1,519 (OpenAI text-embedding-3-small, 1536-dim) - cleaned & normalized 2025-11-03
+- **Total Items**: 2,200+
+- **Vector Embeddings**: 965 (OpenAI text-embedding-3-small, 1536-dim) - rebuilt with legendary effects 2025-11-25
 
 ### Architecture
 
@@ -62,6 +64,25 @@
 - ✅ **LangChain removal (Nov 2025)**
   - Simplified RAG implementation without LangChain dependency
   - Direct Claude API integration
+- ✅ **Database 3NF normalization (Nov 22, 2025)**
+  - Normalized weapons, armor, perks, mutations tables to 3NF
+  - Created lookup tables for races, special_attributes, weapon_types, weapon_classes
+  - Replaced VARCHAR columns with FK references
+  - Created mutation_effects table for normalized effect storage
+  - Updated all views to use normalized schema
+- ✅ **Weapon Mods system (Nov 22, 2025)**
+  - Scraped 1,148 weapon mods from 75 weapons
+  - Comprehensive mod categories: receivers, barrels, grips, sights, magazines, etc.
+  - Fully normalized schema with weapon_mods and weapon_mod_categories tables
+  - Created v_weapon_mods_complete view
+- ✅ **Legendary Effects system (Nov 25, 2025)**
+  - Complete legendary weapon and armor effects (123 total: 60 weapon, 63 armor)
+  - 1-4 star effects with proper categorization (Prefix, Major, Minor, Additional)
+  - Schema: legendary_effects, legendary_effect_categories, legendary_effect_conditions
+  - Includes all major effects: Bloodied, Unyielding, Anti-Armor, Two Shot, Explosive, etc.
+  - Condition tracking (health_threshold, vats, aiming, movement, etc.)
+  - Integrated into ChromaDB with bloodied build context
+  - Created views: v_legendary_effects_complete, v_weapon_legendary_effects, v_armor_legendary_effects
 
 ### In Progress
 
@@ -78,7 +99,6 @@
 - [ ] ORM layer for entities
 - [ ] Type hints throughout codebase
 - [ ] Direct MCP server integration (beyond current utility layer)
-- [ ] Legendary effects system (legendary weapon/armor modifiers)
 - [ ] User build saving and sharing functionality
 - [ ] Build optimizer/recommendation engine
 - [ ] Synergy detection (perks that work well together)
@@ -94,4 +114,4 @@
 
 ---
 
-**Last Updated**: 2025-11-10
+**Last Updated**: 2025-11-25
