@@ -1,163 +1,228 @@
 #!/usr/bin/env python3
 """
-Import unified armor data (regular + power armor) from CSV into MySQL database
+Import armor from CSV into normalized database schema.
+Handles armor_types, armor_classes, and armor_slots lookup tables properly.
 """
-
 import csv
-import mysql.connector
-from mysql.connector import Error
-import logging
-
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
-logger = logging.getLogger(__name__)
-
-# Database connection config
+import sys
 import os
-from dotenv import load_dotenv
-load_dotenv()
+from pathlib import Path
 
-DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'user': os.getenv('DB_USER', 'root'),
-    'password': os.getenv('DB_PASSWORD', 'secret'),
-    'database': os.getenv('DB_NAME', 'f76')
-}
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from database.db_utils import get_db
 
 
-def connect_db():
-    """Establish database connection"""
-    try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        logger.info("Connected to MySQL database")
-        return conn
-    except Error as e:
-        logger.error(f"Database connection failed: {e}")
-        return None
+def import_armor(csv_file: str = "data/input/armor.csv"):
+    """Import armor from CSV into armor table with proper FK relationships."""
+    print(f"\n=== Importing Armor from {csv_file} ===")
 
+    if not os.path.exists(csv_file):
+        print(f"⚠ File not found: {csv_file}")
+        sys.exit(1)
 
-def import_unified_armor(conn, csv_file: str):
-    """Import unified armor data (regular + power armor) from CSV"""
-    cursor = conn.cursor()
-    imported = 0
-    regular_count = 0
-    power_count = 0
+    db = get_db()
+
+    # Read CSV and collect unique types/classes/slots
+    armor_data = []
+    armor_types = set()
+    armor_classes = set()
+    armor_slots = set()
 
     with open(csv_file, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
 
         for row in reader:
-            try:
-                sql = """
-                INSERT INTO armor (
-                    name, class, slot, damage_resistance, energy_resistance,
-                    radiation_resistance, cryo_resistance, fire_resistance,
-                    poison_resistance, set_name, armor_type, level, source_url
-                ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
-                ON DUPLICATE KEY UPDATE
-                    class = VALUES(class),
-                    slot = VALUES(slot),
-                    damage_resistance = VALUES(damage_resistance),
-                    energy_resistance = VALUES(energy_resistance),
-                    radiation_resistance = VALUES(radiation_resistance),
-                    cryo_resistance = VALUES(cryo_resistance),
-                    fire_resistance = VALUES(fire_resistance),
-                    poison_resistance = VALUES(poison_resistance),
-                    set_name = VALUES(set_name),
-                    armor_type = VALUES(armor_type),
-                    level = VALUES(level),
-                    source_url = VALUES(source_url)
-                """
+            armor_name = row['Name'].strip()
+            armor_class = row.get('Class', '').strip()
+            armor_slot = row.get('Slot', '').strip()
+            armor_type = row.get('Armor Type', '').strip()
 
-                values = (
-                    row['Name'],
-                    row['Class'] if row['Class'] else None,
-                    row['Slot'],
-                    row['Damage Resistance'] if row['Damage Resistance'] else None,
-                    row['Energy Resistance'] if row['Energy Resistance'] else None,
-                    row['Radiation Resistance'] if row['Radiation Resistance'] else None,
-                    row['Cryo Resistance'] if row['Cryo Resistance'] else None,
-                    row['Fire Resistance'] if row['Fire Resistance'] else None,
-                    row['Poison Resistance'] if row['Poison Resistance'] else None,
-                    row['Set Name'],
-                    row['Armor Type'],
-                    row['Level'],
-                    row['Source URL']
-                )
-
-                cursor.execute(sql, values)
-                imported += 1
-
-                if row['Armor Type'] == 'regular':
-                    regular_count += 1
-                elif row['Armor Type'] == 'power':
-                    power_count += 1
-
-            except Error as e:
-                logger.error(f"Failed to import '{row.get('Name', 'UNKNOWN')}': {e}")
+            if not armor_name:
                 continue
 
-    conn.commit()
-    logger.info(f"Imported {imported} total armor pieces")
-    logger.info(f"  - Regular armor: {regular_count}")
-    logger.info(f"  - Power armor: {power_count}")
-    return imported, regular_count, power_count
+            armor_data.append({
+                'name': armor_name,
+                'class': armor_class,
+                'slot': armor_slot,
+                'type': armor_type,
+                'damage_resistance': row.get('Damage Resistance', '').strip() or None,
+                'energy_resistance': row.get('Energy Resistance', '').strip() or None,
+                'radiation_resistance': row.get('Radiation Resistance', '').strip() or None,
+                'cryo_resistance': row.get('Cryo Resistance', '').strip() or None,
+                'fire_resistance': row.get('Fire Resistance', '').strip() or None,
+                'poison_resistance': row.get('Poison Resistance', '').strip() or None,
+                'set_name': row.get('Set Name', '').strip() or None,
+                'level': row.get('Level', '').strip() or None,
+                'source_url': row.get('Source URL', '').strip() or None
+            })
 
+            if armor_type:
+                armor_types.add(armor_type)
+            if armor_class:
+                armor_classes.add(armor_class)
+            if armor_slot:
+                armor_slots.add(armor_slot)
 
-def get_table_counts(conn):
-    """Get counts of all main tables"""
-    cursor = conn.cursor()
+    print(f"Found {len(armor_data)} armor pieces")
+    print(f"Found {len(armor_types)} unique armor types")
+    print(f"Found {len(armor_classes)} unique armor classes")
+    print(f"Found {len(armor_slots)} unique armor slots")
 
-    counts = {}
-    tables = ['weapons', 'armor', 'perks', 'legendary_perks']
+    # Insert armor types
+    print("\n✓ Inserting armor types...")
+    for atype in sorted(armor_types):
+        insert_type = """
+            INSERT INTO armor_types (name)
+            VALUES (%s)
+            ON DUPLICATE KEY UPDATE name = name
+        """
+        db.execute_query(insert_type, (atype,))
 
-    for table in tables:
-        cursor.execute(f"SELECT COUNT(*) FROM {table}")
-        counts[table] = cursor.fetchone()[0]
+    # Insert armor classes
+    print("✓ Inserting armor classes...")
+    for aclass in sorted(armor_classes):
+        insert_class = """
+            INSERT INTO armor_classes (name)
+            VALUES (%s)
+            ON DUPLICATE KEY UPDATE name = name
+        """
+        db.execute_query(insert_class, (aclass,))
 
-    return counts
+    # Insert armor slots
+    print("✓ Inserting armor slots...")
+    for aslot in sorted(armor_slots):
+        insert_slot = """
+            INSERT INTO armor_slots (name)
+            VALUES (%s)
+            ON DUPLICATE KEY UPDATE name = name
+        """
+        db.execute_query(insert_slot, (aslot,))
 
+    # Build lookup maps
+    type_map = {}
+    class_map = {}
+    slot_map = {}
 
-def main():
-    """Main import process"""
-    conn = connect_db()
-    if not conn:
-        logger.error("Cannot proceed without database connection")
-        return
+    types_result = db.execute_query("SELECT id, name FROM armor_types")
+    for row in types_result:
+        type_map[row['name']] = row['id']
 
-    try:
-        logger.info("Starting unified armor import...")
+    classes_result = db.execute_query("SELECT id, name FROM armor_classes")
+    for row in classes_result:
+        class_map[row['name']] = row['id']
 
-        # Import all armor from unified CSV
-        total, regular, power = import_unified_armor(conn, 'data/input/armor.csv')
+    slots_result = db.execute_query("SELECT id, name FROM armor_slots")
+    for row in slots_result:
+        slot_map[row['name']] = row['id']
 
-        # Show final counts
-        counts = get_table_counts(conn)
+    print(f"✓ Loaded {len(type_map)} armor type IDs")
+    print(f"✓ Loaded {len(class_map)} armor class IDs")
+    print(f"✓ Loaded {len(slot_map)} armor slot IDs")
 
-        print("\n" + "="*60)
-        print("DATABASE IMPORT COMPLETE")
-        print("="*60)
-        print(f"Armor imported this session:")
-        print(f"  - Regular armor:  {regular}")
-        print(f"  - Power armor:    {power}")
-        print(f"  - Total:          {total}")
-        print("-"*60)
-        print("TOTAL DATABASE RECORDS:")
-        print(f"  Weapons:         {counts['weapons']}")
-        print(f"  Armor (unified): {counts['armor']}")
-        print(f"  Perks:           {counts['perks']}")
-        print(f"  Legendary Perks: {counts['legendary_perks']}")
-        print("="*60)
+    # Import armor
+    print("\n✓ Inserting armor...")
+    inserted = 0
+    skipped = 0
 
-    except Exception as e:
-        logger.error(f"Import failed: {e}")
+    for armor in armor_data:
+        armor_type_id = type_map.get(armor['type']) if armor['type'] else None
+        armor_class_id = class_map.get(armor['class']) if armor['class'] else None
+        armor_slot_id = slot_map.get(armor['slot']) if armor['slot'] else None
 
-    finally:
-        if conn:
-            conn.close()
-            logger.info("Database connection closed")
+        insert_armor = """
+            INSERT INTO armor
+            (name, armor_type_id, armor_class_id, armor_slot_id,
+             damage_resistance, energy_resistance, radiation_resistance,
+             cryo_resistance, fire_resistance, poison_resistance,
+             set_name, level, source_url)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                armor_type_id = VALUES(armor_type_id),
+                armor_class_id = VALUES(armor_class_id),
+                armor_slot_id = VALUES(armor_slot_id),
+                damage_resistance = VALUES(damage_resistance),
+                energy_resistance = VALUES(energy_resistance),
+                radiation_resistance = VALUES(radiation_resistance),
+                cryo_resistance = VALUES(cryo_resistance),
+                fire_resistance = VALUES(fire_resistance),
+                poison_resistance = VALUES(poison_resistance),
+                set_name = VALUES(set_name),
+                level = VALUES(level),
+                source_url = VALUES(source_url)
+        """
+
+        try:
+            db.execute_query(insert_armor, (
+                armor['name'],
+                armor_type_id,
+                armor_class_id,
+                armor_slot_id,
+                armor['damage_resistance'],
+                armor['energy_resistance'],
+                armor['radiation_resistance'],
+                armor['cryo_resistance'],
+                armor['fire_resistance'],
+                armor['poison_resistance'],
+                armor['set_name'],
+                armor['level'],
+                armor['source_url']
+            ))
+            inserted += 1
+
+            if inserted % 50 == 0:
+                print(f"  Inserted {inserted} armor pieces...")
+
+        except Exception as e:
+            print(f"✗ Error inserting armor '{armor['name']}': {e}")
+            skipped += 1
+            continue
+
+    print(f"\n✓ Import complete!")
+    print(f"  Inserted/Updated: {inserted}")
+    print(f"  Skipped: {skipped}")
+
+    # Verify
+    count_query = "SELECT COUNT(*) as count FROM armor"
+    result = db.execute_query(count_query)
+    total = result[0]['count']
+    print(f"  Total in database: {total}")
+
+    # Show breakdown
+    breakdown_query = """
+        SELECT
+            at.name as type,
+            ac.name as class,
+            COUNT(*) as count
+        FROM armor a
+        LEFT JOIN armor_types at ON a.armor_type_id = at.id
+        LEFT JOIN armor_classes ac ON a.armor_class_id = ac.id
+        GROUP BY at.name, ac.name
+        ORDER BY at.name, ac.name
+    """
+    breakdown = db.execute_query(breakdown_query)
+    print("\nBreakdown by type and class:")
+    for row in breakdown:
+        atype = row['type'] or 'NULL'
+        aclass = row['class'] or 'NULL'
+        print(f"  {atype:15s} / {aclass:15s}: {row['count']:3d} pieces")
+
+    return inserted
 
 
 if __name__ == '__main__':
-    main()
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Import armor from CSV')
+    parser.add_argument('csv_file', nargs='?',
+                       default='data/input/armor.csv',
+                       help='CSV file to import (default: data/input/armor.csv)')
+
+    args = parser.parse_args()
+
+    if not os.path.exists(args.csv_file):
+        print(f"Error: CSV file not found: {args.csv_file}")
+        sys.exit(1)
+
+    import_armor(args.csv_file)
