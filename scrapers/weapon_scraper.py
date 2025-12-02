@@ -595,7 +595,7 @@ def main():
     parser = argparse.ArgumentParser(description='Scrape Fallout 76 weapon data from Wiki')
     parser.add_argument('-u', '--url', help='Single URL to scrape')
     parser.add_argument('-f', '--file', default='urls.txt', help='File with URLs to scrape (default: urls.txt)')
-    parser.add_argument('-o', '--output', default='weapons_scraped.csv', help='Output CSV file')
+    parser.add_argument('-o', '--output', default='data/input/weapons.csv', help='Output CSV file')
     parser.add_argument('-p', '--playwright', action='store_true', help='Use Playwright for JavaScript-heavy pages')
     parser.add_argument('--perks', default='Perks.csv', help='Path to canonical perks CSV')
 

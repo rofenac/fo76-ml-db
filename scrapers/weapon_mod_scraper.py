@@ -430,7 +430,7 @@ def main():
     parser = argparse.ArgumentParser(description='Scrape Fallout 76 weapon mod data from Wiki')
     parser.add_argument('-u', '--url', help='Single weapon URL to scrape')
     parser.add_argument('-f', '--file', default='weapon_mod_urls.txt', help='File with weapon URLs')
-    parser.add_argument('-o', '--output', default='weapon_mods_scraped.csv', help='Output CSV file')
+    parser.add_argument('-o', '--output', default='data/input/weapon_mods.csv', help='Output CSV file')
     parser.add_argument('--no-playwright', action='store_true', help='Use requests instead of Playwright')
     args = parser.parse_args()
 

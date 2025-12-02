@@ -168,10 +168,10 @@ def main():
     # Import from each CSV
     base_path = Path(__file__).parent.parent / 'data' / 'input'
     csv_files = [
-        (base_path / 'Chem_scraped.csv', 'Chem'),
-        (base_path / 'Drink_scraped.csv', 'Drink'),
-        (base_path / 'Food_scraped.csv', 'Food'),
-        (base_path / 'Soup_scraped.csv', 'Soup'),
+        (base_path / 'chems.csv', 'Chem'),
+        (base_path / 'drinks.csv', 'Drink'),
+        (base_path / 'food.csv', 'Food'),
+        (base_path / 'soup.csv', 'Soup'),
     ]
 
     total_imported = 0

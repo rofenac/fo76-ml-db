@@ -1,19 +1,33 @@
 # Project Status & TODO
 
-## Current Status (2025-11-25)
+## ⚠️ URGENT: Season Update (2025-12-02)
 
-### Database
+**New Fallout 76 season started today!** The following game data may need to be re-scraped and updated:
+- **New legendary mods** (season-specific legendaries)
+- **Ghoul-related perk cards** (small tweaks/balance changes)
+- **Bullet Shield perk** (possible balance adjustments)
+- **Bulletstorm perk** (possible balance adjustments)
+- **Weapon stats** (minor stat tweaks across various weapons)
 
-- **Weapons**: 262 (with mechanics: charge, spin-up, chain lightning, explosive AOE)
-- **Weapon Mods**: 1,148 (scraped from 75 weapons, fully normalized)
-- **Armor**: 477 (291 regular + 186 power armor)
+**Action Required**: Re-scrape affected data to ensure database accuracy, but only after the Fallout 76 Wiki is updated. Stand by.
+
+---
+
+## Current Status (2025-12-02)
+
+### Database (✅ REBUILT FROM MASTER SCHEMA)
+
+- **Weapons**: 262 (6 types, 19 classes - fully normalized 3NF)
+- **Weapon Mods**: 1,148 (7 slots: receiver, barrel, stock, magazine, sight, muzzle, grip)
+- **Armor**: 477 (2 types, 3 classes, 7 slots - 291 regular + 186 power armor)
 - **Perks**: 240 regular (449 ranks), 28 legendary (112 ranks)
-- **Legendary Effects**: 123 (60 weapon, 63 armor; 1-4 star effects)
-- **Mutations**: 19 (with exclusivity, Class Freak/Strange in Numbers)
-- **Consumables**: 180 (chems, food, drinks, aid items)
-- **Collectibles**: In database (magazines, bobbleheads, series tracking)
-- **Total Items**: 2,200+
-- **Vector Embeddings**: 965 (OpenAI text-embedding-3-small, 1536-dim) - rebuilt with legendary effects 2025-11-25
+- **Legendary Effects**: 122 (4 categories, 5 conditions; 1-4 star effects)
+- **Mutations**: 19 (with exclusivity pairs, 56 effects: 30 positive, 26 negative)
+- **Consumables**: 194 (food, drinks, chems, soups, aid items)
+- **Collectibles**: 20 bobbleheads (1 type, 20 effects, series tracking)
+- **Total Records**: 3,203+ across 33 tables
+- **Vector Embeddings**: 2,803 (OpenAI text-embedding-3-small, 1536-dim) - rebuilt 2025-12-02 (2nd rebuild)
+- **Schema Objects**: 44 total (33 tables + 11 views)
 
 ### Architecture
 
@@ -83,11 +97,22 @@
   - Condition tracking (health_threshold, vats, aiming, movement, etc.)
   - Integrated into ChromaDB with bloodied build context
   - Created views: v_legendary_effects_complete, v_weapon_legendary_effects, v_armor_legendary_effects
+- ✅ **Complete Database Rebuild from Master Schema (Dec 2, 2025)**
+  - Rebuilt entire f76 database from single authoritative schema file
+  - Verified 100% match between schema file and database (44 objects: 33 tables + 11 views)
+  - Created normalized import scripts: import_weapons.py, import_armor_normalized.py
+  - Updated all legacy import scripts to use correct CSV filenames and paths
+  - Fixed environment variable handling across all import scripts
+  - Auto-populated lookup tables (weapon_types, armor_types, collectible_types, etc.)
+  - Imported complete dataset: 3,196+ records across all main tables
+  - Verified full 3NF compliance with no transitive dependencies
+  - Rebuilt ChromaDB with 2,785 embeddings (up from 1,519)
+  - Master schema (database/f76_master_schema.sql) confirmed as single source of truth
+  - All foreign key relationships intact with proper CASCADE options
 
 ### In Progress
 
-- [ ] API collectibles endpoint implementation
-- [ ] Expand collectibles data (populate with specific magazines/bobbleheads)
+*None*
 
 ### Future Enhancements
 
@@ -107,11 +132,25 @@
 - [ ] Frontend pagination and advanced filtering
 - [ ] Collectibles frontend page
 
+### Recently Fixed (2025-12-02)
+
+- ✅ **Fixed mutation_effects table** - Populated with 56 effects (30 positive, 26 negative) by updating `import_mutations.py` to parse and normalize effects from mutations table TEXT fields
+- ✅ **Fixed consumables.addiction_risk column size** - Increased from VARCHAR(32) to VARCHAR(128) to accommodate long addiction descriptions like X-cell (101 chars). Successfully imported all 18 missing consumables (17 drinks + 1 chem)
+- ✅ **Achieved Full 3NF Compliance** - Populated all foreign key relationships:
+  - `mutations.exclusive_with_id` - Resolved 2 exclusive pairs (Carnivore ↔ Herbivore)
+  - `perks.special_id` - Resolved all 240 perks to special_attributes table (S, P, E, C, I, A, L)
+  - Created `populate_perk_fks.py` script to populate special_attributes lookup table and FK relationships
+  - Database now fully normalized with 100% FK compliance while maintaining backward-compatible VARCHAR fields
+- ✅ **ChromaDB Rebuild** - Rebuilt vector database with all improvements:
+  - New total: 2,803 embeddings (up from 2,785)
+  - Includes all 18 new consumables (X-cell, alcoholic drinks, etc.)
+  - Mutations now include detailed effect descriptions from normalized mutation_effects table
+  - All data reflects 3NF-compliant structure
+
 ### Known Issues
 
-- Collectibles API endpoint not yet implemented (database schema exists)
 - Build Planner and Chat pages exist in frontend but need functional implementation
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-12-02

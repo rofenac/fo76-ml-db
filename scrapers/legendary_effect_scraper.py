@@ -294,7 +294,7 @@ def main():
     parser = argparse.ArgumentParser(description='Scrape Fallout 76 legendary effects')
     parser.add_argument('-u', '--url', help='Single URL to scrape')
     parser.add_argument('-f', '--file', default='legendary_effect_urls.txt', help='File with URLs to scrape')
-    parser.add_argument('-o', '--output', default='legendary_effects_scraped.csv', help='Output CSV file')
+    parser.add_argument('-o', '--output', default='data/input/legendary_effects.csv', help='Output CSV file')
 
     args = parser.parse_args()
 

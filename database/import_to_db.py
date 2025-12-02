@@ -6,8 +6,8 @@ Usage:
     python import_to_db.py -u <username> -p <password> [-H <host>] [-d <database>]
 
     Or use environment variables:
-    export MYSQL_USER=your_username
-    export MYSQL_PASS=your_password
+    export MYSQL_USER=your_username (or DB_USER)
+    export MYSQL_PASS=your_password (or DB_PASSWORD)
     python import_to_db.py
 """
 
@@ -643,33 +643,33 @@ def main():
         description='Import Fallout 76 weapon and perk data into MySQL database'
     )
     parser.add_argument('-u', '--user',
-                       default=os.getenv('MYSQL_USER'),
-                       help='MySQL username (or set MYSQL_USER env var)')
+                       default=os.getenv('MYSQL_USER') or os.getenv('DB_USER'),
+                       help='MySQL username (or set MYSQL_USER/DB_USER env var)')
     parser.add_argument('-p', '--password',
-                       default=os.getenv('MYSQL_PASS'),
-                       help='MySQL password (or set MYSQL_PASS env var)')
+                       default=os.getenv('MYSQL_PASS') or os.getenv('DB_PASSWORD'),
+                       help='MySQL password (or set MYSQL_PASS/DB_PASSWORD env var)')
     parser.add_argument('-H', '--host',
-                       default=os.getenv('MYSQL_HOST', 'localhost'),
+                       default=os.getenv('MYSQL_HOST') or os.getenv('DB_HOST', 'localhost'),
                        help='MySQL host (default: localhost)')
     parser.add_argument('-d', '--database',
-                       default=os.getenv('MYSQL_DB', 'f76'),
+                       default=os.getenv('MYSQL_DB') or os.getenv('DB_NAME', 'f76'),
                        help='MySQL database name (default: f76)')
     parser.add_argument('--perks-csv',
-                       default='data/input/Perks.csv',
-                       help='Path to perks CSV file (default: data/input/Perks.csv)')
+                       default='data/input/perks.csv',
+                       help='Path to perks CSV file (default: data/input/perks.csv)')
     parser.add_argument('--legendary-perks-csv',
-                       default='data/input/LegendaryPerks.csv',
-                       help='Path to legendary perks CSV file (default: data/input/LegendaryPerks.csv)')
+                       default='data/input/legendary_perks.csv',
+                       help='Path to legendary perks CSV file (default: data/input/legendary_perks.csv)')
     parser.add_argument('--weapons-csv',
-                       default='data/input/human_corrected_weapons_clean.csv',
-                       help='Path to weapons CSV file (default: data/input/human_corrected_weapons_clean.csv)')
+                       default='data/input/weapons.csv',
+                       help='Path to weapons CSV file (default: data/input/weapons.csv)')
 
     args = parser.parse_args()
 
     # Validate required arguments
     if not args.user or not args.password:
         print("✗ Error: MySQL username and password are required")
-        print("  Either use -u/-p arguments or set MYSQL_USER/MYSQL_PASS environment variables")
+        print("  Either use -u/-p arguments or set MYSQL_USER/MYSQL_PASS (or DB_USER/DB_PASSWORD) environment variables")
         sys.exit(1)
 
     # Create importer and run

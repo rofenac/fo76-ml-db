@@ -3,7 +3,7 @@
 Import collectibles (bobbleheads & magazines) into NORMALIZED MySQL database
 
 Imports from:
-- Bobbleheads_scraped.csv
+- bobbleheads.csv
 """
 
 import csv
@@ -24,7 +24,7 @@ DB_CONFIG = {
 }
 
 # File paths
-BOBBLEHEADS_CSV = 'data/input/Bobbleheads_scraped.csv'
+BOBBLEHEADS_CSV = 'data/input/bobbleheads.csv'
 
 
 def build_caches(conn):
@@ -298,6 +298,20 @@ def main():
         # Build caches
         print("\nBuilding lookup caches...")
         caches = build_caches(conn)
+
+        # Ensure bobblehead type exists
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            INSERT INTO collectible_types (name)
+            VALUES ('bobblehead')
+            ON DUPLICATE KEY UPDATE name = name
+        """)
+        conn.commit()
+
+        # Refresh type cache
+        cursor.execute("SELECT id, name FROM collectible_types")
+        caches['types'] = {row['name']: row['id'] for row in cursor.fetchall()}
+        cursor.close()
 
         # Import collectibles
         imported = import_collectibles(conn, caches)

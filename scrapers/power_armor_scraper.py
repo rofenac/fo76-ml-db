@@ -352,7 +352,7 @@ def main():
     parser = argparse.ArgumentParser(description='Scrape Fallout 76 power armor data from Wiki')
     parser.add_argument('-u', '--url', help='Single URL to scrape')
     parser.add_argument('-f', '--file', default='power_armor_urls.txt', help='File with URLs to scrape')
-    parser.add_argument('-o', '--output', default='power_armor_scraped.csv', help='Output CSV file')
+    parser.add_argument('-o', '--output', default='data/input/power_armor.csv', help='Output CSV file')
     parser.add_argument('-p', '--playwright', action='store_true', help='Use Playwright for JS pages')
     parser.add_argument('--perks', default='Perks.csv', help='Path to canonical perks CSV')
 

@@ -226,7 +226,7 @@ CREATE TABLE `consumables` (
   `hunger_satisfaction` varchar(32) DEFAULT NULL,
   `thirst_satisfaction` varchar(32) DEFAULT NULL,
   `special_modifiers` text,
-  `addiction_risk` varchar(32) DEFAULT NULL,
+  `addiction_risk` varchar(128) DEFAULT NULL,
   `disease_risk` varchar(32) DEFAULT NULL,
   `weight` decimal(5,2) DEFAULT NULL,
   `value` int DEFAULT NULL,
@@ -293,6 +293,69 @@ CREATE TABLE `legendary_perks` (
   UNIQUE KEY `uq_legendary_perk_name` (`name`),
   KEY `idx_legendary_race` (`race`)
 ) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `legendary_effect_categories`
+--
+
+DROP TABLE IF EXISTS `legendary_effect_categories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `legendary_effect_categories` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_category_name` (`name`),
+  KEY `idx_category_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `legendary_effects`
+--
+
+DROP TABLE IF EXISTS `legendary_effects`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `legendary_effects` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  `category_id` int NOT NULL,
+  `star_level` int DEFAULT 1,
+  `item_type` enum('weapon','armor','both') NOT NULL DEFAULT 'weapon',
+  `description` text,
+  `effect_value` varchar(128) DEFAULT NULL,
+  `notes` text,
+  `form_id` varchar(16) DEFAULT NULL,
+  `source_url` text,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_effect_name_type` (`name`,`item_type`),
+  KEY `idx_effect_category` (`category_id`),
+  KEY `idx_effect_star_level` (`star_level`),
+  KEY `idx_effect_item_type` (`item_type`),
+  KEY `idx_effect_name` (`name`),
+  CONSTRAINT `fk_effect_category` FOREIGN KEY (`category_id`) REFERENCES `legendary_effect_categories` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `legendary_effect_conditions`
+--
+
+DROP TABLE IF EXISTS `legendary_effect_conditions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `legendary_effect_conditions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `effect_id` int NOT NULL,
+  `condition_type` varchar(64) NOT NULL,
+  `condition_description` text,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_effect_condition` (`effect_id`,`condition_type`),
+  KEY `idx_condition_type` (`condition_type`),
+  CONSTRAINT `fk_condition_effect` FOREIGN KEY (`effect_id`) REFERENCES `legendary_effects` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -521,6 +584,66 @@ SET @saved_cs_client     = @@character_set_client;
  1 AS `rank_description`,
  1 AS `effect_value`,
  1 AS `effect_type`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `v_legendary_effects_complete`
+--
+
+DROP TABLE IF EXISTS `v_legendary_effects_complete`;
+/*!50001 DROP VIEW IF EXISTS `v_legendary_effects_complete`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `v_legendary_effects_complete` AS SELECT
+ 1 AS `effect_id`,
+ 1 AS `effect_name`,
+ 1 AS `category`,
+ 1 AS `star_level`,
+ 1 AS `item_type`,
+ 1 AS `description`,
+ 1 AS `effect_value`,
+ 1 AS `notes`,
+ 1 AS `form_id`,
+ 1 AS `conditions`,
+ 1 AS `source_url`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `v_weapon_legendary_effects`
+--
+
+DROP TABLE IF EXISTS `v_weapon_legendary_effects`;
+/*!50001 DROP VIEW IF EXISTS `v_weapon_legendary_effects`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `v_weapon_legendary_effects` AS SELECT
+ 1 AS `effect_id`,
+ 1 AS `effect_name`,
+ 1 AS `category`,
+ 1 AS `star_level`,
+ 1 AS `description`,
+ 1 AS `effect_value`,
+ 1 AS `conditions`,
+ 1 AS `source_url`*/;
+SET character_set_client = @saved_cs_client;
+
+--
+-- Temporary view structure for view `v_armor_legendary_effects`
+--
+
+DROP TABLE IF EXISTS `v_armor_legendary_effects`;
+/*!50001 DROP VIEW IF EXISTS `v_armor_legendary_effects`*/;
+SET @saved_cs_client     = @@character_set_client;
+/*!50503 SET character_set_client = utf8mb4 */;
+/*!50001 CREATE VIEW `v_armor_legendary_effects` AS SELECT
+ 1 AS `effect_id`,
+ 1 AS `effect_name`,
+ 1 AS `category`,
+ 1 AS `star_level`,
+ 1 AS `description`,
+ 1 AS `effect_value`,
+ 1 AS `conditions`,
+ 1 AS `source_url`*/;
 SET character_set_client = @saved_cs_client;
 
 --
@@ -926,6 +1049,60 @@ CREATE TABLE `weapons` (
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
 /*!50001 VIEW `v_legendary_perks_all_ranks` AS select `lp`.`id` AS `legendary_perk_id`,`lp`.`name` AS `perk_name`,`lp`.`description` AS `base_description`,`lp`.`race` AS `race`,`lpr`.`rank` AS `rank`,`lpr`.`description` AS `rank_description`,`lpr`.`effect_value` AS `effect_value`,`lpr`.`effect_type` AS `effect_type` from (`legendary_perks` `lp` left join `legendary_perk_ranks` `lpr` on((`lp`.`id` = `lpr`.`legendary_perk_id`))) order by `lp`.`name`,`lpr`.`rank` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `v_legendary_effects_complete`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_legendary_effects_complete`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_legendary_effects_complete` AS select `le`.`id` AS `effect_id`,`le`.`name` AS `effect_name`,`lec`.`name` AS `category`,`le`.`star_level` AS `star_level`,`le`.`item_type` AS `item_type`,`le`.`description` AS `description`,`le`.`effect_value` AS `effect_value`,`le`.`notes` AS `notes`,`le`.`form_id` AS `form_id`,group_concat(concat(`lecond`.`condition_type`,': ',`lecond`.`condition_description`) separator '; ') AS `conditions`,`le`.`source_url` AS `source_url` from ((`legendary_effects` `le` join `legendary_effect_categories` `lec` on((`le`.`category_id` = `lec`.`id`))) left join `legendary_effect_conditions` `lecond` on((`le`.`id` = `lecond`.`effect_id`))) group by `le`.`id`,`le`.`name`,`lec`.`name`,`le`.`star_level`,`le`.`item_type`,`le`.`description`,`le`.`effect_value`,`le`.`notes`,`le`.`form_id`,`le`.`source_url` order by `le`.`item_type`,`lec`.`name`,`le`.`star_level`,`le`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `v_weapon_legendary_effects`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_weapon_legendary_effects`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_weapon_legendary_effects` AS select `le`.`id` AS `effect_id`,`le`.`name` AS `effect_name`,`lec`.`name` AS `category`,`le`.`star_level` AS `star_level`,`le`.`description` AS `description`,`le`.`effect_value` AS `effect_value`,group_concat(concat(`lecond`.`condition_type`,': ',`lecond`.`condition_description`) separator '; ') AS `conditions`,`le`.`source_url` AS `source_url` from ((`legendary_effects` `le` join `legendary_effect_categories` `lec` on((`le`.`category_id` = `lec`.`id`))) left join `legendary_effect_conditions` `lecond` on((`le`.`id` = `lecond`.`effect_id`))) where (`le`.`item_type` in ('weapon','both')) group by `le`.`id`,`le`.`name`,`lec`.`name`,`le`.`star_level`,`le`.`description`,`le`.`effect_value`,`le`.`source_url` order by `lec`.`name`,`le`.`star_level`,`le`.`name` */;
+/*!50001 SET character_set_client      = @saved_cs_client */;
+/*!50001 SET character_set_results     = @saved_cs_results */;
+/*!50001 SET collation_connection      = @saved_col_connection */;
+
+--
+-- Final view structure for view `v_armor_legendary_effects`
+--
+
+/*!50001 DROP VIEW IF EXISTS `v_armor_legendary_effects`*/;
+/*!50001 SET @saved_cs_client          = @@character_set_client */;
+/*!50001 SET @saved_cs_results         = @@character_set_results */;
+/*!50001 SET @saved_col_connection     = @@collation_connection */;
+/*!50001 SET character_set_client      = utf8mb4 */;
+/*!50001 SET character_set_results     = utf8mb4 */;
+/*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
+/*!50001 CREATE ALGORITHM=UNDEFINED */
+/*!50013 DEFINER=`root`@`localhost` SQL SECURITY DEFINER */
+/*!50001 VIEW `v_armor_legendary_effects` AS select `le`.`id` AS `effect_id`,`le`.`name` AS `effect_name`,`lec`.`name` AS `category`,`le`.`star_level` AS `star_level`,`le`.`description` AS `description`,`le`.`effect_value` AS `effect_value`,group_concat(concat(`lecond`.`condition_type`,': ',`lecond`.`condition_description`) separator '; ') AS `conditions`,`le`.`source_url` AS `source_url` from ((`legendary_effects` `le` join `legendary_effect_categories` `lec` on((`le`.`category_id` = `lec`.`id`))) left join `legendary_effect_conditions` `lecond` on((`le`.`id` = `lecond`.`effect_id`))) where (`le`.`item_type` in ('armor','both')) group by `le`.`id`,`le`.`name`,`lec`.`name`,`le`.`star_level`,`le`.`description`,`le`.`effect_value`,`le`.`source_url` order by `lec`.`name`,`le`.`star_level`,`le`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;

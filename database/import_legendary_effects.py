@@ -37,6 +37,18 @@ def import_legendary_effects(csv_file: str):
 
     print(f"Found {len(effects_map)} unique legendary effects after deduplication")
 
+    # Ensure categories exist
+    standard_categories = ['Prefix', 'Major', 'Minor', 'Additional']
+    for category_name in standard_categories:
+        insert_cat = """
+            INSERT INTO legendary_effect_categories (name)
+            VALUES (%s)
+            ON DUPLICATE KEY UPDATE name = name
+        """
+        db.execute_query(insert_cat, (category_name,))
+
+    print(f"✓ Ensured legendary effect categories exist")
+
     # Get category IDs
     category_map = {}
     categories = db.execute_query("SELECT id, name FROM legendary_effect_categories")
@@ -144,8 +156,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Import legendary effects from CSV')
     parser.add_argument('csv_file', nargs='?',
-                       default='../scrapers/legendary_effects_scraped.csv',
-                       help='CSV file to import')
+                       default='data/input/legendary_effects.csv',
+                       help='CSV file to import (default: data/input/legendary_effects.csv)')
 
     args = parser.parse_args()
 

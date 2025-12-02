@@ -453,8 +453,8 @@ def main():
     parser.add_argument('-u', '--url', help='Single URL to scrape')
     parser.add_argument('-f', '--file', default='legendary_perk_urls.txt',
                        help='File with URLs to scrape (default: legendary_perk_urls.txt)')
-    parser.add_argument('-o', '--output', default='LegendaryPerks.csv',
-                       help='Output CSV file (default: LegendaryPerks.csv)')
+    parser.add_argument('-o', '--output', default='data/input/legendary_perks.csv',
+                       help='Output CSV file (default: data/input/legendary_perks.csv)')
     parser.add_argument('-p', '--playwright', action='store_true',
                        help='Use Playwright for JavaScript-heavy pages')
 

@@ -200,7 +200,7 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description='Import weapon mods to database')
-    parser.add_argument('-f', '--file', default='../scrapers/weapon_mods_scraped.csv',
+    parser.add_argument('-f', '--file', default='data/input/weapon_mods.csv',
                         help='CSV file to import')
     args = parser.parse_args()
     

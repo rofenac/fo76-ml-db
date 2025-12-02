@@ -297,6 +297,78 @@ class VectorDBPopulator:
 
         return ". ".join(text_parts)
 
+    def create_weapon_mod_text(self, mod: Dict[str, Any]) -> str:
+        """Create text representation of weapon mod for embedding"""
+        text_parts = []
+
+        # Basic identification
+        text_parts.append(f"Weapon Mod: {mod['mod_name']}")
+        text_parts.append(f"For weapon: {mod['weapon_name']}")
+        text_parts.append(f"Mod slot: {mod['slot_name']}")
+
+        # Stat changes (the important part for build optimization)
+        stat_changes = []
+
+        if mod.get('damage_change'):
+            unit = "%" if mod.get('damage_is_percent') else " points"
+            stat_changes.append(f"damage {mod['damage_change']:+g}{unit}")
+
+        if mod.get('fire_rate_change'):
+            stat_changes.append(f"fire rate {mod['fire_rate_change']:+g}")
+
+        if mod.get('range_change'):
+            stat_changes.append(f"range {mod['range_change']:+g}")
+
+        if mod.get('accuracy_change'):
+            stat_changes.append(f"accuracy {mod['accuracy_change']:+g}")
+
+        if mod.get('ap_cost_change'):
+            stat_changes.append(f"AP cost {mod['ap_cost_change']:+g}")
+
+        if mod.get('recoil_change'):
+            stat_changes.append(f"recoil {mod['recoil_change']:+g}")
+
+        if mod.get('spread_change'):
+            stat_changes.append(f"spread {mod['spread_change']:+g}")
+
+        if mod.get('mag_size_change'):
+            stat_changes.append(f"magazine size {mod['mag_size_change']:+g}")
+
+        if mod.get('reload_speed_change'):
+            stat_changes.append(f"reload speed {mod['reload_speed_change']:+g}")
+
+        if stat_changes:
+            text_parts.append(f"Modifies: {', '.join(stat_changes)}")
+
+        # Special properties
+        if mod.get('converts_to_auto'):
+            text_parts.append("Converts weapon to automatic fire")
+
+        if mod.get('converts_to_semi'):
+            text_parts.append("Converts weapon to semi-automatic fire")
+
+        if mod.get('crit_damage_bonus'):
+            text_parts.append(f"Critical damage bonus: +{mod['crit_damage_bonus']}%")
+
+        if mod.get('hip_fire_accuracy_bonus'):
+            text_parts.append(f"Hip fire accuracy bonus: +{mod['hip_fire_accuracy_bonus']}%")
+
+        if mod.get('armor_penetration'):
+            text_parts.append(f"Armor penetration: +{mod['armor_penetration']}%")
+
+        if mod.get('is_suppressed'):
+            text_parts.append("Suppresses weapon (reduces noise and visibility)")
+
+        if mod.get('is_scoped'):
+            text_parts.append("Adds scope for improved aiming")
+
+        # Crafting requirements
+        if mod.get('required_perk'):
+            perk_rank = mod.get('required_perk_rank', 1)
+            text_parts.append(f"Requires: {mod['required_perk']} rank {perk_rank}")
+
+        return ". ".join(text_parts)
+
     def populate_batch(self, items: List[Dict], item_type: str, text_creator_func, id_prefix: str):
         """
         Generic batch populator for any item type.
@@ -349,6 +421,8 @@ class VectorDBPopulator:
                         db_id = item['collectible_id']
                     elif item_type == "legendary effects":
                         db_id = item['effect_id']
+                    elif item_type == "weapon mods":
+                        db_id = item['mod_id']
                     else:
                         db_id = item['id']
 
@@ -364,6 +438,8 @@ class VectorDBPopulator:
                     # Add name if available (handle different column naming)
                     if item_type == "weapons":
                         name = item.get('weapon_name')
+                    elif item_type == "weapon mods":
+                        name = item.get('mod_name')
                     elif item_type == "armor":
                         name = item.get('name')
                     elif item_type == "mutations":
@@ -386,6 +462,11 @@ class VectorDBPopulator:
                             metadata['class'] = item['weapon_class']
                         if item.get('damage'):
                             metadata['damage'] = str(item['damage'])
+                    elif item_type == "weapon mods":
+                        if item.get('weapon_name'):
+                            metadata['weapon_name'] = item['weapon_name']
+                        if item.get('slot_name'):
+                            metadata['slot_name'] = item['slot_name']
                     elif item_type == "armor":
                         if item.get('armor_type'):
                             metadata['armor_type'] = item['armor_type']
@@ -431,6 +512,7 @@ class VectorDBPopulator:
         """Get emoji for item type"""
         emojis = {
             "weapons": "🔫",
+            "weapon mods": "🔧",
             "armor": "🛡️",
             "perks": "⭐",
             "legendary perks": "💎",
@@ -482,6 +564,11 @@ class VectorDBPopulator:
         effects = self.execute_query("SELECT * FROM v_legendary_effects_complete")
         self.populate_batch(effects, "legendary effects", self.create_legendary_effect_text, "legendary_effect_")
 
+    def populate_weapon_mods(self):
+        """Load weapon mods from MySQL and add to ChromaDB"""
+        weapon_mods = self.execute_query("SELECT * FROM v_weapon_mods_complete")
+        self.populate_batch(weapon_mods, "weapon mods", self.create_weapon_mod_text, "weapon_mod_")
+
     def populate_all(self):
         """Populate all data types"""
         print("\n" + "="*60)
@@ -489,6 +576,7 @@ class VectorDBPopulator:
         print("="*60)
 
         self.populate_weapons()
+        self.populate_weapon_mods()
         self.populate_armor()
         self.populate_perks()
         self.populate_legendary_perks()
