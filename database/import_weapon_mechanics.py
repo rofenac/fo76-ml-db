@@ -9,9 +9,11 @@ Usage:
     python import_weapon_mechanics.py -u <username> -p <password> [-H <host>] [-d <database>]
 
     Or use environment variables:
-    export MYSQL_USER=your_username
-    export MYSQL_PASS=your_password
+    export DB_USER=your_username
+    export DB_PASSWORD=your_password
     python import_weapon_mechanics.py
+
+    (Also supports legacy MYSQL_USER/MYSQL_PASS for backward compatibility)
 """
 
 import argparse
@@ -319,11 +321,11 @@ def main():
     parser.add_argument('-H', '--host', default='localhost',
                         help='MySQL host (default: localhost)')
     parser.add_argument('-u', '--user',
-                        default=os.getenv('MYSQL_USER'),
-                        help='MySQL username (or set MYSQL_USER env var)')
+                        default=os.getenv('DB_USER') or os.getenv('MYSQL_USER'),
+                        help='MySQL username (or set DB_USER/MYSQL_USER env var)')
     parser.add_argument('-p', '--password',
-                        default=os.getenv('MYSQL_PASS'),
-                        help='MySQL password (or set MYSQL_PASS env var)')
+                        default=os.getenv('DB_PASSWORD') or os.getenv('MYSQL_PASS'),
+                        help='MySQL password (or set DB_PASSWORD/MYSQL_PASS env var)')
     parser.add_argument('-d', '--database', default='f76',
                         help='Database name (default: f76)')
 
@@ -331,10 +333,10 @@ def main():
 
     # Validate required arguments
     if not args.user:
-        print("Error: MySQL username required (use -u or MYSQL_USER env var)")
+        print("Error: MySQL username required (use -u or DB_USER/MYSQL_USER env var)")
         sys.exit(1)
     if not args.password:
-        print("Error: MySQL password required (use -p or MYSQL_PASS env var)")
+        print("Error: MySQL password required (use -p or DB_PASSWORD/MYSQL_PASS env var)")
         sys.exit(1)
 
     # Create importer and run

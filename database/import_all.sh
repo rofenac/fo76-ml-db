@@ -7,11 +7,18 @@
 #   - Old VARCHAR fields remain for backward compatibility
 #   - Views use FK joins for optimal performance
 
+set -e  # Exit on error
+
+# Check if .env exists
+if [ ! -f ../.env ]; then
+  echo "Error: .env file not found in project root"
+  echo "Please create a .env file with DB_USER, DB_PASSWORD, DB_NAME, and DB_HOST"
+  exit 1
+fi
+
 set -a
 source ../.env
 set +a
-
-set -e  # Exit on error
 
 echo "=========================================="
 echo "MASTER DATA IMPORT - RESTORING ALL DATA"
