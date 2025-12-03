@@ -728,7 +728,7 @@ DROP TABLE IF EXISTS `v_weapons_with_perks`;
 /*!50001 DROP VIEW IF EXISTS `v_weapons_with_perks`*/;
 SET @saved_cs_client     = @@character_set_client;
 /*!50503 SET character_set_client = utf8mb4 */;
-/*!50001 CREATE VIEW `v_weapons_with_perks` AS SELECT 
+/*!50001 CREATE VIEW `v_weapons_with_perks` AS SELECT
  1 AS `id`,
  1 AS `weapon_name`,
  1 AS `weapon_type`,
@@ -737,6 +737,7 @@ SET @saved_cs_client     = @@character_set_client;
  1 AS `damage`,
  1 AS `regular_perks`,
  1 AS `legendary_perks`,
+ 1 AS `mechanics`,
  1 AS `source_url`*/;
 SET character_set_client = @saved_cs_client;
 
@@ -1184,7 +1185,7 @@ CREATE TABLE `weapons` (
 /*!50001 SET collation_connection      = utf8mb4_0900_ai_ci */;
 /*!50001 CREATE ALGORITHM=UNDEFINED */
 /*!50013 DEFINER=`rofenac`@`localhost` SQL SECURITY DEFINER */
-/*!50001 VIEW `v_weapons_with_perks` AS select `w`.`id` AS `id`,`w`.`name` AS `weapon_name`,`wt`.`name` AS `weapon_type`,`wc`.`name` AS `weapon_class`,`w`.`level` AS `level`,`w`.`damage` AS `damage`,group_concat(distinct `p`.`name` order by `p`.`name` ASC separator '; ') AS `regular_perks`,group_concat(distinct `lp`.`name` order by `lp`.`name` ASC separator '; ') AS `legendary_perks`,`w`.`source_url` AS `source_url` from ((((((`weapons` `w` left join `weapon_types` `wt` on((`w`.`weapon_type_id` = `wt`.`id`))) left join `weapon_classes` `wc` on((`w`.`weapon_class_id` = `wc`.`id`))) left join `weapon_perks` `wp` on((`w`.`id` = `wp`.`weapon_id`))) left join `perks` `p` on((`wp`.`perk_id` = `p`.`id`))) left join `weapon_legendary_perk_effects` `wlpe` on((`w`.`id` = `wlpe`.`weapon_id`))) left join `legendary_perks` `lp` on((`wlpe`.`legendary_perk_id` = `lp`.`id`))) group by `w`.`id`,`w`.`name`,`wt`.`name`,`wc`.`name`,`w`.`level`,`w`.`damage`,`w`.`source_url` order by `w`.`name` */;
+/*!50001 VIEW `v_weapons_with_perks` AS select `w`.`id` AS `id`,`w`.`name` AS `weapon_name`,`wt`.`name` AS `weapon_type`,`wc`.`name` AS `weapon_class`,`w`.`level` AS `level`,`w`.`damage` AS `damage`,group_concat(distinct `p`.`name` order by `p`.`name` ASC separator '; ') AS `regular_perks`,group_concat(distinct `lp`.`name` order by `lp`.`name` ASC separator '; ') AS `legendary_perks`,group_concat(distinct concat(`wmt`.`name`,case when (`wm`.`numeric_value` is not null) then concat(': ',`wm`.`numeric_value`,coalesce(`wm`.`unit`,'')) when (`wm`.`string_value` is not null) then concat(': ',`wm`.`string_value`) else '' end,case when (`wm`.`numeric_value_2` is not null) then concat(' to ',`wm`.`numeric_value_2`,coalesce(`wm`.`unit`,'')) else '' end) order by `wmt`.`name` ASC separator '; ') AS `mechanics`,`w`.`source_url` AS `source_url` from ((((((((`weapons` `w` left join `weapon_types` `wt` on((`w`.`weapon_type_id` = `wt`.`id`))) left join `weapon_classes` `wc` on((`w`.`weapon_class_id` = `wc`.`id`))) left join `weapon_perks` `wp` on((`w`.`id` = `wp`.`weapon_id`))) left join `perks` `p` on((`wp`.`perk_id` = `p`.`id`))) left join `weapon_legendary_perk_effects` `wlpe` on((`w`.`id` = `wlpe`.`weapon_id`))) left join `legendary_perks` `lp` on((`wlpe`.`legendary_perk_id` = `lp`.`id`))) left join `weapon_mechanics` `wm` on((`w`.`id` = `wm`.`weapon_id`))) left join `weapon_mechanic_types` `wmt` on((`wm`.`mechanic_type_id` = `wmt`.`id`))) group by `w`.`id`,`w`.`name`,`wt`.`name`,`wc`.`name`,`w`.`level`,`w`.`damage`,`w`.`source_url` order by `w`.`name` */;
 /*!50001 SET character_set_client      = @saved_cs_client */;
 /*!50001 SET character_set_results     = @saved_cs_results */;
 /*!50001 SET collation_connection      = @saved_col_connection */;
