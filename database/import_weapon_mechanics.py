@@ -272,8 +272,7 @@ class WeaponMechanicsImporter:
             print("\nExample: Gauss weapons with charge mechanic:")
             self.cursor.execute("""
                 SELECT w.name, wm.numeric_value, wm.unit, wm.notes
-                FROM v_weapons_with_mechanics vwm
-                JOIN weapons w ON vwm.id = w.id
+                FROM weapons w
                 JOIN weapon_mechanics wm ON w.id = wm.weapon_id
                 JOIN weapon_mechanic_types wmt ON wm.mechanic_type_id = wmt.id
                 WHERE wmt.name = 'charge' AND w.name LIKE 'Gauss%'
