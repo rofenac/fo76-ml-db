@@ -851,6 +851,16 @@ CREATE TABLE `weapon_mod_slots` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `weapon_mod_slots`
+--
+
+LOCK TABLES `weapon_mod_slots` WRITE;
+/*!40000 ALTER TABLE `weapon_mod_slots` DISABLE KEYS */;
+INSERT INTO `weapon_mod_slots` VALUES (8,'barrel'),(9,'grip'),(10,'magazine'),(11,'muzzle'),(12,'receiver'),(13,'sight'),(14,'stock');
+/*!40000 ALTER TABLE `weapon_mod_slots` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `weapon_mods`
 --
 
