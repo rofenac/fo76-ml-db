@@ -1,5 +1,7 @@
 # Fallout 76 Build Database & RAG System
 
+## NOTE: The frontend is currently in development. If you clone this project, you'll have to use the CLI version only until I can get the web gui up and running. Also, this project as written incurs some monetary cost via Anthropic and OpenAI API fees. Feel free to adapt it to local models if desired
+
 Python-based system that scrapes Fallout 76 game data, stores it in a fully normalized MySQL 8+ database, and exposes it via a hybrid SQL + vector RAG layer, a FastAPI REST API, and a React frontend.
 
 The database currently contains weapons, armor, perks, legendary perks, mutations, consumables, and collectibles, and is optimized for fast, reliable queries via a centralized database utility and read-optimized views.
@@ -27,10 +29,16 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Install Playwright’s Chromium browser for the scrapers:
+Install Playwright’s Chromium browser for the scrapers (optional, only needed if you plan to scrape fresh data):
 
 ```bash
-playwright install chromium
+sudo apt-get install libnspr4 libnss3 libasound2t64
+```
+
+Or if you want to install ALL dependencies:
+
+```bash
+sudo .venv/bin/python -m playwright install-deps
 ```
 
 ---
@@ -74,16 +82,6 @@ Use the provided scripts to load all scraped data into the database:
 bash database/import_all.sh
 ```
 
-Optionally import additional weapon mechanics data:
-
-```bash
-export MYSQL_USER=your_user
-export MYSQL_PASS=your_password
-python database/import_weapon_mechanics.py
-```
-
----
-
 ### 6. Build the vector database for RAG (optional but recommended)
 
 Generate OpenAI embeddings and populate the ChromaDB vector store:
@@ -109,7 +107,7 @@ npm run dev      # http://localhost:5173
 npm run build
 ```
 
-This app is built with **React 19**, **TypeScript**, **Vite**, **TailwindCSS v4**, **DaisyUI**, and **GSAP**.
+The frontend is built with **React 19**, **TypeScript**, **Vite**, **TailwindCSS v4**, **DaisyUI**, and **GSAP**.
 
 ---
 
