@@ -1,10 +1,12 @@
 # Fallout 76 Build Database & RAG System
 
-## NOTE: The frontend is currently in development. If you clone this project, you'll have to use the CLI version only until I can get the web gui up and running. Also, this project as written incurs some monetary cost via Anthropic and OpenAI API fees. Feel free to adapt it to local models if desired
+> **Note:** The frontend exists but needs significant work. The CLI and API are fully functional. Use `bash python-start.sh` for the CLI or `bash api-start.sh` for the REST API.
+>
+> This project incurs a small monetary cost via Anthropic and OpenAI API fees. Feel free to adapt it to local models if desired.
 
-Python-based system that scrapes Fallout 76 game data, stores it in a fully normalized MySQL 8+ database, and exposes it via a hybrid SQL + vector RAG layer, a FastAPI REST API, and a React frontend.
+Python-based system that scrapes Fallout 76 game data, stores it in a fully normalized MariaDB database, and exposes it via a hybrid SQL + vector RAG layer, a FastAPI REST API, a React frontend, and a CLI.
 
-The database currently contains weapons, armor, perks, legendary perks, mutations, consumables, and collectibles, and is optimized for fast, reliable queries via a centralized database utility and read-optimized views.
+The database contains weapons, armor, perks, legendary perks, mutations, consumables, and collectibles — 3,200+ records across 33 tables and 11 views, optimized for fast queries via a centralized database utility and read-optimized views.
 
 ---
 
@@ -21,99 +23,151 @@ cd fo76-ml-db
 
 ### 2. Python environment & dependencies
 
-Create and activate a virtual environment, then install Python dependencies:
+Dependencies are managed via [`uv`](https://docs.astral.sh/uv/). Install it first:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+# Arch Linux
+sudo pacman -S uv
+
+# macOS / Linux (official installer)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Install Playwright’s Chromium browser for the scrapers (optional, only needed if you plan to scrape fresh data):
+Sync all Python dependencies (uv creates `.venv` automatically):
 
 ```bash
-sudo apt-get install libnspr4 libnss3 libasound2t64
-```
-
-Or if you want to install ALL dependencies:
-
-```bash
-sudo .venv/bin/python -m playwright install-deps
+uv sync
 ```
 
 ---
 
-### 3. MySQL setup
+### 3. MariaDB setup
 
-Create the `f76` database and apply the master schema (MySQL 8.0+):
+Install and initialize MariaDB:
 
 ```bash
-mysql -u your_user -p -e "CREATE DATABASE IF NOT EXISTS f76;"
-mysql -u your_user -p f76 < database/f76_master_schema.sql
+# Arch Linux
+sudo pacman -S mariadb
+sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+sudo systemctl enable --now mariadb
+sudo mysql_secure_installation
 ```
 
-The file `database/f76_master_schema.sql` is the **single source of truth** for the normalized schema.
+Create the database and apply the schema:
+
+```bash
+sudo mariadb -e "CREATE DATABASE IF NOT EXISTS f76;"
+sudo mariadb f76 < database/f76_master_schema.sql
+```
+
+> `database/f76_master_schema.sql` is the single source of truth for the normalized schema.
+
+> **If you import a schema dumped on another machine**, views may fail with a `definer does not exist` error. Fix it by running:
+> ```bash
+> sudo mariadb f76 -sN -e "SELECT CONCAT('CREATE OR REPLACE DEFINER=\`YOUR_USER\`@\`localhost\` SQL SECURITY DEFINER VIEW \`', TABLE_NAME, '\` AS ', VIEW_DEFINITION, ';') FROM information_schema.VIEWS WHERE TABLE_SCHEMA = 'f76';" | sudo mariadb f76
+> ```
 
 ---
 
 ### 4. Environment configuration
 
-Copy the example environment file and edit it with your settings:
-
 ```bash
 cp .env.example .env
 ```
 
-Set at least:
+Edit `.env` and set:
 
-* `DB_USER`, `DB_PASSWORD`, `DB_NAME` – your MySQL credentials and database name
-* `ANTHROPIC_API_KEY` – Claude API key
-* `OPENAI_API_KEY` – OpenAI API key (for embeddings)
+```bash
+ANTHROPIC_API_KEY=sk-ant-...       # Required for RAG queries
+OPENAI_API_KEY=sk-...              # Required for vector embeddings
+DB_HOST=localhost
+DB_USER=your_mariadb_user
+DB_PASSWORD=your_password
+DB_NAME=f76
+```
 
-Keys and DB credentials are read by the backend via this `.env` file; do not hard-code them in code.
+> **Windows users:** If you edited `.env` on Windows, strip carriage returns before running scripts:
+> ```bash
+> sed -i 's/\r//' .env
+> ```
 
 ---
 
 ### 5. Import game data
 
-Use the provided scripts to load all scraped data into the database:
-
 ```bash
 bash database/import_all.sh
 ```
 
-### 6. Build the vector database for RAG (optional but recommended)
+---
 
-Generate OpenAI embeddings and populate the ChromaDB vector store:
+### 6. Build the vector database (optional but recommended for RAG/CLI)
+
+Generates OpenAI embeddings and populates the ChromaDB vector store (~$0.001 cost):
 
 ```bash
-python rag/populate_vector_db.py
+uv run python rag/populate_vector_db.py
 ```
-
-This step incurs a small OpenAI cost (on the order of ~$0.001 per full rebuild).
 
 ---
 
-### 7. Install frontend dependencies (React app)
-
-The React character builder frontend lives in the `react/` directory.
+### 7. Frontend dependencies (optional)
 
 ```bash
 cd react
 npm install
-# For development:
-npm run dev      # http://localhost:5173
-# For production build:
-npm run build
 ```
-
-The frontend is built with **React 19**, **TypeScript**, **Vite**, **TailwindCSS v4**, **DaisyUI**, and **GSAP**.
 
 ---
 
-Once these steps are complete, the project is fully installed locally with:
+## Usage
 
-* MySQL schema and data loaded
-* Python dependencies and RAG components ready
-* Optional vector database populated
-* Frontend dependencies installed
+### CLI (RAG queries)
+
+```bash
+bash python-start.sh
+# or directly:
+uv run python rag/cli.py
+```
+
+### API server
+
+```bash
+bash api-start.sh
+```
+
+- API: <http://localhost:8000>
+- Docs: <http://localhost:8000/docs>
+
+### Frontend (development)
+
+```bash
+cd react && npm run dev   # http://localhost:5173
+```
+
+---
+
+## Optional: Playwright (scrapers only)
+
+Only needed if you want to re-scrape data from the Fallout Wiki.
+
+```bash
+uv run playwright install chromium
+
+# Arch Linux — install missing system libs:
+sudo pacman -S --needed nss nspr at-spi2-core libcups libdrm libxcb \
+    libxkbcommon libxcomposite libxdamage libxrandr mesa pango cairo alsa-lib
+```
+
+---
+
+## Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Database | MariaDB 10.x+ (MySQL-compatible) |
+| Python runtime | Python 3.12+, managed by `uv` |
+| API | FastAPI + Uvicorn |
+| RAG | Anthropic Claude + OpenAI embeddings + ChromaDB |
+| Scrapers | Playwright + BeautifulSoup |
+| Frontend | React 19 + TypeScript + Vite + TailwindCSS v4 + DaisyUI |

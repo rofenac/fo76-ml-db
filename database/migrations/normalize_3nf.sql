@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS mutation_effects (
     KEY idx_me_type (effect_type),
     CONSTRAINT fk_me_mutation FOREIGN KEY (mutation_id)
         REFERENCES mutations(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Migrate positive effects
 INSERT INTO mutation_effects (mutation_id, effect_type, description)

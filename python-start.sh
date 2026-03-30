@@ -1,5 +1,4 @@
 #!/bin/bash
 
-source .venv/bin/activate
-python rag/cli.py
-
+uv sync
+uv run python rag/cli.py

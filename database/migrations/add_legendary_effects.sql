@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS legendary_effect_categories (
     PRIMARY KEY (id),
     UNIQUE KEY uq_category_name (name),
     KEY idx_category_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT IGNORE INTO legendary_effect_categories (name, description) VALUES
 ('Prefix', 'Primary legendary effect (1st star)'),
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS legendary_effects (
     KEY idx_le_item_type (item_type),
     CONSTRAINT fk_le_category FOREIGN KEY (category_id)
         REFERENCES legendary_effect_categories(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
 -- Legendary Effect Conditions
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS legendary_effect_conditions (
     KEY idx_lec_type (condition_type),
     CONSTRAINT fk_lec_effect FOREIGN KEY (effect_id)
         REFERENCES legendary_effects(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
 -- Views for Legendary Effects

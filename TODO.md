@@ -153,4 +153,24 @@
 
 ---
 
-**Last Updated**: 2025-12-02
+---
+
+## Session: 2026-03-29 — Modernization & Revival
+
+### Completed
+
+- ✅ **Migrated dependency management to uv + pyproject.toml**
+  - Replaced 103-package `pip freeze` dump with 17 direct deps in `pyproject.toml`
+  - Generated `uv.lock` for reproducible installs on Python 3.14
+  - Root cause of install failure: `PyPika==0.48.9` used `ast.Str` removed in Python 3.12+
+- ✅ **MariaDB migration (Arch Linux)**
+  - Replaced MySQL 8.0 references throughout docs
+  - Fixed `utf8mb4_0900_ai_ci` → `utf8mb4_unicode_ci` in schema and migration SQL files
+  - Documented view definer fix for cross-machine imports
+- ✅ **Updated all start scripts** to use `uv run` instead of manual venv activation
+- ✅ **Configured MariaDB MCP** (`mcp-server-mariadb` via uvx, project-scoped in `.claude/settings.local.json`)
+- ✅ **Documented Playwright setup for Arch Linux** (manual pacman deps required)
+- ✅ **Rebuilt vector database** after MariaDB view definer fix
+- ✅ **Full docs refresh**: README, api/README, CLAUDE.md
+
+**Last Updated**: 2026-03-29

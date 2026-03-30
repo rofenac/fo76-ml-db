@@ -1,0 +1,31 @@
+[project]
+name = "fo76-ml-db"
+version = "1.0.0"
+description = "Fallout 76 Build Database & RAG System"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "python-multipart",
+    "anthropic",
+    "openai",
+    "chromadb",
+    "mysql-connector-python",
+    "python-dotenv",
+    "pydantic",
+    "pydantic-settings",
+    "beautifulsoup4",
+    "lxml",
+    "requests",
+    "playwright",
+    "tqdm",
+    "numpy",
+    "pandas",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = false
